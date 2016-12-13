@@ -1,0 +1,65 @@
+# PinAPLPy: Platform-independent Analysis of Pooled Screens using Python
+# P. Spahn et al., UC San Diego (10/2016) 
+
+# ***********************************************************************
+# CONFIGURATION FILE
+# ***********************************************************************
+
+# PROJECT PARAMETERS
+ScreenType: 'enrichment'                    # type of screen ('enrichment'/'depletion')
+LibFilename: 'GeCKO_library.tsv'            # filename of library spreadsheet  
+seq_5_end: 'TCTTGTGGAAAGGACGAAACACCG'       # sequence 5' of sgRNA in read
+seq_3_end: 'GTTTTAGAGCTAGAAATAGCAAGTT'       # sequence 3' of sgRNA in read
+CtrlPrefix: 'Control_'                      # name prefix of control samples
+NonTargetPrefix: 'NonTargeting'             # prefix for non-targeting sgRNAs in library (keep at default if none present)
+sgRNAsPerGene: 6                            # number of sgRNAs targeting each gene (not taking non-targeting / microRNAs into account) 
+
+# ANALYSIS OPTIONS
+AlnOutput: 'Compress'                  # keep raw alignment output? ('Keep'/'Compress'/'Delete')
+keepCutReads: False                    # keep files containing trimmed reads? ('True'/'False')
+VarEst: 'model'                        # method for count variance estimation ('model'/'sample') 
+GeneMetric: 'aRRA'                    # metric for gene enrichment ('aRRA'/'STARS'/'ES')
+scatter_annotate: True                 # annotate scatterplot with sgRNA IDs? ('True'/'False')
+ClusterBy: 'variance'                  # clustering criterion ('variance'/'counts')
+TopN: 100                              # number of top sgRNAs to take into account for clustering
+
+# TECHNICAL PARAMETERS
+R_min:  10                             # minimal required read length after cutadapt trimming
+L_bw: 11                               # Bowtie2 -L parameter (seed length)
+N_bw: 1                                # Bowtie2 -N parameter (seed mismatch)
+i_bw: 'S,1,0.75'                       # Bowtie2 -i parameter (interval function)
+Theta: 2                               # alignment ambiguity tolerance
+N0: 1000000                            # read normalization 
+max_q: 95                              # maximum quantile for histogram plots
+alpha: 0.01                            # significance level    
+pcorr: 'fdr_bh'                        # method for p-value correction
+Np_ES: 100                             # number of permutations for gene enrichment analysis (ES)
+Np_aRRA: 100                          # number of permutations for gene enrichment analysis (aRRA)
+Np_STARS: 10                          # number of permutations for gene enrichment analysis (STARS)
+thr_STARS: 10                          # Threshold percentage for STARS analysis
+delta_s: 0.01                          # count shift before log transformation in scatterplots
+delta_p: 1                             # count shift before log transformation in heatmap
+
+# DIRECTORIES
+WorkingDir: '/workingdir/'
+DataDir: '/workingdir/Data/'
+LibDir: '/workingdir/Library/'
+IndexDir: '/workingdir/Library/Bowtie2_Index/'
+ScriptsDir: '/opt/PinAPLPy/'
+AnalysisDir: '/workingdir/Analysis/'
+AlignDir: '/workingdir/Alignments/'
+QCDir: '/workingdir/Analysis/QC/'
+bw2Dir: '/usr/bin/'
+CutAdaptDir: '/root/.local/bin/'   
+STARSDir: '/opt/PinAPLPy/STARS_mod/'
+
+# SCRIPT FILENAMES
+script00: 'BuildLibraryIndex'
+script01: 'AlignReads'
+script02: 'AnalyzeCounts'
+script03: 'AnalyzeControl'
+script04: 'ListCandidateGuides'
+script05: 'ListCandidateGenes'
+script06: 'PlotSample'
+script07: 'PlotReplicates'
+script08: 'PlotHeatmap'
