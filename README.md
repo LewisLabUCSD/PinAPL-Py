@@ -11,9 +11,9 @@
 	e.g. TreatmentA_R1.fastq.gz / TreatmentA_R2.fastq.gz / TreatmentB_R1.fastq.gz /...etc. for your treatment samples
 	
 	Control_R1.fastq.gz / Control_R2.fastq.gz / ... etc. for your control samples
-3. Copy the *library file (.tsv)* to the /Library folder. Columns should be sgRNA, Sequence, Gene. If you work with GECKO_v2 library, you can download this file from https://github.com/Yavin4/PinAPL-Py
+3. Copy the *library file (.tsv)* to the /Library folder. Columns should be Gene, sgRNA_ID, Sequence. If you work with GECKO_v2 library, you can download this file from https://github.com/LewisLabUCSD/PinAPL-Py
   
-4. Download *configuration.yaml* from https://github.com/Yavin4/PinAPL-Py and copy it to the working directory.
+4. Download *configuration.yaml* from https://github.com/LewisLabUCSD/PinAPL-Py and copy it to the working directory.
 
 5. Edit configuration.yaml 
 
