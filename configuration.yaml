@@ -38,21 +38,25 @@ Np_ES: 100                             # number of permutations for gene enrichm
 Np_aRRA: 100                          # number of permutations for gene enrichment analysis (aRRA)
 Np_STARS: 10                          # number of permutations for gene enrichment analysis (STARS)
 thr_STARS: 10                          # Threshold percentage for STARS analysis
+
+# VISUALIZATION PARAMETERS
 delta_s: 0.01                          # count shift before log transformation in scatterplots
 delta_p: 1                             # count shift before log transformation in heatmap
+dpi: 300                               # resolution of PNG plots
+dotsize: 10                             # size of dots in scatterplot
 
 # DIRECTORIES
 WorkingDir: '/workingdir/'
 DataDir: '/workingdir/Data/'
 LibDir: '/workingdir/Library/'
 IndexDir: '/workingdir/Library/Bowtie2_Index/'
-ScriptsDir: '/opt/PinAPLPy/'
+ScriptsDir: '/opt/PinAPL-Py/Scripts/'
 AnalysisDir: '/workingdir/Analysis/'
 AlignDir: '/workingdir/Alignments/'
 QCDir: '/workingdir/Analysis/QC/'
 bw2Dir: '/usr/bin/'
 CutAdaptDir: '/root/.local/bin/'   
-STARSDir: '/opt/PinAPLPy/STARS_mod/'
+STARSDir: '/opt/PinAPL-Py/Scripts/STARS_mod/'
 
 # SCRIPT FILENAMES
 script00: 'BuildLibraryIndex'

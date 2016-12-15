@@ -65,6 +65,7 @@ def MapAndCount(sample):
     N_bw = config['N_bw']
     i_bw = config['i_bw']
     N0 = config['N0']
+    res = config['dpi']
     AlnOutput = config['AlnOutput']
     keepCutReads = config['keepCutReads']
     ReadsDir = DataDir
@@ -123,7 +124,7 @@ def MapAndCount(sample):
     # ----------------------------------------------                  
     start = time.time()  
     print('Bowtie2 alignment in progress ...')        
-    RunBowtie2(ReadsCut_filename,ReadsDir,AlnDir,LogDir,bw2Dir,IndexDir,Theta,L_bw,N_bw,i_bw)
+    RunBowtie2(ReadsCut_filename,ReadsDir,AlnDir,LogDir,bw2Dir,IndexDir,Theta,L_bw,N_bw,i_bw,res)
     end = time.time()
     # Time stamp
     sec_elapsed = end-start
