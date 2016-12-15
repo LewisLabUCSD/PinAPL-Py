@@ -46,6 +46,8 @@ def GOI_Scatterplot(sample,GOI='None'):
     pcorr = config['pcorr']
     delta = config['delta_s']
     NonTPrefix = config['NonTargetPrefix']
+    res = config['dpi']
+    dotsize = config['dotsize']
    
     # ------------------------------------------------
     # Reading counts from sample and control
@@ -90,12 +92,12 @@ def GOI_Scatterplot(sample,GOI='None'):
         os.makedirs(PlotDir)      
     os.chdir(PlotDir)   
     plt.figure()
-    plt.scatter(control_rest,sample_rest,s=2)
-    plt.scatter(control_sig,sample_sig,s=2,color='green',label='Significant')
+    plt.scatter(control_rest,sample_rest,s=dotsize,facecolor='black',lw=0)
+    plt.scatter(control_sig,sample_sig,s=dotsize,facecolor='green',lw=0,label='Significant')
     if GOI != 'None':
-        plt.scatter(control_goi,sample_goi,s=20,color='red',label=GOI)
+        plt.scatter(control_goi,sample_goi,s=20,facecolor='red',lw=0,label=GOI)
     if len(K_nonT)>0:
-        plt.scatter(control_nonT,sample_nonT,s=2,color=(255/255,0,255/255),label='Non Targeting')
+        plt.scatter(control_nonT,sample_nonT,s=dotsize,facecolor=(255/255,0,255/255),lw=0,label='Non Targeting')
     axes = plt.gca()
     x0 = axes.get_xlim()  
     plt.plot((0,x0[1]-1), (0,x0[1]-1), ls="--", color=(51/255,153/255,1))
@@ -110,9 +112,9 @@ def GOI_Scatterplot(sample,GOI='None'):
         for label, x, y in zip(goi_sgIDs,control_goi,sample_goi):
             plt.annotate(label,xy=(x,y),color='red',fontsize=8)  
     if GOI != 'None':
-        plt.savefig(sample+' '+GOI+' counts.png', dpi=300)
+        plt.savefig(sample+' '+GOI+' counts.png', dpi=res)
     else:
-        plt.savefig(sample+' '+' counts.png', dpi=300)        
+        plt.savefig(sample+' '+' counts.png', dpi=res)        
     plt.close()
 
     # ------------------------------------------------

@@ -112,11 +112,11 @@ def TopN_Clustering():
         T = len(TopGuides)      
         # Establish data frame
         print('Writing data frame ...')
-        os.chdir(LibDir)    
+        os.chdir(LibDir)
         LibCols = ['gene','ID','seq']
         LibFile = pd.read_table(LibFilename, sep = '\t', skiprows = 1, names = LibCols)
         genes = list(LibFile['gene'].values)
-        sgIDs = list(LibFile['ID'].values)  
+        sgIDs = list(LibFile['ID'].values)
         TopIndex = [sgIDs.index(TopGuides[k]) for k in range(T)]
         TopGenes = [genes[TopIndex[k]] for k in range(T)]
         TopVar = [Var[TopIndex[k]] for k in range(T)]
