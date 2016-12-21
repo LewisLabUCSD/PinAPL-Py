@@ -13,7 +13,7 @@ Experienced users can follow the Quick Start below:
 
 2. Copy your read files (fastq.gz) to the /Data folder 
 
-3. *Rename your read files*. To be recognized and correctly interpreted, the fastq.gz file names of control replicates need to start with *“Control_R1_...”,  “Control_R2_....”* etc. Similarly, file names of treatment replicates (e.g. treatmentX) need to start with *“TreatmentX_R1_...”, “TreatmentX_R2_...”* etc. For more information on filename requirements see section 2.
+3. *Rename your read files*. To be recognized and correctly interpreted, the fastq.gz file names of control replicates need to start with *“Control_R1_...”,  “Control_R2_....”* etc. Similarly, file names of treatment replicates (e.g. treatmentX) need to start with *“TreatmentX_R1_...”, “TreatmentX_R2_...”* etc. For more information on filename requirements see Section 2 of the tutorial.
 
 4. Copy the *library file (.tsv)* to the /Library folder. The library file is a tab delimited file of all sgRNAs in the library. Columns should be 1: gene_ID, 2: sgRNA_ID, 3: sequence. If you work with the GECKO_v2 library, you can download this file from https://github.com/LewisLabUCSD/PinAPL-Py
   
