@@ -9,23 +9,22 @@ Experienced users can follow the Quick Start below:
 
 0. *Install docker* on your machine: https://docs.docker.com/engine/installation/
 
-1. Create a *working directory* and create both a /Data and /Library folder inside it
+1. Create a *working directory* and create both a /Data and /Library subfolder inside it
 
-2. Copy your read files (fastq.gz) to the /Data folder and rename them as *\<samplename>\_R\<number>.fastq.gz* 
+2. Copy your read files (fastq.gz) to the /Data folder 
 
-	e.g. TreatmentA_R1.fastq.gz / TreatmentA_R2.fastq.gz / TreatmentB_R1.fastq.gz /...etc. for your treatment samples
-	
-	Control_R1.fastq.gz / Control_R2.fastq.gz / ... etc. for your control samples
-3. Copy the *library file (.tsv)* to the /Library folder. Columns should be Gene, sgRNA_ID, Sequence. If you work with GECKO_v2 library, you can download this file from https://github.com/LewisLabUCSD/PinAPL-Py
+3. *Rename your read files*. To be recognized and correctly interpreted, the fastq.gz file names of control replicates need to start with *“Control_R1_...”,  “Control_R2_....”* etc. Similarly, file names of treatment replicates (e.g. treatmentX) need to start with *“TreatmentX_R1_...”, “TreatmentX_R2_...”* etc. For more information on filename requirements see section 2.
+
+4. Copy the *library file (.tsv)* to the /Library folder. The library file is a tab delimited file of all sgRNAs in the library. Columns should be 1: gene_ID, 2: sgRNA_ID, 3: sequence. If you work with the GECKO_v2 library, you can download this file from https://github.com/LewisLabUCSD/PinAPL-Py
   
-4. Download *configuration.yaml* from https://github.com/LewisLabUCSD/PinAPL-Py and copy it to the working directory.
+5. Download *configuration.yaml* from https://github.com/LewisLabUCSD/PinAPL-Py and copy it to the working directory.
 
-5. Edit configuration.yaml 
+6. Edit configuration.yaml 
 
 	NOTE: For GECKO_v2 enrichment screens, you can leave everything at default.
   
-6. Start PinAPL-Py from the working directory using Terminal (Windows: Docker Quickstart Terminal)
+7. Start PinAPL-Py from the working directory using Terminal (Windows: Docker Quickstart Terminal)
 
-  docker  run -v $PWD:/workingdir oharismendy/pinaplpy_docker PinAPL.py
+  docker run -v $PWD:/workingdir oncogx/pinaplpy_docker PinAPL.py
 
   
