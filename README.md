@@ -1,5 +1,10 @@
 # PinAPL-Py
 ![pinapl-py logo_small](https://cloud.githubusercontent.com/assets/23485218/21127117/6e0cac76-c0a5-11e6-8109-fce62e21c148.png)
+
+See the Tutorial (PinAPL-Py Tutorial.pdf) for instructions!
+
+Experienced users can follow the Quick Start below:
+
 ## Quick Start 
 
 0. *Install docker* on your machine: https://docs.docker.com/engine/installation/
