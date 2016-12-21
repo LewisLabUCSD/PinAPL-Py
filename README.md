@@ -1,7 +1,7 @@
 # PinAPL-Py
 ![pinapl-py logo_small](https://cloud.githubusercontent.com/assets/23485218/21127117/6e0cac76-c0a5-11e6-8109-fce62e21c148.png)
 
-See the **Tutorial (PinAPL-Py Tutorial.pdf)** for instructions!
+!! See the **Tutorial (PinAPL-Py Tutorial.pdf)** for instructions !!
 
 Experienced users can follow the Quick Start below:
 
@@ -27,6 +27,5 @@ Experienced users can follow the Quick Start below:
 6. Start PinAPL-Py from the working directory using Terminal (Windows: Docker Quickstart Terminal)
 
   docker  run -v $PWD:/workingdir oharismendy/pinaplpy_docker PinAPL.py
-  
-7. Refer to the tutorial (PinAPL-Py Tutorial.pdf) for a full documentation on PinAPL-Py
+
   
