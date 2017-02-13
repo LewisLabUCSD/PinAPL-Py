@@ -24,25 +24,28 @@ def EstimateControlCounts():
     # ------------------------------------------------
     # Print header
     # ------------------------------------------------
-    print('*************************************************************')
+    print('+++++++++++++++++++++++++++++++++++')
     print('PinAPL-Py: Control Count Estimation')
-    print('*************************************************************')
+    print('+++++++++++++++++++++++++++++++++++')
     start_total = time.time()    
        
     # ------------------------------------------------
     # Get parameters
     # ------------------------------------------------
-    os.chdir('/workingdir/')
     configFile = open('configuration.yaml','r')
     config = yaml.load(configFile)
     configFile.close()
     WorkingDir = config['WorkingDir']
     LibDir = config['LibDir']
-    LibFilename = config['LibFilename']    
-    CtrlPrefix = config['CtrlPrefix']
     AnalysisDir = config['AnalysisDir']
     QCDir = config['QCDir']
-    ControlDir = AnalysisDir + 'Control/'
+    ControlDir = config['ControlDir']
+    LibFilename = config['LibFilename']    
+    LibFormat = LibFilename[-3:]
+    if LibFormat == 'tsv':
+        libsep = '\t'
+    elif LibFormat == 'csv':
+        libsep = ','    
     CtrlCounts_Filename = 'Control_GuideCounts_0.tsv'
 
     # ------------------------------------------------
@@ -50,7 +53,7 @@ def EstimateControlCounts():
     # ------------------------------------------------
     os.chdir(LibDir)
     LibCols = ['gene','ID','seq']
-    LibFile = pd.read_table(LibFilename, sep = '\t', skiprows = 1, names = LibCols)
+    LibFile = pd.read_table(LibFilename, sep = libsep, skiprows = 1, names = LibCols)
     sgIDs = list(LibFile['ID'].values)
     genes = list(LibFile['gene'].values)
     L = len(sgIDs)
@@ -63,7 +66,7 @@ def EstimateControlCounts():
     # --------------------------------    
     print('Reading control counts ...')    
     os.chdir(QCDir)
-    ControlSamples = [d for d in os.listdir(QCDir) if CtrlPrefix in d]
+    ControlSamples = [d for d in os.listdir(QCDir) if 'Control' in d]
     if len(ControlSamples) == 0:
         print('ERROR: No control sample directories found!')
     else:
@@ -91,13 +94,17 @@ def EstimateControlCounts():
 
     # -----------------------------------------------    
     # Estimate variance from negative binomial model
-    # -------------------------------- ---------------
-    x = [numpy.log(Mean[k]) for k in range(L) if Mean[k]>0 and Var[k]>Mean[k]]
-    y = [numpy.log(Var[k]-Mean[k]) for k in range(L) if Mean[k]>0 and Var[k]>Mean[k]]    
-    c = [y[k]-2*x[k] for k in range(len(x))]
-    c_0 = numpy.mean(c)
-    D = numpy.exp(c_0)
-    Var_Model = [Mean[k] + D*Mean[k]**2 for k in range(L)]    
+    # -------------------------------- --------------
+    if max(Var)>0:   
+        x = [numpy.log(Mean[k]) for k in range(L) if Mean[k]>0 and Var[k]>Mean[k]]
+        y = [numpy.log(Var[k]-Mean[k]) for k in range(L) if Mean[k]>0 and Var[k]>Mean[k]]    
+        c = [y[k]-2*x[k] for k in range(len(x))]
+        c_0 = numpy.mean(c)
+        D = numpy.exp(c_0)
+        Var_Model = [Mean[k] + D*Mean[k]**2 for k in range(L)]    
+    else: # no control replicates present
+        print('WARNING: No control replicates found!')
+        Var_Model = ['N/A' for k in range(len(Var))]
     
     # --------------------------------    
     # Write data frame
@@ -117,25 +124,31 @@ def EstimateControlCounts():
     plt.figure(figsize=(12,5))
     # Mean/Variance plot
     print('Generating dispersion plot ...')
-    Mmax = numpy.percentile(Mean_array,99)
-    x = [Mean[k] for k in range(L) if Mean[k] < Mmax]
-    y = [Var[k] for k in range(L) if Mean[k] < Mmax]
-    plt.subplot(121)
-    plt.scatter(x,y,s=2)
+    plt.subplot(121)        
+    if max(Var) > 0:
+        Mmax = numpy.percentile(Mean_array,99)
+        x = [Mean[k] for k in range(L) if Mean[k] < Mmax]
+        y = [Var[k] for k in range(L) if Mean[k] < Mmax]
+        plt.scatter(x,y,s=2)
+        plt.plot(x,x,'g--')
+    else: # no control replicates
+        plt.figtext(0.25,0.5,'N/A')
     plt.xlabel('Mean', fontsize=14)    
     plt.ylabel('Variance', fontsize=14)
-    plt.plot(x,x,'g--')
     plt.title('Read Counts (Control Samples)', fontsize=16)
     # Log Plot with Regression
     print('Generating log regression plot ...')
     plt.subplot(122)
-    logx = [numpy.log(Mean[k]) for k in range(L) if Mean[k]>0 and Var[k]>Mean[k]]
-    logy = [numpy.log(Var[k]-Mean[k]) for k in range(L) if Mean[k]>0 and Var[k]>Mean[k]]
-    plt.scatter(logx,logy,s=2)
+    if max(Var) > 0:
+        logx = [numpy.log(Mean[k]) for k in range(L) if Mean[k]>0 and Var[k]>Mean[k]]
+        logy = [numpy.log(Var[k]-Mean[k]) for k in range(L) if Mean[k]>0 and Var[k]>Mean[k]]
+        plt.scatter(logx,logy,s=2)  
+        logy_0 = [2*logx[k] + c_0 for k in range(len(logx))]
+        plt.plot(logx,logy_0,'r--')
+    else: # no control replicates
+        plt.figtext(0.75,0.5,'N/A')
     plt.xlabel('log (Mean)', fontsize=14)    
-    plt.ylabel('log (Variance - Mean)', fontsize=14)    
-    logy_0 = [2*logx[k] + c_0 for k in range(len(logx))]
-    plt.plot(logx,logy_0,'r--')
+    plt.ylabel('log (Variance - Mean)', fontsize=14)     
     plt.title('log Regression', fontsize=16)
     plt.savefig('Control_MeanVariance.png')
 

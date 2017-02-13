@@ -21,26 +21,29 @@ def TopN_Clustering():
     # ------------------------------------------------
     # Print header
     # ------------------------------------------------
-    print('*****************************************************')
+    print('++++++++++++++++++++++++++++++++++')
     print('PinAPL-Py: Sample Cluster Analysis')
-    print('*****************************************************')  
+    print('++++++++++++++++++++++++++++++++++')  
     start_total = time.time()  
     
     # ------------------------------------------------
     # Get parameters
     # ------------------------------------------------
-    os.chdir('/workingdir/')    
     configFile = open('configuration.yaml','r')
     config = yaml.load(configFile)
     configFile.close()
     WorkingDir = config['WorkingDir']
-    AnalysisDir = WorkingDir + 'Analysis/'
+    AnalysisDir = config['AnalysisDir']
     QCDir = config['QCDir']
-    ClusterDir = AnalysisDir + 'Heatmap/'
+    ClusterDir = config['HeatDir']
     ScriptsDir = config['ScriptsDir']
     ClusterBy = config['ClusterBy']
     N = config['TopN']
     delta = config['delta_p']
+    width = config['width_p']
+    height = config['height_p']
+    fontsize = config['fontsize_p']
+    marginsize = config['marginsize']
     LibDir = config['LibDir']
     LibFilename = config['LibFilename']
     
@@ -62,7 +65,7 @@ def TopN_Clustering():
     os.chdir(QCDir)
     for sample in SampleNames:
         os.chdir(sample)
-        filename = glob.glob(sample+'*GuideCounts_0.tsv')[0]        
+        filename = glob.glob('*GuideCounts_0.tsv')[0]        
         CountsFile = pd.read_table(filename, sep='\t',names=colnames)
         counts = list(CountsFile['counts'].values)
         AllCounts[sample] = counts
@@ -101,7 +104,7 @@ def TopN_Clustering():
         SampleNames = [d for d in os.listdir(QCDir) if os.path.isdir(d)]
         for sample in SampleNames:
             os.chdir(sample)
-            filename = sample+'_GuideCounts_0_sorted.tsv'
+            filename = glob.glob('*GuideCounts_0_sorted.tsv')[0]
             CountsFile = pd.read_table(filename, sep='\t')
             sgIDs = list(CountsFile['sgRNA'].values)
             TopGuides_sample = sgIDs[0:int(N-1)]
@@ -127,7 +130,7 @@ def TopN_Clustering():
         os.chdir(QCDir)
         for sample in SampleNames:
             os.chdir(sample)
-            filename = sample+'_GuideCounts_0_sorted.tsv'
+            filename = glob.glob('*_GuideCounts_0_sorted.tsv')[0]
             CountsFile = pd.read_table(filename, sep='\t')
             sgIDs = list(CountsFile['sgRNA'].values)
             TopIndex_sample = [sgIDs.index(TopGuides[k]) for k in range(T)]
@@ -147,13 +150,14 @@ def TopN_Clustering():
     # ------------------------------------------------
     # Calling R for clustering analysis
     # ------------------------------------------------
-    print('Running cluster analysis ...')
+    print('Plotting heatmap ...')
     print('--------------------------------------------')    
     # Define command and arguments
     command = 'Rscript'
     path2script = ScriptsDir+'ClusterAnalysis_Heatmap.r'
-    HeatmapFilename = 'Top'+str(N)+'_'+ClusterBy+'_Heatmap.pdf'
-    args = [ClusterDir,OutputSheetname,str(delta),HeatmapFilename]  
+    HeatmapFilename = 'Top'+str(N)+'_'+ClusterBy+'_Heatmap.png'
+    args = [ClusterDir,OutputSheetname,str(delta),HeatmapFilename,\
+            str(width),str(height),str(fontsize),str(marginsize)]  
     cmd = [command, path2script] + args    
     # Run R script
     subprocess.check_output(cmd)

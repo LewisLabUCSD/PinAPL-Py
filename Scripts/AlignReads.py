@@ -10,7 +10,7 @@ Created on Mon May 16 19:11:28 2016
 # =======================================================================
 # Imports
 from __future__ import division # floating point division by default
-import pandas as pd
+import pandas
 from Bowtie2 import RunBowtie2
 import yaml
 import os
@@ -20,14 +20,19 @@ import sys
 from collections import Counter
 from joblib import Parallel, delayed
 import multiprocessing
+from mpl_toolkits.mplot3d import axes3d
+import matplotlib
+matplotlib.use('Agg') 
+import matplotlib.pyplot as plt
 import numpy
+import pysam
 
 def CountReadsPerGene(g):
-    global UniqueGeneList
-    global LibGenes
+    global GeneList
+    global geneIDs
     global ReadsPerGuide
-    gene = UniqueGeneList[g]        
-    geneIndex = [i for i,x in enumerate(LibGenes) if x==gene]
+    gene = GeneList[g]        
+    geneIndex = [i for i,x in enumerate(geneIDs) if x==gene]
     sgCounts = [ReadsPerGuide[i] for i in geneIndex]
     g_counts = sum(sgCounts)
     return g_counts  
@@ -37,76 +42,85 @@ def MapAndCount(sample):
     # ------------------------------------------------
     # Print header
     # ------------------------------------------------
-    print('**************************************************************')
+    print('++++++++++++++++++++++++++++++++++++')
     print('PinAPL-Py: Alignment & Read Counting')
-    print('**************************************************************')  
+    print('++++++++++++++++++++++++++++++++++++')  
     start_total = time.time()   
 
     # ------------------------------------------------
     # Get parameters
     # ------------------------------------------------
-    os.chdir('/workingdir/') 
     configFile = open('configuration.yaml','r')
     config = yaml.load(configFile)
     configFile.close()
+    WorkingDir = config['WorkingDir']
     DataDir = config['DataDir']
     AnalysisDir = config['AnalysisDir']
     CutAdaptDir = config['CutAdaptDir']
     bw2Dir = config['bw2Dir']
     IndexDir = config['IndexDir']
     LibDir = config['LibDir']
+    AlnStemDir = config['AlignDir']
+    AlnDir = AlnStemDir+sample+'/'
+    QCDir = config['QCDir']
+    LogDir = QCDir+sample+'/'       
     seq_5_end = config['seq_5_end']
     seq_3_end = config['seq_3_end']
     CutErrorTol = config['CutErrorTol']
     R_min = config['R_min']
     LibFilename = config['LibFilename']
+    LibFormat = LibFilename[-3:]
+    if LibFormat == 'tsv':
+        libsep = '\t'
+    elif LibFormat == 'csv':
+        libsep = ','
     Theta = config['Theta']
     L_bw = config['L_bw']
     N_bw = config['N_bw']
     i_bw = config['i_bw']
-    N0 = config['N0']
+    N0 = 1000000
     res = config['dpi']
     AlnOutput = config['AlnOutput']
     keepCutReads = config['keepCutReads']
-    ReadsDir = DataDir
-    AlnStemDir = config['AlignDir']
-    AlnDir = AlnStemDir+sample+'/'
-    QCDir = config['QCDir']
-    LogDir = QCDir+sample+'/'       
     AlnFileSuffix = '_bw2Aln.tsv'
     GuideCount_Suffix = '_GuideCounts.tsv'
     GeneCount_Suffix = '_GeneCounts.tsv'
     NormSuffix = '_0.tsv'
+    cutadaptLog = sample+'_cutadapt_log.txt'
+    logfilename = sample+'_AlignmentResults.txt'
+    
     
     # ------------------------------------------------
+    # Get sample read file
+    # ------------------------------------------------  
+    start = time.time()   
+    os.chdir(WorkingDir)
+    DataSheet = pandas.read_excel('DataSheet.xlsx')
+    FileNames = list(DataSheet['FILENAME'].values)
+    n = len(FileNames)
+    Samples = list(DataSheet['SAMPLE NAME'].values)
+    ReadsFilename = [FileNames[j] for j in range(n) if Samples[j] == sample][0] 
+
+               
+    # ------------------------------------------------
     # Apply cutadapt to trim off the constant region
-    # ------------------------------------------------       
-    start = time.time() 
-    print('cutadapt read clipping in progress ...')        
-    os.chdir(ReadsDir)
-    ReadsFilename = glob.glob(sample+'*.fastq.gz')
-    if len(ReadsFilename) == 2:      # A file ending in *_cut.fastq is present from a previous run
-        if '_cut' in ReadsFilename[0]:
-            ReadsFilename = ReadsFilename[1]
-        else:
-            ReadsFilename = ReadsFilename[0] 
-    else:
-        ReadsFilename = ReadsFilename[0]
+    # ------------------------------------------------           
+    print('Read clipping in progress ...')        
+    os.chdir(DataDir) 
     Reads_filename = ReadsFilename[0:-9]
     ReadsCutFilename = Reads_filename + '_cut.fastq.gz'
     ReadsCut_filename = ReadsCutFilename[0:-9]
     CutAdaptCmdLine = CutAdaptDir+'cutadapt -a '+seq_5_end+'...'+seq_3_end  \
                         +' '+ReadsFilename+' -o '+ReadsCutFilename \
                         +' -e '+str(CutErrorTol) \
-                        +' --minimum-length '+str(R_min)+' > cutadapt.txt'
+                        +' --minimum-length '+str(R_min)+' > '+cutadaptLog
     os.system(CutAdaptCmdLine)
     if not os.path.exists(LogDir):
         os.makedirs(LogDir)
-    mv_cmdline = 'mv cutadapt.txt '+LogDir
+    mv_cmdline = 'mv '+cutadaptLog+' '+LogDir
     os.system(mv_cmdline)
-    print('cutadapt read clipping completed.')
-    end = time.time()
-    
+    print('Read clipping completed.')
+    end = time.time()    
     # Time stamp
     sec_elapsed = end-start
     if sec_elapsed < 60:
@@ -118,107 +132,262 @@ def MapAndCount(sample):
     else:
         time_elapsed = sec_elapsed/3600
         print('Time elapsed (Read clipping) [hours]: ' + '%.3f' % time_elapsed +'\n')    
-    
+
+
     # ----------------------------------------------
-    # Run Bowtie alignment
+    # Run alignment
     # ----------------------------------------------                  
     start = time.time()  
-    print('Bowtie2 alignment in progress ...')        
-    RunBowtie2(ReadsCut_filename,ReadsDir,AlnDir,LogDir,bw2Dir,IndexDir,Theta,L_bw,N_bw,i_bw,res)
+    print('Alignment in progress ...')        
+    RunBowtie2(ReadsCut_filename,DataDir,AlnDir,bw2Dir,IndexDir,L_bw,N_bw,i_bw)
+    print('Alignment completed.')
+    end = time.time()
+    # Time stamp
+    aln_time = end-start
+    if aln_time < 60: 
+        time_elapsed = aln_time
+        print('Time elapsed (Alignment) [secs]: ' + '%.3f' % time_elapsed +'\n')
+    elif aln_time < 3600:
+        time_elapsed = aln_time/60
+        print('Time elapsed (Alignment) [mins]: ' + '%.3f' % time_elapsed +'\n')
+    else:
+        time_elapsed = aln_time/3600
+        print('Time elapsed (Alignment) [hours]: ' + '%.3f' % time_elapsed +'\n')
+
+
+    # ------------------------------------------
+    # Extract and analyze alignments
+    # ------------------------------------------ 
+    start = time.time()
+    print('Analyzing alignment ...') 
+    # CLASSIFY ALIGNMENTS 
+    os.chdir(AlnDir)
+    bw2outputFilename = ReadsCut_filename + '_bw2output.sam'
+    bw2sam = pysam.AlignmentFile(bw2outputFilename,'rb')
+    fail = pysam.Samfile('failed_alignments.bam','wb',template=bw2sam)
+    unique = pysam.Samfile('unique_alignments.bam','wb',template=bw2sam)
+    keep = pysam.Samfile('tolerated_alignments.bam','wb',template=bw2sam)
+    toss = pysam.Samfile('ambiguous_alignments.bam','wb',template=bw2sam)
+    NFail = 0; NUnique = 0; NTol = 0; NAmb = 0
+    mapQ = list()
+    primScore = list()
+    secScore = list()
+    AlnStatus = list()
+    sgRNA_Hitlist = list()
+    for read in bw2sam.fetch():        
+        mapQ.append(read.mapping_quality)
+        # read with primary and seconday alignment
+        if read.has_tag('AS') and read.has_tag('XS'):
+            AS = read.get_tag('AS')
+            XS = read.get_tag('XS')       
+            primScore.append(AS)
+            secScore.append(XS)            
+            if XS <= AS - Theta:
+                keep.write(read); NTol += 1
+                AlnStatus.append('Tolerate')
+                sgRNA_Hitlist.append(read.reference_name)
+            else:
+                toss.write(read); NAmb += 1  
+                AlnStatus.append('Ambiguous')
+        # read with only primary alignment
+        elif read.has_tag('AS'):
+            AS = read.get_tag('AS')
+            primScore.append(AS)
+            secScore.append(0)
+            unique.write(read); NUnique += 1
+            AlnStatus.append('Unique')
+            sgRNA_Hitlist.append(read.reference_name)
+        # read with failed alignment
+        else:
+            primScore.append(0)
+            secScore.append(0)
+            fail.write(read); NFail += 1
+            AlnStatus.append('Fail')
+    bw2sam.close(); fail.close(); unique.close(); keep.close(); toss.close()   
+    os.system('samtools view failed_alignments.bam -o failed_alignments.txt')
+    os.system('samtools view unique_alignments.bam -o unique_alignments.txt')
+    os.system('samtools view tolerated_alignments.bam -o tolerated_alignments.txt')  
+    os.system('samtools view ambiguous_alignments.bam -o ambiguous_alignments.txt')  
+    os.system('rm failed_alignments.bam')
+    os.system('rm unique_alignments.bam')
+    os.system('rm tolerated_alignments.bam')
+    os.system('rm ambiguous_alignments.bam')              
+    # PRINT ANALYSIS LOGFILE
+    print('Writing alignment logfile ...')
+    NReads = NTol + NAmb + NUnique + NFail
+    FracUnique = round(NUnique/NReads*1000)/10    
+    FracTol = round(NTol/NReads*1000)/10
+    FracAmb = round(NAmb/NReads*1000)/10
+    FracFail = round(NFail/NReads*1000)/10    
+    if aln_time < 60:
+        time_elapsed = aln_time
+        time_unit = ' [secs]'
+    elif aln_time < 3600:
+        time_elapsed = aln_time/60
+        time_unit = ' [mins]'
+    else:
+        aln_time = aln_time/3600
+        time_unit = ' [hours]'
+    if not os.path.exists(LogDir):
+        os.makedirs(LogDir)      
+    os.chdir(LogDir)    
+    LogFile = open(logfilename,'w')         
+    LogFile.write(sample+' Alignment Results\n')
+    LogFile.write('**************************************\n')
+    LogFile.write('\n')
+    LogFile.write('Total Number of Reads: \t'+str(NReads)+'\n')    
+    LogFile.write('\n')    
+    LogFile.write('Number of Reads with unique Alignments: \t'+str(NUnique)+' ('+str(FracUnique)+'%)\n')
+    LogFile.write('Number of Reads above Ambiguity Tolerance: \t'+str(NTol)+' ('+str(FracTol)+'%)\n')
+    LogFile.write('---------------------------------------------------------------\n')
+    LogFile.write('Total Number of Reads matched: \t\t\t'+str(NUnique+NTol)+' ('+str(FracUnique+FracTol)+'%)\n')
+    LogFile.write('\n\n')    
+    LogFile.write('Number of Reads below Ambiguity Tolerance: \t'+str(NAmb)+' ('+str(FracAmb)+'%)\n')
+    LogFile.write('Number of Reads with failed Alignment: \t\t'+str(NFail)+' ('+str(FracFail)+'%)\n')
+    LogFile.write('---------------------------------------------------------------\n')
+    LogFile.write('Total Number of Reads discarded: \t\t'+str(NFail+NAmb)+' ('+str(FracFail+FracAmb)+'%)\n')    
+    LogFile.write('\n\n\n')    
+    LogFile.write('---- Alignment completed in %.2f' % time_elapsed + time_unit+' ----')
+    LogFile.write('\n\n\n')        
+    LogFile.write('Parameter settings\n')
+    LogFile.write('Seed Length: '+str(L_bw)+'\n')    
+    LogFile.write('Seed Mismatch: '+str(N_bw)+'\n')    
+    LogFile.write('Interval Function: '+str(i_bw)+'\n')        
+    LogFile.write('Ambiguity Cutoff: '+str(Theta)+'\n')    
+    LogFile.close()              
+    # DRAW PLOTS
+    # Plot mapping quality histogram
+    os.chdir(LogDir)
+    print('Plotting mapping quality ...')
+    maxQuality = max(mapQ)
+    plt.hist(mapQ, bins = range(maxQuality+1), align = 'left')
+    plt.title(sample+' Mapping Quality', fontsize=14, fontweight='bold')
+    plt.xlabel('Mapping Quality', fontsize=14)
+    plt.ylabel('Number of Reads', fontsize=14)
+    plt.tight_layout()
+    plt.savefig(sample+'_MappingQuality.png',dpi=res)  
+    # Alignment score barplot
+    print('Plotting alignment scores ...')
+    primScoreKeep = [primScore[k] for k in range(NReads) if AlnStatus[k] in ['Unique','Tolerate']]
+    secScoreKeep = [secScore[k] for k in range(NReads) if AlnStatus[k] in ['Unique','Tolerate']]    
+    primScoreToss = [primScore[k] for k in range(NReads) if AlnStatus[k] in ['Fail','Ambiguous']]
+    secScoreToss = [secScore[k] for k in range(NReads) if AlnStatus[k] in ['Fail','Ambiguous']]
+    # Plot bars (matched reads)
+    xedges = range(42)
+    yedges = range(42)
+    H, xedges, yedges = numpy.histogram2d(secScoreKeep, primScoreKeep, bins=(xedges, yedges))
+    Y, X = numpy.nonzero(H)
+    Z = H[Y,X]
+    Z_off = numpy.zeros(len(Y))
+    dX = numpy.ones(len(X))
+    dY = numpy.ones(len(Y))
+    # Plot bars (discarded reads)
+    h, xedges, yedges = numpy.histogram2d(secScoreToss, primScoreToss, bins=(xedges, yedges))
+    y, x = numpy.nonzero(h)
+    z = h[y,x]
+    z_off = numpy.zeros(len(y))
+    dx = numpy.ones(len(x))
+    dy = numpy.ones(len(y))
+    # Show plot    
+    fig = plt.figure()
+    ax = fig.gca(projection='3d')
+    ax.bar3d(X,Y,Z_off,dX,dY,Z,color='#00FF00')
+    green_proxy = plt.Rectangle((0, 0), 1, 1, fc='#00FF00')
+    ax.bar3d(x,y,z_off,dx,dy,z,color='#FF3333')
+    red_proxy = plt.Rectangle((0, 0), 1, 1, fc='#FF3333')
+    ax.legend([green_proxy,red_proxy],['Matched','Discarded'],loc='upper left')
+    plt.suptitle(sample+' Alignment Scores', fontsize=14, fontweight='bold')
+    ax.set_xlabel('Primary Alignment Score')
+    ax.set_ylabel('Secondary Alignment Score')
+    ax.set_zlabel('Number of Reads')
+    plt.tight_layout()
+    plt.savefig(sample+'_AlignmentScores.png',dpi=res)        
+    print('Alignment analysis completed.')  
     end = time.time()
     # Time stamp
     sec_elapsed = end-start
     if sec_elapsed < 60: 
         time_elapsed = sec_elapsed
-        print('Time elapsed (Alignment & Processing) [secs]: ' + '%.3f' % time_elapsed +'\n')
+        print('Time elapsed (Alignment analysis) [secs]: ' + '%.3f' % time_elapsed +'\n')
     elif sec_elapsed < 3600:
         time_elapsed = sec_elapsed/60
-        print('Time elapsed (Alignment & Processing) [mins]: ' + '%.3f' % time_elapsed +'\n')
+        print('Time elapsed (Alignment analysis) [mins]: ' + '%.3f' % time_elapsed +'\n')
     else:
         time_elapsed = sec_elapsed/3600
-        print('Time elapsed (Alignment & Processing) [hours]: ' + '%.3f' % time_elapsed +'\n')
+        print('Time elapsed (Alignment analysis) [hours]: ' + '%.3f' % time_elapsed +'\n')
+        
     
     # --------------------------------------
     # Get read counts
     # --------------------------------------
     start = time.time()    
-    print('Reads counting in progress ...')
+    print('Read counting in progress ...')
     # Read library
     os.chdir(LibDir)
     LibCols = ['gene','ID','seq']
-    LibFile = pd.read_table(LibFilename, sep = '\t', skiprows = 1, names = LibCols)
+    LibFile = pandas.read_table(LibFilename, sep = libsep, skiprows = 1, names = LibCols)
     sgIDs = list(LibFile['ID'].values)
-    N_Guides = len(sgIDs)
-    global LibGenes
-    LibGenes = list(LibFile['gene'].values)
-    N_Genes = len(set(LibGenes))
-    # Read alignment file
-    os.chdir(AlnDir)
-    AlnFilename = ReadsCut_filename+AlnFileSuffix
-    colnames = ['sgID','mapping_quality']
-    AlnFile = pd.read_table(AlnFilename, sep = '\t', names = colnames)
-    N_Reads = len(AlnFile)
-    IDRead = list(AlnFile['sgID'].values) 
+    L = len(sgIDs)
+    global geneIDs
+    geneIDs = list(LibFile['gene'].values)
+    G = len(set(geneIDs))
+    # Read counts per sgRNA
+    print('Counting reads per sgRNA ...')
     ReadCounts = Counter()
-    for ID in IDRead:
-        ReadCounts[ID] += 1
+    for sgRNA in sgRNA_Hitlist:
+        ReadCounts[sgRNA] += 1
     global ReadsPerGuide
     ReadsPerGuide = list()
-    for ID in sgIDs:
-        ReadsPerGuide.append(ReadCounts[ID])    
-    
-    # --------------------------------------
-    # Write count files
-    # --------------------------------------
-    os.chdir(LogDir)     
-    # Read counts per sgRNA in library
-    print('Counting reads per sgRNA ...')
-    GuideCountsFilename = Reads_filename + GuideCount_Suffix
+    for sgRNA in sgIDs:
+        ReadsPerGuide.append(ReadCounts[sgRNA])        
+    os.chdir(LogDir)         
+    GuideCountsFilename = sample + GuideCount_Suffix
     GuideCounts = open(GuideCountsFilename,'w')
-    for k in range(N_Guides):
-        GuideCounts.write(sgIDs[k] + '\t'+ LibGenes[k] + '\t' + str(ReadsPerGuide[k]) + '\n')
+    for k in range(L):
+        GuideCounts.write(str(sgIDs[k]) + '\t'+ str(geneIDs[k]) + '\t' + str(ReadsPerGuide[k]) + '\n')
     GuideCounts.close()
     # Read counts per gene in library       
     print('Counting reads per gene ...')   
-    GeneCountsFilename = Reads_filename + GeneCount_Suffix
-    GeneCounts = open(GeneCountsFilename,'w')
-    global UniqueGeneList
-    UniqueGeneList = list(set(LibGenes))   
-    G = len(UniqueGeneList)  
+    global GeneList
+    GeneList = list(set(geneIDs))   
+    G = len(GeneList)  
     num_cores = multiprocessing.cpu_count()
     ReadsPerGene = Parallel(n_jobs=num_cores)(delayed(CountReadsPerGene)(g) for g in range(G))  
+    GeneCountsFilename = sample + GeneCount_Suffix
+    GeneCounts = open(GeneCountsFilename,'w')
     for g in range(G):
-        GeneCounts.write(UniqueGeneList[g] + '\t' + str(ReadsPerGene[g]) + '\n')
+        GeneCounts.write(str(GeneList[g]) + '\t' + str(ReadsPerGene[g]) + '\n')
     GeneCounts.close()
     # Normalization    
     print('Normalizing read counts ...')
     GuideCounts0_Filename = GuideCountsFilename[0:-4] + NormSuffix
     GuideCounts0 = open(GuideCounts0_Filename,'w')
     ReadsPerGuide_0 = list()
-    for k in range(N_Guides):      
-        ReadsPerGuide_0.append(int(numpy.ceil(ReadsPerGuide[k]/N_Reads*N0)))
-        GuideCounts0.write(sgIDs[k] + '\t' + LibGenes[k] + '\t' + str(ReadsPerGuide_0[k]) + '\n')
+    for k in range(L):      
+        ReadsPerGuide_0.append(int(numpy.ceil(ReadsPerGuide[k]/NReads*N0)))
+        GuideCounts0.write(str(sgIDs[k]) + '\t' + str(geneIDs[k]) + '\t' + str(ReadsPerGuide_0[k]) + '\n')
     GuideCounts0.close()
     GeneCounts0_Filename = GeneCountsFilename[0:-4] + NormSuffix
     GeneCounts0 = open(GeneCounts0_Filename,'w')
     ReadsPerGene_0 = list()
     for j in range(G):    
-        ReadsPerGene_0.append(int(numpy.ceil(ReadsPerGene[j]/N_Reads*N0)))
-        GeneCounts0.write(UniqueGeneList[j] + '\t' + str(ReadsPerGene_0[j]) + '\n')
+        ReadsPerGene_0.append(int(numpy.ceil(ReadsPerGene[j]/NReads*N0)))
+        GeneCounts0.write(str(GeneList[j]) + '\t' + str(ReadsPerGene_0[j]) + '\n')
     GeneCounts0.close()        
     end = time.time()
-    print('Reads counting completed.')
+    print('Read counting completed.')
     # Time stamp
     sec_elapsed = end-start
     if sec_elapsed < 60:
         time_elapsed = sec_elapsed
-        print('Time elapsed (Reads Counting) [secs]: ' + '%.3f' % time_elapsed +'\n')
+        print('Time elapsed (Read Counting) [secs]: ' + '%.3f' % time_elapsed +'\n')
     elif sec_elapsed < 3600:
         time_elapsed = sec_elapsed/60
-        print('Time elapsed (Reads Counting) [mins]: ' + '%.3f' % time_elapsed + '\n')
+        print('Time elapsed (Read Counting) [mins]: ' + '%.3f' % time_elapsed + '\n')
     else:
         time_elapsed = sec_elapsed/3600
-        print('Time elapsed (Reads Counting) [hours]: ' + '%.3f' % time_elapsed + '\n')
+        print('Time elapsed (Read Counting) [hours]: ' + '%.3f' % time_elapsed + '\n')
+
 
     # --------------------------------------
     # Cleaning up...
@@ -226,29 +395,29 @@ def MapAndCount(sample):
     start = time.time()  
     # clipped reads file    
     if not keepCutReads:
-        os.chdir(ReadsDir)
+        os.chdir(DataDir)
         os.system('rm '+ReadsCutFilename)    
     # alignment output        
     if AlnOutput == 'Compress':
         print('Compressing raw alignment output...')
         os.chdir(AlnDir)
         # converting SAM to BAM
-        SAM_output = glob.glob(sample+'*bw2output.sam')[0]
+        SAM_output = glob.glob('*bw2output.sam')[0]
         BAM_output = SAM_output[:-3] + 'bam'
         os.system('samtools view -buSH '+SAM_output+' > '+BAM_output)
-        os.system('rm '+SAM_output)
-        # compressing SAM table
-        SAM_table = glob.glob(sample+'*alignments.txt')[0]
-        os.system('tar -cvf - '+SAM_table+' | gzip -5 - > '+sample + '_SAM_alignments.tar.gz ')
-        os.system('rm '+SAM_table)
+        os.system('rm '+SAM_output) 
+        # zipping up txt outputs
+        os.system('tar -cvf - unique_alignments.txt | gzip -5 - > unique_alignments.tar.gz')
+        os.system('tar -cvf - failed_alignments.txt | gzip -5 - > failed_alignments.tar.gz')
+        os.system('tar -cvf - tolerated_alignments.txt | gzip -5 - > tolerated_alignments.tar.gz')
+        os.system('tar -cvf - ambiguous_alignments.txt | gzip -5 - > ambiguous_alignments.tar.gz')
+        os.system('rm *.txt')
     elif AlnOutput == 'Delete':
         print('Removing raw alignment output...')
         os.chdir(AlnDir)
-        SAM_output = glob.glob(sample+'*bw2output.sam')[0]
-        SAM_table = glob.glob(sample+'*alignments.txt')[0]        
-        os.system('rm '+SAM_output+' '+SAM_table)
-    else:
-        print('Skipping raw alignment output compression/removal ...')
+        os.system('rm *')
+    elif AlnOutput == 'Keep':
+        print('Keeping raw alignment output ...')
     end = time.time()
     # Time stamp
     sec_elapsed = end-start

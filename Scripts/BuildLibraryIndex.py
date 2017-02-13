@@ -20,22 +20,26 @@ def BuildBowtieIndex():
     # ------------------------------------------------
     # Print header
     # ------------------------------------------------
-    print('**************************************************************')
+    print('++++++++++++++++++++++++++++++++++++')
     print('PinAPL-Py: Library Index Preparation')
-    print('**************************************************************')  
+    print('++++++++++++++++++++++++++++++++++++')  
     start_total = time.time()  
 
     # ------------------------------------------------
     # Get parameters
     # ------------------------------------------------
-    os.chdir('/workingdir/')    
     configFile = open('configuration.yaml','r')
     config = yaml.load(configFile)
     configFile.close()
     bw2Dir = config['bw2Dir']    
     LibDir = config['LibDir']
-    IndexDir = LibDir+'Bowtie2_Index/'
+    IndexDir = config['IndexDir']
     LibFilename = config['LibFilename']
+    LibFormat = LibFilename[-3:]
+    if LibFormat == 'tsv':
+        libsep = '\t'
+    elif LibFormat == 'csv':
+        libsep = ','
 
     # ----------------------------------
     # Convert library to fasta
@@ -43,7 +47,7 @@ def BuildBowtieIndex():
     print('Converting library to fasta format ...') 
     os.chdir(LibDir)
     LibCols = ['gene','ID','seq']
-    LibFile = pd.read_table(LibFilename, sep = '\t', skiprows = 1, names = LibCols)
+    LibFile = pd.read_table(LibFilename, sep = libsep, skiprows = 1, names = LibCols)
     seq = LibFile['seq'].values
     IDs = LibFile['ID'].values    
     with open('library.fasta','w') as library_fasta:
