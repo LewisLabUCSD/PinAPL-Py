@@ -46,6 +46,8 @@ def Repl_Scatterplot(Repl1,Repl2):
     pcorr = config['pcorr']
     delta = config['delta_s']
     NonTPrefix = config['NonTargetPrefix']
+    res = config['dpi']
+    dotsize = config['dotsize']
    
     # ------------------------------------------------
     # Reading counts from sample and control
@@ -94,9 +96,9 @@ def Repl_Scatterplot(Repl1,Repl2):
         os.makedirs(PlotDir)      
     os.chdir(PlotDir)   
     plt.figure()
-    plt.scatter(repl1_rest,repl2_rest,s=2)
+    plt.scatter(repl1_rest,repl2_rest,s=dotsize,facecolor='black',lw=0)
     if len(K_nonT)>0:
-        plt.scatter(repl1_nonT,repl2_nonT,s=2,color=(255/255,0,255/255),label='Non Targeting')
+        plt.scatter(repl1_nonT,repl2_nonT,s=dotsize,facecolor=(255/255,0,255/255),lw=0,label='Non Targeting')
     axes = plt.gca()
     x0 = axes.get_xlim()  
     plt.plot((0,x0[1]-1), (0,x0[1]-1), ls="--", color=(51/255,153/255,1))
@@ -107,7 +109,7 @@ def Repl_Scatterplot(Repl1,Repl2):
     plt.text(.6,.2,'Corr (Pearson) = '+str(round(CorrCoeffP*1000)/1000),transform=axes.transAxes) 
     plt.text(.6,.15,'Corr (Spearman) = '+str(round(CorrCoeffS*1000)/1000),transform=axes.transAxes) 
     plt.text(.6,.1,'p-val (Spearman) = '+str(round(Corr_p*1000)/1000),transform=axes.transAxes)      
-    plt.savefig(Repl1+' '+Repl2+' correlation.png', dpi=300)        
+    plt.savefig(Repl1+' '+Repl2+' correlation.png', dpi=res)        
     plt.close()
 
     # --------------------------------------

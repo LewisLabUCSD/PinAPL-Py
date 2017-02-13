@@ -47,6 +47,7 @@ def AnalyzeCounts(sample):
     ScreenType = config['ScreenType']
     max_q = config['max_q']
     QCDir = config['QCDir']
+    res = config['dpi']
     LogDir = QCDir+sample+'/' 
     logfilename = 'ReadCounts_Statistics.txt'
    
@@ -112,7 +113,7 @@ def AnalyzeCounts(sample):
     ax1.set_ylabel('Cumulative Fraction of Reads', fontsize=12)
     ax1.set_title('Read Disparity (Genes)', fontsize=12, fontweight='bold')     
     ax1.text(.1,.8,'Gini coefficient: '+str((round(GiniIndex_g*1000)/1000)),fontsize=14)    
-    plt.savefig('ReadCounts_LorenzCurves.png')
+    plt.savefig('ReadCounts_LorenzCurves.png',dpi=res)
    
     # --------------------------------------
     # Boxplots & Histograms
@@ -158,7 +159,7 @@ def AnalyzeCounts(sample):
     ax3.set_xlabel('Reads per Gene', fontsize=12)
     ax3.set_ylabel('Number of Genes', fontsize=12)
     plt.tight_layout()
-    plt.savefig('ReadCounts_Distribution.png')
+    plt.savefig('ReadCounts_Distribution.png',dpi=res)
     
     # --------------------------------------------
     # Counts distribution

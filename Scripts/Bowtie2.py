@@ -26,7 +26,7 @@ def BuildIndex(LibFastA,IndexDir,bw2Dir):
     bw2_cmdline = bw2Dir+'bowtie2-build -f library.fasta Library'
     os.system(bw2_cmdline)
 
-def RunBowtie2(ReadsCut_filename,ReadsDir,AlnDir,LogDir,bw2Dir,IndexDir,Theta,L_bw,N_bw,i_bw):   
+def RunBowtie2(ReadsCut_filename,ReadsDir,AlnDir,LogDir,bw2Dir,IndexDir,Theta,L_bw,N_bw,i_bw,res):   
     # ------------------------------------------    
     # Set output parameters
     # ------------------------------------------    
@@ -189,7 +189,7 @@ def RunBowtie2(ReadsCut_filename,ReadsDir,AlnDir,LogDir,bw2Dir,IndexDir,Theta,L_
     plt.suptitle('Bowtie2 Mapping Quality', fontsize=16, fontweight='bold')
     plt.xlabel('Mapping Quality', fontsize=14)
     plt.ylabel('Number of Reads', fontsize=14)
-    plt.savefig('Bowtie2_MappingQuality_Hist.png')  
+    plt.savefig('Bowtie2_MappingQuality_Hist.png',dpi=res)  
     # Alignment score barplot
     print('Generating alignment score barplot...')
     AlnPrimAcc = [AlnPrimScore[k] for k in range(NReads) if AlnStatus[k] in ['Unique','Tolerate']]
@@ -224,4 +224,4 @@ def RunBowtie2(ReadsCut_filename,ReadsDir,AlnDir,LogDir,bw2Dir,IndexDir,Theta,L_
     ax.set_xlabel('Primary Alignment Score')
     ax.set_ylabel('Secondary Alignment Score')
     ax.set_zlabel('Number of Reads')
-    plt.savefig('Bowtie2_AlignmentScores.png')
+    plt.savefig('Bowtie2_AlignmentScores.png',dpi=res)
