@@ -51,6 +51,7 @@ def PrepareHitList(sample):
     pcorr = config['pcorr']
     VarEst = config['VarEst']  
     SheetFormat = config['HitListFormat']
+    delta = config['delta_d']
     
     # --------------------------------
     # Read control and sample data
@@ -79,12 +80,7 @@ def PrepareHitList(sample):
     # -----------------------------------------------
     # Compute fold change (compared to control)
     print('Computing fold changes ...')
-    fc = list()
-    for k in range(L):
-        if mu[k] > 0:
-            fc.append(x[k]/mu[k])
-        else:
-            fc.append(-1)               
+    fc = [(x[k]+delta)/(mu[k]+delta) for k in range(L)]
     # Compute negative binomial p-values
     if max(sigma2) > 0: 
         print('Computing p-values ...')
@@ -138,15 +134,15 @@ def PrepareHitList(sample):
                                      'counts [cpm]': [x[k] for k in range(L)],
                                      'control mean [cpm]': [np.rint(mu[k]) for k in range(L)],
                                      'control stdev [cpm]': [np.rint(np.sqrt(sigma2[k])) for k in range(L)],
-                                     'fold change': [round(fc[k]*100)/100 for k in range(L)],   
+                                     'fold change': [fc[k] for k in range(L)],   
                                      'NB_pval': ['%.2E' % Decimal(NBpval[k]) for k in range(L)],
                                      'significant': [str(significant[k]) for k in range(L)]},
                             columns = ['sgRNA','gene','counts [cpm]','control mean [cpm]',\
                             'control stdev [cpm]','fold change','NB_pval','significant'])
     if ScreenType == 'enrichment':
-        Results_df_0 = Results_df.sort_values(['significant','counts [cpm]'],ascending=[0,0])                
+        Results_df_0 = Results_df.sort_values(['significant','fold change'],ascending=[0,0])                
     elif ScreenType == 'depletion':
-        Results_df_0 = Results_df.sort_values(['significant','counts [cpm]'],ascending=[0,1])            
+        Results_df_0 = Results_df.sort_values(['significant','fold change'],ascending=[0,1])            
     if SheetFormat == 'tsv':
         ListFilename = sample+'_'+str(alpha)+'_'+pcorr+'_sgRNAList.tsv'
         Results_df_0.to_csv(ListFilename, sep = '\t', index = False)

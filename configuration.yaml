@@ -6,8 +6,8 @@
 # ***********************************************************************
 
 # PROJECT PARAMETERS
-ScreenType: 'enrichment'                    # type of screen ['enrichment'/'depletion']
-LibFilename: 'GeCKOv2_library.tsv'            # filename of library spreadsheet  
+ScreenType: 'depletion'                    # type of screen ['enrichment'/'depletion']
+LibFilename: 'GeCKOv2_Mouse.csv'            # filename of library spreadsheet  
 seq_5_end: 'TCTTGTGGAAAGGACGAAACACCG'       # sequence 5' of sgRNA in read
 seq_3_end: 'GTTTTAGAGCTAGAAATAGCAAGTT'       # sequence 3' of sgRNA in read
 NonTargetPrefix: 'NonTargeting'             # prefix for non-targeting sgRNAs in library (keep at default if none present)
@@ -15,7 +15,7 @@ sgRNAsPerGene: 6                       # number of sgRNAs targeting each gene (e
                                        #    ONLY IMPORTANT IF 'ES' is chosen for gene ranking method !
 
 # ANALYSIS OPTIONS
-AlnOutput: 'Compress'                  # keep raw alignment output? ['Keep'/'Compress'/'Delete']
+AlnOutput: 'Delete'                  # keep raw alignment output? ['Keep'/'Compress'/'Delete']
 keepCutReads: False                    # keep files containing trimmed reads? ['True'/'False']
 VarEst: 'model'                        # method for count variance estimation ['model'/'sample')]
 GeneMetric: 'aRRA'                    # metric for gene ranking ['aRRA'/'STARS'/'ES']
@@ -38,6 +38,8 @@ Np_ES: 10                             # number of permutations for gene ranking 
 Np_aRRA: 100                         # number of permutations for gene ranking analysis (aRRA)
 Np_STARS: 10                          # number of permutations for gene ranking analysis (STARS)
 thr_STARS: 10                          # Threshold percentage for STARS analysis
+delta_d: 0.01                         # count shift for computing fold changes (avoid division by zero)
+
 
 # VISUALIZATION PARAMETERS
 # Scatterplots
@@ -53,24 +55,24 @@ fontsize_p: 14                          # fontsize in heatmap image
 marginsize: 7                           # size of margin in heatmap image (increase if sample names are clipped)
 
 # DIRECTORIES
-WorkingDir: '/workingdir/'
-DataDir: '/workingdir/Data/'
-LibDir: '/workingdir/Library/'
-IndexDir: '/workingdir/Library/Bowtie2_Index/'
-ScriptsDir: '/opt/PinAPL-Py/Scripts/'
-AlignDir: '/workingdir/Alignments/'
-AnalysisDir: '/workingdir/Analysis/'
-HitDir: '/workingdir/Analysis/Hit Lists'
-GeneDir: '/workingdir/Analysis/Gene Rankings'
-ControlDir: '/workingdir/Analysis/Control/'
-HeatDir: '/workingdir/Analysis/Heatmap/'
-QCDir: '/workingdir/Analysis/QC/'
-ScatterDir: '/workingdir/Analysis/Scatterplots/'
-EffDir: '/workingdir/Analysis/sgRNA Efficiency/'
-DepthDir: '/workingdir/Analysis/Read Depth/' 
-bw2Dir: '/usr/bin/'
-CutAdaptDir: '/root/.local/bin/'   
-STARSDir: '/opt/PinAPL-Py/Scripts/STARS_mod/'
+WorkingDir: '/home/philipp/Documents/Projects/PinAPL-Py/'
+DataDir: '/home/philipp/Documents/Projects/PinAPL-Py/Data/'
+LibDir: '/home/philipp/Documents/Projects/PinAPL-Py/Library/'
+IndexDir: '/home/philipp/Documents/Projects/PinAPL-Py/Library/Bowtie2_Index/'
+ScriptsDir: '/home/philipp/Documents/Projects/PinAPL-Py/Scripts/'
+AlignDir: '/home/philipp/Documents/Projects/PinAPL-Py/Alignments/'
+AnalysisDir: '/home/philipp/Documents/Projects/PinAPL-Py/Analysis/'
+HitDir: '/home/philipp/Documents/Projects/PinAPL-Py/Analysis/Hit Lists'
+GeneDir: '/home/philipp/Documents/Projects/PinAPL-Py/Analysis/Gene Rankings'
+ControlDir: '/home/philipp/Documents/Projects/PinAPL-Py/Analysis/Control/'
+HeatDir: '/home/philipp/Documents/Projects/PinAPL-Py/Analysis/Heatmap/'
+QCDir: '/home/philipp/Documents/Projects/PinAPL-Py/Analysis/QC/'
+ScatterDir: '/home/philipp/Documents/Projects/PinAPL-Py/Analysis/Scatterplots/'
+EffDir: '/home/philipp/Documents/Projects/PinAPL-Py/Analysis/sgRNA Efficiency/'
+DepthDir: '/home/philipp/Documents/Projects/PinAPL-Py/Analysis/Read Depth/' 
+bw2Dir: '/home/philipp/Programs/bowtie2-2.2.8/'
+CutAdaptDir: '/home/philipp/Programs/cutadapt/'   
+STARSDir: '/home/philipp/Documents/Projects/Python/STARS_v1.2/'
 
 # SCRIPT FILENAMES
 script00: 'BuildLibraryIndex'
