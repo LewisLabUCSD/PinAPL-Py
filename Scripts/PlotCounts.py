@@ -64,8 +64,8 @@ def GOI_Scatterplot(sample,GOI='None'):
     sgIDs = list(HitList['sgRNA'].values)
     genes = list(HitList['gene'].values)  
     L = len(sgIDs)
-    sample_counts = list(HitList['counts [cpm]'].values)
-    control_counts = list(HitList['control mean [cpm]'].values)
+    sample_counts = list(HitList['counts [norm.]'].values)
+    control_counts = list(HitList['control mean [norm.]'].values)
     sig = list(HitList['significant'].values)  
     # Log transformation
     print('Log'+str(logbase)+' transformation ...')
@@ -114,8 +114,8 @@ def GOI_Scatterplot(sample,GOI='None'):
         plt.suptitle(sample+': '+GOI+' counts', fontsize=14, fontweight='bold')
     else:
         plt.suptitle(sample+': '+' counts', fontsize=14, fontweight='bold')
-    plt.xlabel('mean log'+str(logbase)+' cpm control', fontsize=12)    
-    plt.ylabel('log'+str(logbase)+' cpm '+sample, fontsize=12)
+    plt.xlabel('mean log'+str(logbase)+' counts control [norm.]', fontsize=12)    
+    plt.ylabel('log'+str(logbase)+' counts '+sample+' [norm.]', fontsize=12)
     plt.legend(loc='upper left', prop={'size':10})
     if annotate:
         for label, x, y in zip(goi_sgIDs,control_goi,sample_goi):
@@ -142,7 +142,7 @@ def GOI_Scatterplot(sample,GOI='None'):
                 print(println)
 
     # --------------------------------------
-    # Final time stamp
+    # Time stamp
     # --------------------------------------        
     end_total = time.time()
     # Final time stamp

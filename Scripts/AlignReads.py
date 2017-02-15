@@ -85,7 +85,6 @@ def MapAndCount(sample):
     AlnFileSuffix = '_bw2Aln.tsv'
     GuideCount_Suffix = '_GuideCounts.tsv'
     GeneCount_Suffix = '_GeneCounts.tsv'
-    NormSuffix = '_0.tsv'
     cutadaptLog = sample+'_cutadapt_log.txt'
     logfilename = sample+'_AlignmentResults.txt'
     
@@ -357,23 +356,7 @@ def MapAndCount(sample):
     GeneCounts = open(GeneCountsFilename,'w')
     for g in range(G):
         GeneCounts.write(str(GeneList[g]) + '\t' + str(ReadsPerGene[g]) + '\n')
-    GeneCounts.close()
-    # Normalization    
-    print('Normalizing read counts ...')
-    GuideCounts0_Filename = GuideCountsFilename[0:-4] + NormSuffix
-    GuideCounts0 = open(GuideCounts0_Filename,'w')
-    ReadsPerGuide_0 = list()
-    for k in range(L):      
-        ReadsPerGuide_0.append(int(numpy.ceil(ReadsPerGuide[k]/NReads*N0)))
-        GuideCounts0.write(str(sgIDs[k]) + '\t' + str(geneIDs[k]) + '\t' + str(ReadsPerGuide_0[k]) + '\n')
-    GuideCounts0.close()
-    GeneCounts0_Filename = GeneCountsFilename[0:-4] + NormSuffix
-    GeneCounts0 = open(GeneCounts0_Filename,'w')
-    ReadsPerGene_0 = list()
-    for j in range(G):    
-        ReadsPerGene_0.append(int(numpy.ceil(ReadsPerGene[j]/NReads*N0)))
-        GeneCounts0.write(str(GeneList[j]) + '\t' + str(ReadsPerGene_0[j]) + '\n')
-    GeneCounts0.close()        
+    GeneCounts.close()        
     end = time.time()
     print('Read counting completed.')
     # Time stamp

@@ -135,9 +135,9 @@ def PrepareGeneList(sample):
     # ------------------------------------------------
     # Print header
     # ------------------------------------------------
-    print('+++++++++++++++++++++++++++++++')
-    print('PinAPL-Py: List Candidate Genes')
-    print('+++++++++++++++++++++++++++++++')
+    print('++++++++++++++++++++++++++++++++')
+    print('PinAPL-Py: Gene Ranking Analysis')
+    print('++++++++++++++++++++++++++++++++')
     start_total = time.time()    
 
     # ------------------------------------------------
@@ -173,7 +173,7 @@ def PrepareGeneList(sample):
     sgIDs = list(HitList['sgRNA'].values)
     global genes
     genes = list(HitList['gene'].values)
-    counts = list(HitList['counts [cpm]'].values)
+    counts = list(HitList['counts [norm.]'].values)
     global NB_pval
     NB_pval = list(HitList['NB_pval'].values)
     sig = list(HitList['significant'].values)

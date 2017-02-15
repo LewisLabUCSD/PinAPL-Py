@@ -44,46 +44,40 @@ def TopN_Clustering():
     height = config['height_p']
     fontsize = config['fontsize_p']
     marginsize = config['marginsize']
-    LibDir = config['LibDir']
-    LibFilename = config['LibFilename']
+    ScreenType = config['ScreenType']
     
     # ------------------------------------------------
-    # compute variance across samples
-    # ------------------------------------------------
-    # Read sgRNA IDs    
-    os.chdir(LibDir)    
-    LibCols = ['gene','ID','seq']
-    LibFile = pd.read_table(LibFilename, sep = '\t', skiprows = 1, names = LibCols)
-    genes = list(LibFile['gene'].values)
-    sgIDs = list(LibFile['ID'].values)
     # Dataframe containing all counts 
+    # ------------------------------------------------
     print('Loading read counts ...')
     os.chdir(QCDir)
     SampleNames = [d for d in os.listdir(QCDir) if os.path.isdir(d)]
-    AllCounts = pd.DataFrame()  
-    colnames = ['sgID','gene','counts']
+    AllCounts = pd.DataFrame()    
+    colnames = ['sgRNA','gene','counts']
     os.chdir(QCDir)
     for sample in SampleNames:
         os.chdir(sample)
         filename = glob.glob('*GuideCounts_0.tsv')[0]        
         CountsFile = pd.read_table(filename, sep='\t',names=colnames)
-        counts = list(CountsFile['counts'].values)
+        sgIDs = list(CountsFile['sgRNA'].values)        
+        genes = list(CountsFile['gene'].values)                
+        counts = list(CountsFile['counts'].values)    
+        AllCounts['sgRNA'] = sgIDs 
+        AllCounts['gene'] = genes         
         AllCounts[sample] = counts
         os.chdir(QCDir)
-    # Compute variance
-    print('Computing variance ...')
-    L = len(AllCounts)
-    AC = AllCounts.as_matrix()
-    Var = [numpy.var(AC[k,]) for k in range(L)]
 
     # ------------------------------------------------
     # Sort read counts
     # ------------------------------------------------    
     if ClusterBy == 'variance':
+        # Compute variance
+        print('Computing variance ...')
+        L = len(sgIDs)
+        AC = AllCounts.iloc[:,2:].as_matrix()
+        Var = [numpy.var(AC[k,]) for k in range(L)]
         # Insert into dataframe
-        AllCounts.insert(0,'sgID',sgIDs)
-        AllCounts.insert(1,'gene',genes)
-        AllCounts.insert(len(AllCounts.columns),'Variance',Var)
+        AllCounts['Variance'] = Var
         # Sort by highest variance
         print('Extracting top '+str(N)+' most variable sgRNAs ...')
         Q = AllCounts.sort_values('Variance',ascending=False)    
@@ -96,50 +90,42 @@ def TopN_Clustering():
         os.chdir(ClusterDir)
         Q.to_csv(OutputSheetname,sep='\t',index=False)            
     elif ClusterBy == 'counts':
-        # Find top N guides
-        print('Reading top '+str(N)+' counts ...')      
         TopGuides = set()  
-        # Assembling top N guides from treatment samples       
-        os.chdir(QCDir)
-        SampleNames = [d for d in os.listdir(QCDir) if os.path.isdir(d)]
+        # Assembling top N guides        
         for sample in SampleNames:
-            os.chdir(sample)
-            filename = glob.glob('*GuideCounts_0_sorted.tsv')[0]
-            CountsFile = pd.read_table(filename, sep='\t')
-            sgIDs = list(CountsFile['sgRNA'].values)
-            TopGuides_sample = sgIDs[0:int(N-1)]
+            print('Reading top '+str(N)+' sgRNAs in sample '+sample+' ...')     
+            SampleCounts = AllCounts[['sgRNA',sample]]
+            if ScreenType == 'enrichment':
+                SampleCounts = SampleCounts.sort_values([sample],ascending=[0])
+            elif ScreenType == 'depletion':
+                SampleCounts = SampleCounts.sort_values(sample,ascending=[1])
+            SampleIDs = list(SampleCounts['sgRNA'].values)
+            TopGuides_sample = SampleIDs[0:int(N-1)]
             TopGuides = set.union(TopGuides,TopGuides_sample)
             os.chdir(QCDir)
-        # Assembling top N guides from control samples
         TopGuides = list(TopGuides)    
         T = len(TopGuides)      
         # Establish data frame
-        print('Writing data frame ...')
-        os.chdir(LibDir)
-        LibCols = ['gene','ID','seq']
-        LibFile = pd.read_table(LibFilename, sep = '\t', skiprows = 1, names = LibCols)
-        genes = list(LibFile['gene'].values)
-        sgIDs = list(LibFile['ID'].values)
+        print('Assembling data frame ...')
         TopIndex = [sgIDs.index(TopGuides[k]) for k in range(T)]
         TopGenes = [genes[TopIndex[k]] for k in range(T)]
-        TopVar = [Var[TopIndex[k]] for k in range(T)]
-        TopGuides_df = pd.DataFrame(data = {'sgID': [TopGuides[k] for k in range(T)],
+        TopGuides_df = pd.DataFrame(data = {'sgRNA': [TopGuides[k] for k in range(T)],
                                             'gene': [TopGenes[k] for k in range(T)]},
-                                    columns = ['sgID','gene'])  
+                                    columns = ['sgRNA','gene'])  
         # Extract counts for top guides and write into data frame
-        os.chdir(QCDir)
-        for sample in SampleNames:
-            os.chdir(sample)
-            filename = glob.glob('*_GuideCounts_0_sorted.tsv')[0]
-            CountsFile = pd.read_table(filename, sep='\t')
-            sgIDs = list(CountsFile['sgRNA'].values)
-            TopIndex_sample = [sgIDs.index(TopGuides[k]) for k in range(T)]
-            counts = list(CountsFile['counts'].values)
+        for sample in SampleNames:   
+            SampleCounts = AllCounts[['sgRNA',sample]]            
+            if ScreenType == 'enrichment':
+                SampleCounts = SampleCounts.sort_values([sample],ascending=[0])
+            elif ScreenType == 'depletion':
+                SampleCounts = SampleCounts.sort_values(sample,ascending=[1])           
+            SampleIDs = list(SampleCounts['sgRNA'].values)
+            TopIndex_sample = [SampleIDs.index(TopGuides[k]) for k in range(T)]
+            counts = list(SampleCounts[sample].values)
             TopCounts = [counts[TopIndex_sample[k]] for k in range(T)]
             TopGuides_df[sample] = TopCounts
-            os.chdir(QCDir)
         # Write dataframe  
-        TopGuides_df.insert(len(TopGuides_df.columns),'Variance',TopVar)
+        TopGuides_df[' '] = ' '
         OutputSheetname = 'Top'+str(N)+'_Counts.tsv'
         if not os.path.exists(ClusterDir):
             os.makedirs(ClusterDir)  

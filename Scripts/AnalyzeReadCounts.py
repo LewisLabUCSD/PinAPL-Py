@@ -70,21 +70,6 @@ def AnalyzeCounts(sample):
  
 
     # --------------------------------------
-    # Rank counts
-    # --------------------------------------
-    print('Ranking sgRNA counts ...')    
-    Results_df = pd.DataFrame(data = {'sgRNA': [sgID[k] for k in range(L)],
-                                     'gene': [gene[k] for k in range(L)],
-                                     'counts': [ReadsPerGuide[k] for k in range(L)]},
-                                    columns = ['sgRNA','gene','counts'])
-    if ScreenType == 'enrichment':
-        Results_df_0 = Results_df.sort_values(['counts'],ascending=[0])
-    else:
-        Results_df_0 = Results_df.sort_values(['counts'],ascending=[1])
-    Results_Filename = sample+'_GuideCounts_0_sorted.tsv'
-    Results_df_0.to_csv(Results_Filename,sep='\t',index=False)
-    
-    # --------------------------------------
     # Lorenz Curve
     # --------------------------------------
     print('Computing Gini coefficients ... ')    
@@ -131,13 +116,13 @@ def AnalyzeCounts(sample):
     plt.setp(bp['boxes'], color='black')
     ax0.set_title('Reads per sgRNA', fontsize=12)
     ax0.set_xticks([''])
-    ax0.set_ylabel('counts per mio [cpm]', fontsize=11)
+    ax0.set_ylabel('counts [norm.]', fontsize=11)
     # Reads per gene: Boxplot
     bp = ax2.boxplot(ReadsPerGene, showfliers = False) # No outliers
     plt.setp(bp['boxes'], color='black')
     ax2.set_title('Reads per Gene', fontsize=12)
     ax2.set_xticks([''])
-    ax2.set_ylabel('counts per mio [cpm]', fontsize=12)
+    ax2.set_ylabel('counts [norm.]', fontsize=12)
     print('Generating histograms...')
     # Reads per guide: Histogram
     Counts_noFliers = list()
@@ -147,7 +132,7 @@ def AnalyzeCounts(sample):
             Counts_noFliers.append(count)
     ax1.hist(Counts_noFliers, bins = range(max_count+2), align = 'left')
     ax1.set_title(sample+' Read Distribution', fontsize=12)
-    ax1.set_xlabel('cpm per sgRNA', fontsize=12)
+    ax1.set_xlabel('counts [norm.] per sgRNA', fontsize=12)
     ax1.set_ylabel('Number of sgRNAs', fontsize=12)
     # Reads per gene: Histogram
     Counts_noFliers = list()
@@ -157,7 +142,7 @@ def AnalyzeCounts(sample):
             Counts_noFliers.append(count)
     ax3.hist(Counts_noFliers, bins = range(max_count+2), align = 'left')
     ax3.set_title(sample+' Read Distribution', fontsize=12)
-    ax3.set_xlabel('cpm per Gene', fontsize=12)
+    ax3.set_xlabel('counts [norm.] per Gene', fontsize=12)
     ax3.set_ylabel('Number of Genes', fontsize=12)
     plt.tight_layout()
     plt.savefig(sample+'_ReadCount_Distribution.png',dpi=res)
@@ -191,7 +176,7 @@ def AnalyzeCounts(sample):
     LogFile.write(sample+' Read Counts Distribution:\n')
     LogFile.write('***********************************\n')
     LogFile.write('\n')
-    LogFile.write('Read Counts per sgRNA [cpm]\n')    
+    LogFile.write('Read Counts per sgRNA [norm.]\n')    
     LogFile.write('------------------------------------\n')
     LogFile.write('Median:\t\t\t'+str(guide_m)+'\n')
     LogFile.write('Standard Deviation:\t'+str(guide_sd)+'\n')    
@@ -202,7 +187,7 @@ def AnalyzeCounts(sample):
     LogFile.write('sgRNA Representation:\t'+str(guide_pres)+' ('+str(guide_pres100)+'%)\n')
     LogFile.write('Gini coefficient:\t'+str(GiniIndex_u)+'\n')
     LogFile.write('\n')
-    LogFile.write('Read Counts per Gene [cpm]\n')    
+    LogFile.write('Read Counts per Gene [norm.]\n')    
     LogFile.write('------------------------------------\n')
     LogFile.write('Median:\t\t\t'+str(gene_m)+'\n')
     LogFile.write('Standard Deviation:\t'+str(gene_sd)+'\n')    

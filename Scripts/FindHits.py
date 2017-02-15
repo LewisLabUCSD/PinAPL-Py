@@ -29,9 +29,9 @@ def PrepareHitList(sample):
     # ------------------------------------------------
     # Print header
     # ------------------------------------------------
-    print('++++++++++++++++++++++++++++++++')
-    print('PinAPL-Py: List Candidate sgRNAs')
-    print('++++++++++++++++++++++++++++++++')
+    print('++++++++++++++++++++++++++++++++++++++++++++++')
+    print('PinAPL-Py: sgRNA Enrichment/Depletion Analysis')
+    print('++++++++++++++++++++++++++++++++++++++++++++++')
     start_total = time.time()
 
     # ------------------------------------------------
@@ -112,7 +112,9 @@ def PrepareHitList(sample):
                     p = mu[i]/sigma2[i]
                     NBpval.append(scipy.stats.nbinom.cdf(x[i],n,p))
                 else:
-                    NBpval.append(1)                 
+                    NBpval.append(1)  
+        else:
+            print('ERROR: Check spelling of ScreenType in configuration file!')
         # Determine critical threshold
         NBpval_corr = multipletests(NBpval,alpha,pcorr)
         significant = NBpval_corr[0]
@@ -131,14 +133,14 @@ def PrepareHitList(sample):
     print('Writing results dataframe ...')
     Results_df = pd.DataFrame(data = {'sgRNA': [sgIDs[k] for k in range(L)],
                                      'gene': [genes[k] for k in range(L)],
-                                     'counts [cpm]': [x[k] for k in range(L)],
-                                     'control mean [cpm]': [np.rint(mu[k]) for k in range(L)],
-                                     'control stdev [cpm]': [np.rint(np.sqrt(sigma2[k])) for k in range(L)],
+                                     'counts [norm.]': [x[k] for k in range(L)],
+                                     'control mean [norm.]': [np.rint(mu[k]) for k in range(L)],
+                                     'control stdev [norm.]': [np.rint(np.sqrt(sigma2[k])) for k in range(L)],
                                      'fold change': [fc[k] for k in range(L)],   
                                      'NB_pval': ['%.2E' % Decimal(NBpval[k]) for k in range(L)],
                                      'significant': [str(significant[k]) for k in range(L)]},
-                            columns = ['sgRNA','gene','counts [cpm]','control mean [cpm]',\
-                            'control stdev [cpm]','fold change','NB_pval','significant'])
+                            columns = ['sgRNA','gene','counts [norm.]','control mean [norm.]',\
+                            'control stdev [norm.]','fold change','NB_pval','significant'])
     if ScreenType == 'enrichment':
         Results_df_0 = Results_df.sort_values(['significant','fold change'],ascending=[0,0])                
     elif ScreenType == 'depletion':

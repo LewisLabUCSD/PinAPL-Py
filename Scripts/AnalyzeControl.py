@@ -36,41 +36,30 @@ def EstimateControlCounts():
     config = yaml.load(configFile)
     configFile.close()
     WorkingDir = config['WorkingDir']
-    LibDir = config['LibDir']
-    AnalysisDir = config['AnalysisDir']
     QCDir = config['QCDir']
     ControlDir = config['ControlDir']
-    LibFilename = config['LibFilename']    
-    LibFormat = LibFilename[-3:]
-    if LibFormat == 'tsv':
-        libsep = '\t'
-    elif LibFormat == 'csv':
-        libsep = ','    
     CtrlCounts_Filename = 'Control_GuideCounts_0.tsv'
 
-    # ------------------------------------------------
-    # Get library entries
-    # ------------------------------------------------
-    os.chdir(LibDir)
-    LibCols = ['gene','ID','seq']
-    LibFile = pd.read_table(LibFilename, sep = libsep, skiprows = 1, names = LibCols)
-    sgIDs = list(LibFile['ID'].values)
-    genes = list(LibFile['gene'].values)
-    L = len(sgIDs)
-    CtrlCounts_df = pd.DataFrame(data = {'sgID': sgIDs,
-                                    'gene': genes},
-                            columns = ['sgID','gene'])
-    
+   
     # --------------------------------    
     # Generate table of control counts
     # --------------------------------    
     print('Reading control counts ...')    
     os.chdir(QCDir)
     ControlSamples = [d for d in os.listdir(QCDir) if 'Control' in d]
+    os.chdir(ControlSamples[0])
+    colnames = ['sgID','gene','counts']                      
+    CountFile = pd.read_table(glob.glob('*GuideCounts_0.tsv')[0], sep='\t',names=colnames)
+    sgIDs = list(CountFile['sgID'].values)
+    genes = list(CountFile['gene'].values)
+    L = len(sgIDs)
+    CtrlCounts_df = pd.DataFrame(data = {'sgID': sgIDs,
+                                    'gene': genes},
+                            columns = ['sgID','gene'])        
     if len(ControlSamples) == 0:
         print('ERROR: No control sample directories found!')
     else:
-        colnames = ['sgID','gene','counts']        
+        os.chdir(QCDir)
         for controlsample in ControlSamples:
             os.chdir(controlsample)
             filename = glob.glob('*GuideCounts_0.tsv')[0]                          
