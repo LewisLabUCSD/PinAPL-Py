@@ -42,10 +42,10 @@ def GOI_Scatterplot(sample,GOI='None'):
     PlotDir = config['ScatterDir']
     annotate = config['scatter_annotate']
     alpha = config['alpha']
-    pcorr = config['pcorr']
     delta = config['delta_s']
     NonTPrefix = config['NonTargetPrefix']
     res = config['dpi']
+    svg = config['svg']
     dotsize = config['dotsize']
     logbase = config['logbase']
     SheetFormat = config['HitListFormat']    
@@ -100,30 +100,33 @@ def GOI_Scatterplot(sample,GOI='None'):
     if not os.path.exists(PlotDir):
         os.makedirs(PlotDir)      
     os.chdir(PlotDir)   
-    plt.figure()
-    plt.scatter(control_rest,sample_rest,s=dotsize,facecolor='black',lw=0)
-    plt.scatter(control_sig,sample_sig,s=dotsize,facecolor='green',lw=0,label='Significant')
+    plt.figure(figsize=(6,5))
+    plt.scatter(control_rest,sample_rest,s=dotsize,facecolor='black',lw=0,alpha=0.35)
+    plt.scatter(control_sig,sample_sig,s=dotsize,facecolor='green',lw=0,alpha=0.35,label='Significant')
     if GOI != 'None':
-        plt.scatter(control_goi,sample_goi,s=20,facecolor='red',lw=0,label=GOI)
+        plt.scatter(control_goi,sample_goi,s=1.5*dotsize,facecolor='red',lw=0,alpha=0.35,label=GOI)
     if len(K_nonT)>0:
-        plt.scatter(control_nonT,sample_nonT,s=dotsize,facecolor=(255/255,0,255/255),lw=0,label='Non Targeting')
+        plt.scatter(control_nonT,sample_nonT,s=dotsize,facecolor='orange',lw=0,alpha=0.75,\
+            label='Non Targeting')
     axes = plt.gca()
     x0 = axes.get_xlim()  
-    plt.plot((0,x0[1]-1), (0,x0[1]-1), ls="--", color=(51/255,153/255,1))
-    if GOI != 'None':
-        plt.suptitle(sample+': '+GOI+' counts', fontsize=14, fontweight='bold')
-    else:
-        plt.suptitle(sample+': '+' counts', fontsize=14, fontweight='bold')
-    plt.xlabel('mean log'+str(logbase)+' counts control [norm.]', fontsize=12)    
-    plt.ylabel('log'+str(logbase)+' counts '+sample+' [norm.]', fontsize=12)
+    plt.plot((x0[0],x0[1]), (x0[0],x0[1]), ls="--", color=(51/255,153/255,1))
+    plt.title(sample+' log'+str(logbase)+' counts [norm.]', fontsize=14)
+    plt.xlabel('Control (avg.)', fontsize=12)    
+    plt.ylabel(sample, fontsize=12)
     plt.legend(loc='upper left', prop={'size':10})
     if annotate:
         for label, x, y in zip(goi_sgIDs,control_goi,sample_goi):
             plt.annotate(label,xy=(x,y),color='red',fontsize=8)  
+    plt.tight_layout()
     if GOI != 'None':
         plt.savefig(sample+' '+GOI+' counts.png', dpi=res)
+        if svg:
+            plt.savefig(sample+' '+GOI+' counts.svg')
     else:
-        plt.savefig(sample+' '+' counts.png', dpi=res)        
+        plt.savefig(sample+' '+' counts.png', dpi=res)
+        if svg:
+            plt.savefig(sample+' '+' counts.svg')
     plt.close()
 
     # ------------------------------------------------

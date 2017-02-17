@@ -34,7 +34,7 @@ def TopN_Clustering():
     configFile.close()
     WorkingDir = config['WorkingDir']
     AnalysisDir = config['AnalysisDir']
-    QCDir = config['QCDir']
+    AlnQCDir = config['AlnQCDir']
     ClusterDir = config['HeatDir']
     ScriptsDir = config['ScriptsDir']
     ClusterBy = config['ClusterBy']
@@ -50,11 +50,11 @@ def TopN_Clustering():
     # Dataframe containing all counts 
     # ------------------------------------------------
     print('Loading read counts ...')
-    os.chdir(QCDir)
-    SampleNames = [d for d in os.listdir(QCDir) if os.path.isdir(d)]
+    os.chdir(AlnQCDir)
+    SampleNames = [d for d in os.listdir(AlnQCDir) if os.path.isdir(d)]
     AllCounts = pd.DataFrame()    
     colnames = ['sgRNA','gene','counts']
-    os.chdir(QCDir)
+    os.chdir(AlnQCDir)
     for sample in SampleNames:
         os.chdir(sample)
         filename = glob.glob('*GuideCounts_0.tsv')[0]        
@@ -65,7 +65,7 @@ def TopN_Clustering():
         AllCounts['sgRNA'] = sgIDs 
         AllCounts['gene'] = genes         
         AllCounts[sample] = counts
-        os.chdir(QCDir)
+        os.chdir(AlnQCDir)
 
     # ------------------------------------------------
     # Sort read counts
@@ -88,7 +88,8 @@ def TopN_Clustering():
         if not os.path.exists(ClusterDir):
            os.makedirs(ClusterDir)
         os.chdir(ClusterDir)
-        Q.to_csv(OutputSheetname,sep='\t',index=False)            
+        Q.to_csv(OutputSheetname,sep='\t',index=False)     
+        HeatmapFilename = 'Heatmap_Top'+str(N)+'_most_variable_sgRNAs.png'
     elif ClusterBy == 'counts':
         TopGuides = set()  
         # Assembling top N guides        
@@ -102,7 +103,7 @@ def TopN_Clustering():
             SampleIDs = list(SampleCounts['sgRNA'].values)
             TopGuides_sample = SampleIDs[0:int(N-1)]
             TopGuides = set.union(TopGuides,TopGuides_sample)
-            os.chdir(QCDir)
+            os.chdir(AlnQCDir)
         TopGuides = list(TopGuides)    
         T = len(TopGuides)      
         # Establish data frame
@@ -131,6 +132,7 @@ def TopN_Clustering():
             os.makedirs(ClusterDir)  
         os.chdir(ClusterDir)
         TopGuides_df.to_csv(OutputSheetname,sep='\t',index=False)
+        HeatmapFilename = 'Heatmap_combined_Top'+str(N)+'_highest_sgRNA_counts.png'
    
 
     # ------------------------------------------------
@@ -141,7 +143,6 @@ def TopN_Clustering():
     # Define command and arguments
     command = 'Rscript'
     path2script = ScriptsDir+'ClusterAnalysis_Heatmap.r'
-    HeatmapFilename = 'Top'+str(N)+'_'+ClusterBy+'_Heatmap.png'
     args = [ClusterDir,OutputSheetname,str(delta),HeatmapFilename,\
             str(width),str(height),str(fontsize),str(marginsize)]  
     cmd = [command, path2script] + args    

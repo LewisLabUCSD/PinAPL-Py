@@ -34,7 +34,7 @@ def Normalization():
     configFile = open('configuration.yaml','r')
     config = yaml.load(configFile)
     configFile.close()
-    QCDir = config['QCDir'] 
+    AlnQCDir = config['AlnQCDir']     
     DepthDir = config['DepthDir']
     delta = config['delta_d']
     norm = config['Normalization']
@@ -44,8 +44,8 @@ def Normalization():
     # ------------------------------------------------
     # Normalization
     # ------------------------------------------------        
-    os.chdir(QCDir)
-    SampleNames = [d for d in os.listdir(QCDir) if os.path.isdir(d)]
+    os.chdir(AlnQCDir)
+    SampleNames = [d for d in os.listdir(AlnQCDir) if os.path.isdir(d)]
     colnames_u = ['sgRNA','gene','counts']
     colnames_g = ['gene','counts']    
     if norm == 'cpm':
@@ -81,7 +81,7 @@ def Normalization():
                 ReadsPerGene_0 = int(numpy.ceil(ReadsPerGene[j]/N * N0))
                 GeneCounts0.write(str(geneIDs[j]) + '\t' + str(ReadsPerGene_0) + '\n')
             GeneCounts0.close()            
-            os.chdir(QCDir)
+            os.chdir(AlnQCDir)
     elif norm == 'size':
         print('Normalizing by size-factors ...')       
         # Establish data frame
@@ -96,14 +96,14 @@ def Normalization():
                                 columns = ['sgRNA','gene'])
         # Compute geometric means for all sgRNAs
         print('Computing geometric means ...')
-        os.chdir(QCDir)
+        os.chdir(AlnQCDir)
         for sample in SampleNames:
             os.chdir(sample)
             filename = glob.glob('*GuideCounts.tsv')[0]
             SampleFile = pandas.read_table(filename, sep='\t',names=colnames_u)
             x = list(SampleFile['counts'].values)
             Counts[sample] = [x[k]+delta for k in range(L)]
-            os.chdir(QCDir)
+            os.chdir(AlnQCDir)
         geomean = [sc.gmean(list(Counts.iloc[k,2:])) for k in range(L)]
         Counts['Geom mean'] = geomean
         # Compute size-factors for each sgRNA and each sample   
@@ -122,7 +122,7 @@ def Normalization():
         Counts.to_csv('Size-factors.tsv',sep='\t',index=False)
         # Write normalized counts dataframe
         print('Writing normalized read counts ...')
-        os.chdir(QCDir)        
+        os.chdir(AlnQCDir)        
         Counts0 = pandas.DataFrame(data = {'sgRNA': [sgIDs[k] for k in range(L)],
                                          'gene': [genes[k] for k in range(L)]},
                                 columns = ['sgRNA','gene'])
@@ -141,7 +141,7 @@ def Normalization():
                 for j in range(G)]
             GeneCounts0.to_csv(sample+'_GeneCounts'+NormSuffix,sep='\t',columns=['gene',sample],\
                 header=False,index=False)                        
-            os.chdir(QCDir)
+            os.chdir(AlnQCDir)
     else:
         print('ERROR: Check spelling of Normalization parameter in configuration file!')
     

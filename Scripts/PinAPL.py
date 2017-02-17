@@ -29,7 +29,7 @@ IndexDir = config['IndexDir']
 DataDir = config['DataDir']
 ScriptsDir = config['ScriptsDir']
 AlignDir = config['AlignDir']
-QCDir = config['QCDir']
+AlnQCDir = config['AlnQCDir']
 script00 = config['script00']
 script01 = config['script01']
 script02 = config['script02']
@@ -71,9 +71,12 @@ os.chdir(ScriptsDir)
 StatMsg = 'Aligning reads ...'
 os.system('python -u PrintStatus.py SubHeader "'+StatMsg+'" 2>&1 | tee -a PinAPL-Py.log')
 for sample in SampleNames:
-    if not (os.path.exists(AlignDir+sample) and os.path.exists(QCDir+sample)):
+    if os.path.exists(AlignDir+sample) and os.path.exists(AlnQCDir+sample):
+        os.system('python -u PrintStatus.py SkipSample '+sample+' 2>&1 | tee -a PinAPL-Py.log')
+    else:        
         os.system('python -u PrintStatus.py ProcessSample '+sample+' 2>&1 | tee -a PinAPL-Py.log')
         os.system('python -u '+script03+'.py '+sample+' 2>&1 | tee -a PinAPL-Py.log')
+        
 DoneMsg = 'Read alignments completed.'
 os.system('python -u PrintStatus.py Done "'+DoneMsg+'" 2>&1 | tee -a PinAPL-Py.log')
 

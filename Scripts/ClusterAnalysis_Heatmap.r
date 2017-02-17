@@ -22,7 +22,7 @@ sgcounts = sgcounts_File[1:nrow(sgcounts_File),3:(ncol(sgcounts_File)-1)]
 # Process data and plot
 log_sgcounts = log(sgcounts+delta)
 DataMatrix = as.matrix(log_sgcounts)
-col_palette = colorRampPalette(c("red","yellow","green"))(n = 40)
+col_palette = colorRampPalette(c("yellow","orange","red"))(n = 40)
 png(out_filename, width = W, height = H, pointsize = S)
 heatmap.2(DataMatrix,trace="none",col=col_palette,dendrogram="column",margins=c(r,r),labRow="")
 dev.off()

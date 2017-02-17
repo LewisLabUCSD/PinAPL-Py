@@ -45,17 +45,16 @@ def AnalyzeCounts(sample):
     AnalysisDir = config['AnalysisDir']
     ScreenType = config['ScreenType']
     max_q = config['max_q']
-    QCDir = config['QCDir']
-    res = config['dpi']
-    LogDir = QCDir+sample+'/' 
+    InputDir = config['AlnQCDir']+sample
+    OutputDir = config['CountQCDir']+sample
+    res = config['dpi']    
+    svg = config['svg']
     logfilename = sample+'_ReadStatistics.txt'
    
     # --------------------------------------
     # Load counts
     # --------------------------------------
-    if not os.path.exists(LogDir):
-        os.makedirs(LogDir)
-    os.chdir(LogDir)
+    os.chdir(InputDir)
     colnames = ['ID','gene','counts']
     GuideFileName = glob.glob('*_GuideCounts_0.tsv')[0]
     GuideFile = pd.read_table(GuideFileName, sep='\t', names=colnames)
@@ -67,7 +66,9 @@ def AnalyzeCounts(sample):
     ReadsPerGene = list(GeneFile['counts'].values)
     sgID = list(GuideFile['ID'].values)    
     gene = list(GuideFile['gene'].values)    
- 
+    if not os.path.exists(OutputDir):
+        os.makedirs(OutputDir)
+    os.chdir(OutputDir)
 
     # --------------------------------------
     # Lorenz Curve
@@ -81,30 +82,33 @@ def AnalyzeCounts(sample):
     print('Gini Index (genes): ' + str(round(GiniIndex_g*1000)/1000))
     # Plot Lorenz curves
     print('Plotting Lorenz curves ...')
-    plt.figure(figsize=(5,10))
+    plt.figure(figsize=(3.5,7))
     gs = gridspec.GridSpec(2, 1)
     ax0 = plt.subplot(gs[0])
     ax1 = plt.subplot(gs[1])   
     ax0.plot(xu,yu, linewidth=2)   
     ax0.plot(xu,xu, 'r--')
     ax0.set_ylim([0,1])    
-    ax0.set_xlabel('Cumulative Fraction of sgRNAs', fontsize=12)    
-    ax0.set_ylabel('Cumulative Fraction of Reads', fontsize=12)
-    ax0.set_title('Read Disparity (sgRNAs)', fontsize=12, fontweight='bold')
-    ax0.text(.1,.8,'Gini coefficient: '+str((round(GiniIndex_u*1000)/1000)),fontsize=14)     
+    ax0.set_xlabel('Cumulative Fraction of sgRNAs', fontsize=10)    
+    ax0.set_ylabel('Cumulative Fraction of Reads', fontsize=10)
+    ax0.set_title('Read Disparity (sgRNAs)', fontsize=14)
+    ax0.text(.1,.8,'Gini coefficient: '+str((round(GiniIndex_u*1000)/1000)),fontsize=9)     
     ax1.plot(xg,yg, linewidth=2)   
     ax1.plot(xg,xg, 'r--')
     ax1.set_ylim([0,1])
-    ax1.set_xlabel('Cumulative Fraction of Genes', fontsize=12)    
-    ax1.set_ylabel('Cumulative Fraction of Reads', fontsize=12)
-    ax1.set_title('Read Disparity (Genes)', fontsize=12, fontweight='bold')     
-    ax1.text(.1,.8,'Gini coefficient: '+str((round(GiniIndex_g*1000)/1000)),fontsize=14)    
+    ax1.set_xlabel('Cumulative Fraction of Genes', fontsize=10)    
+    ax1.set_ylabel('Cumulative Fraction of Reads', fontsize=10)
+    ax1.set_title('Read Disparity (Genes)', fontsize=14)     
+    ax1.text(.1,.8,'Gini coefficient: '+str((round(GiniIndex_g*1000)/1000)),fontsize=9)    
+    plt.tight_layout()
     plt.savefig(sample+'_LorenzCurves.png',dpi=res)
+    if svg:
+        plt.savefig(sample+'_LorenzCurves.svg')        
    
     # --------------------------------------
     # Boxplots & Histograms
     # --------------------------------------
-    plt.figure()
+    plt.figure(figsize=(7,5))
     gs = gridspec.GridSpec(2, 2, width_ratios=[1, 2])
     ax0 = plt.subplot(gs[0])
     ax1 = plt.subplot(gs[1])
@@ -116,13 +120,13 @@ def AnalyzeCounts(sample):
     plt.setp(bp['boxes'], color='black')
     ax0.set_title('Reads per sgRNA', fontsize=12)
     ax0.set_xticks([''])
-    ax0.set_ylabel('counts [norm.]', fontsize=11)
+    ax0.set_ylabel('counts [norm.]', fontsize=10)
     # Reads per gene: Boxplot
     bp = ax2.boxplot(ReadsPerGene, showfliers = False) # No outliers
     plt.setp(bp['boxes'], color='black')
     ax2.set_title('Reads per Gene', fontsize=12)
     ax2.set_xticks([''])
-    ax2.set_ylabel('counts [norm.]', fontsize=12)
+    ax2.set_ylabel('counts [norm.]', fontsize=10)
     print('Generating histograms...')
     # Reads per guide: Histogram
     Counts_noFliers = list()
@@ -132,8 +136,8 @@ def AnalyzeCounts(sample):
             Counts_noFliers.append(count)
     ax1.hist(Counts_noFliers, bins = range(max_count+2), align = 'left')
     ax1.set_title(sample+' Read Distribution', fontsize=12)
-    ax1.set_xlabel('counts [norm.] per sgRNA', fontsize=12)
-    ax1.set_ylabel('Number of sgRNAs', fontsize=12)
+    ax1.set_xlabel('counts [norm.] per sgRNA', fontsize=10)
+    ax1.set_ylabel('Number of sgRNAs', fontsize=10)
     # Reads per gene: Histogram
     Counts_noFliers = list()
     max_count = int(numpy.percentile(ReadsPerGene,max_q))
@@ -142,10 +146,12 @@ def AnalyzeCounts(sample):
             Counts_noFliers.append(count)
     ax3.hist(Counts_noFliers, bins = range(max_count+2), align = 'left')
     ax3.set_title(sample+' Read Distribution', fontsize=12)
-    ax3.set_xlabel('counts [norm.] per Gene', fontsize=12)
-    ax3.set_ylabel('Number of Genes', fontsize=12)
+    ax3.set_xlabel('counts [norm.] per Gene', fontsize=10)
+    ax3.set_ylabel('Number of Genes', fontsize=10)
     plt.tight_layout()
     plt.savefig(sample+'_ReadCount_Distribution.png',dpi=res)
+    if svg:
+        plt.savefig(sample+'_ReadCount_Distribution.svg')        
     
     # --------------------------------------------
     # Counts distribution

@@ -28,6 +28,9 @@ def PrintStatus_Done(msg):
 def PrintStatus_ProcessSample(sample):
     print('\nProcessing sample '+sample+' ... ')
 
+def PrintStatus_SkipSample(sample):
+    print('Alignment data found for sample '+sample+'. Skipping alignment ... ')
+
 def PrintStatus_AllDone():
     print('**************************************************')
     print('PinAPL-Py completed.')  
@@ -48,6 +51,8 @@ if __name__ == "__main__":
         PrintStatus_Done(input2)
     elif input1 == 'ProcessSample':
         PrintStatus_ProcessSample(input2)
+    elif input1 == 'SkipSample':
+        PrintStatus_SkipSample(input2)        
     elif input1 == 'AllDone':
         PrintStatus_AllDone()
     elif input1 == 'TimeStamp':

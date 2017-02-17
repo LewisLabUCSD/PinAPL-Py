@@ -30,6 +30,7 @@ def PlotReadDepth():
     AnalysisDir = config['AnalysisDir']
     DepthDir = config['DepthDir']
     res = config['dpi']
+    svg = config['svg']
     
     # Get data
     os.chdir(WorkingDir)
@@ -51,19 +52,21 @@ def PlotReadDepth():
         NumReads.append(NReads)
     
     # Plot    
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(5,4))
     plt.bar(range(n), NumReads, align='center', color=(0.2588,0.4433,1.0))
     plt.xticks(range(n), SampleNames, rotation='vertical')
     formatter = FuncFormatter(millions)
     ax.yaxis.set_major_formatter(formatter)
-    plt.title('Read Depth', fontsize=18, fontweight='bold')
-    plt.xlabel('Sample', fontsize=14)  
-    plt.ylabel('Number of Reads', fontsize=14)
+    plt.title('Read Depth', fontsize=14)
+    plt.xlabel('Sample', fontsize=12)  
+    plt.ylabel('Number of Reads', fontsize=12)
     plt.tight_layout()
     if not os.path.exists(DepthDir):
         os.makedirs(DepthDir)
     os.chdir(DepthDir)
     plt.savefig('Read_Depth.png',dpi=res)
+    if svg:
+        plt.savefig('Read_Depth.svg')        
 
 
     

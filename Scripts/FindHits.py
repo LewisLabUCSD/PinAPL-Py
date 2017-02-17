@@ -9,8 +9,8 @@ Created on Sat Apr 30 14:22:06 2016
 # =======================================================================
 # Imports
 from __future__ import division # floating point division by default
-import pandas as pd
-import numpy as np
+import pandas
+import numpy
 import scipy
 from scipy import stats
 from decimal import *
@@ -22,6 +22,7 @@ import time
 import yaml
 import warnings
 import sys
+from pvalPlots import *
 
 
 
@@ -42,37 +43,36 @@ def PrepareHitList(sample):
     configFile.close()
     WorkingDir = config['WorkingDir']
     AnalysisDir = config['AnalysisDir']
-    QCDir = config['QCDir']
+    InputDir = config['AlnQCDir']+sample
     CtrlDir = AnalysisDir + 'Control/'
     ListDir = config['HitDir']
     CtrlCounts_Filename = 'Control_GuideCounts_0.tsv'
     ScreenType = config['ScreenType']
     alpha = config['alpha']    
-    pcorr = config['pcorr']
-    VarEst = config['VarEst']  
+    padj = config['padj']
     SheetFormat = config['HitListFormat']
-    delta = config['delta_d']
+    delta = config['delta_2']
+    pvalDir = config['pvalDir']
+    res = config['dpi']
+    svg = config['svg']
     
     # --------------------------------
     # Read control and sample data
     # --------------------------------   
     print('Loading read counts ...')     
     os.chdir(CtrlDir)
-    Ctrl_File = pd.read_table(CtrlCounts_Filename, sep='\t')
+    Ctrl_File = pandas.read_table(CtrlCounts_Filename, sep='\t')
     sgIDs = list(Ctrl_File['sgID'].values)
     genes = list(Ctrl_File['gene'].values)
     mu = list(Ctrl_File['Mean'].values)
     L = len(sgIDs)
-    if VarEst == 'model':
-        sigma2 = list(Ctrl_File['Model Variance'].values)
-    elif VarEst == 'sample':
-        sigma2 = list(Ctrl_File['Sample Variance'].values)
-    if np.isnan(max(sigma2)): # no control replicates
+    sigma2 = list(Ctrl_File['Model Variance'].values)
+    if numpy.isnan(max(sigma2)): # no control replicates
         sigma2 = [0 for k in range(L)]
-    os.chdir(QCDir+sample)
+    os.chdir(InputDir)
     colnames = ['sgID','gene','counts']
     filename = glob.glob('*GuideCounts_0.tsv')[0]
-    SampleFile = pd.read_table(filename, sep='\t',names=colnames)
+    SampleFile = pandas.read_table(filename, sep='\t',names=colnames)
     x = list(SampleFile['counts'].values)
      
     # -----------------------------------------------
@@ -80,47 +80,65 @@ def PrepareHitList(sample):
     # -----------------------------------------------
     # Compute fold change (compared to control)
     print('Computing fold changes ...')
-    fc = [(x[k]+delta)/(mu[k]+delta) for k in range(L)]
-    # Compute negative binomial p-values
+    fc = list()
+    for k in range(L):
+        if x[k]==0 or mu[k]==0:
+            fc.append((x[k]+delta)/(mu[k]+delta))
+        else:
+            fc.append(x[k]/mu[k])
+    # Compute negative binomial p-values    
     if max(sigma2) > 0: 
         print('Computing p-values ...')
-        NBpval = list()
+        # Neg. Binom. Parameters  n: number of failures, p: probability of failure
+        n = list(); p = list()
+        for i in range(L):
+            if mu[i]==0 or sigma2[i]==0:
+                n.append(((mu[i]+delta)**2/(sigma2[i]+2*delta))/(1-(mu[i]+delta)/(sigma2[i]+2*delta)))
+                p.append((mu[i]+delta)/(sigma2[i]+2*delta))
+            else:
+                n.append((mu[i]**2/sigma2[i])/(1-mu[i]/sigma2[i]))
+                p.append(mu[i]/sigma2[i])
+        NBpval = list(); 
         if ScreenType == 'enrichment':
             for i in range(L):
                 if mu[i]==0 and x[i]==0:
                     NBpval.append(1)
-                elif mu[i]==0 and x[i]>0:
+                elif x[i]<=mu[i]:
                     NBpval.append(1)
-                elif mu[i]>0 and x[i]<=mu[i]:
-                    NBpval.append(1)
-                elif x[i]>mu[i]:
-                    n = (mu[i]**2/sigma2[i])/(1-mu[i]/sigma2[i])
-                    p = mu[i]/sigma2[i]
-                    NBpval.append(1 - scipy.stats.nbinom.cdf(x[i],n,p))
-                else:
-                    NBpval.append(1)
+                else: 
+                    NBpval.append(1 - scipy.stats.nbinom.cdf(x[i],n[i],p[i]))
         elif ScreenType == 'depletion':
             for i in range(L):
                 if mu[i]==0 and x[i]==0:
                     NBpval.append(1)
-                elif mu[i]==0 and x[i]>0:
-                    NBpval.append(1)
-                elif mu[i]>0 and x[i]>=mu[i]:
-                    NBpval.append(1)
-                elif x[i]<mu[i]:
-                    n = (mu[i]**2/sigma2[i])/(1-mu[i]/sigma2[i])
-                    p = mu[i]/sigma2[i]
-                    NBpval.append(scipy.stats.nbinom.cdf(x[i],n,p))
+                elif x[i]>=mu[i]:
+                    NBpval.append(1)                                                           
                 else:
-                    NBpval.append(1)  
+                    NBpval.append(scipy.stats.nbinom.cdf(x[i],n[i],p[i]))
         else:
             print('ERROR: Check spelling of ScreenType in configuration file!')
-        # Determine critical threshold
-        NBpval_corr = multipletests(NBpval,alpha,pcorr)
-        significant = NBpval_corr[0]
+        # Compute two-sided pvalues (for volcano plot only!)
+        NBpval2 = list()
+        for i in range(L):
+            if x[i]<=mu[i]:
+                NBpval2.append(scipy.stats.nbinom.cdf(x[i],n[i],p[i]))
+            else:
+                NBpval2.append(1 - scipy.stats.nbinom.cdf(x[i],n[i],p[i]))                        
+        # p-value correction for multiple tests
+        print('p-value correction ...')
+        multTest = multipletests(NBpval,alpha,padj)
+        significant = multTest[0]
+        NBpval_0 = multTest[1]
+        # Plots
+        print('Plotting p-values ...')
+        pvalHist(NBpval,NBpval_0,pvalDir,sample,res,svg)
+        VolcanoPlot(fc,NBpval2,significant,pvalDir,ScreenType,sample,res,svg)
+        QQPlot(NBpval,significant,pvalDir,sample,res,svg)
+        zScorePlot(fc,significant,pvalDir,ScreenType,sample,res,svg)
     else:         # no control replicates
         print('WARNING: No control replicates! No p-values computed...')
         NBpval = [-1 for k in range(L)]
+        NBpval_0 = [-1 for k in range(L)]
         significant = ['N/A' for k in range(L)]
             
     # -----------------------------------------------
@@ -131,28 +149,28 @@ def PrepareHitList(sample):
         os.makedirs(ListDir)
     os.chdir(ListDir)             
     print('Writing results dataframe ...')
-    Results_df = pd.DataFrame(data = {'sgRNA': [sgIDs[k] for k in range(L)],
+    Results_df = pandas.DataFrame(data = {'sgRNA': [sgIDs[k] for k in range(L)],
                                      'gene': [genes[k] for k in range(L)],
                                      'counts [norm.]': [x[k] for k in range(L)],
-                                     'control mean [norm.]': [np.rint(mu[k]) for k in range(L)],
-                                     'control stdev [norm.]': [np.rint(np.sqrt(sigma2[k])) for k in range(L)],
+                                     'control mean [norm.]': [numpy.rint(mu[k]) for k in range(L)],
+                                     'control stdev [norm.]': [numpy.rint(numpy.sqrt(sigma2[k])) for k in range(L)],
                                      'fold change': [fc[k] for k in range(L)],   
-                                     'NB_pval': ['%.2E' % Decimal(NBpval[k]) for k in range(L)],
+                                     'p-value': ['%.2E' % Decimal(NBpval[k]) for k in range(L)],
+                                     'adj. p-value': ['%.2E' % Decimal(NBpval_0[k]) for k in range(L)],                                                 
                                      'significant': [str(significant[k]) for k in range(L)]},
                             columns = ['sgRNA','gene','counts [norm.]','control mean [norm.]',\
-                            'control stdev [norm.]','fold change','NB_pval','significant'])
+                            'control stdev [norm.]','fold change','p-value','adj. p-value','significant'])
     if ScreenType == 'enrichment':
         Results_df_0 = Results_df.sort_values(['significant','fold change'],ascending=[0,0])                
     elif ScreenType == 'depletion':
         Results_df_0 = Results_df.sort_values(['significant','fold change'],ascending=[0,1])            
     if SheetFormat == 'tsv':
-        ListFilename = sample+'_'+str(alpha)+'_'+pcorr+'_sgRNAList.tsv'
+        ListFilename = sample+'_'+str(alpha)+'_'+padj+'_sgRNAList.tsv'
         Results_df_0.to_csv(ListFilename, sep = '\t', index = False)
     elif SheetFormat == 'xlsx':
         print('Converting to xlsx ...')
-        ListFilename = sample+'_'+str(alpha)+'_'+pcorr+'_sgRNAList.xlsx'
+        ListFilename = sample+'_'+str(alpha)+'_'+padj+'_sgRNAList.xlsx'
         Results_df_0.to_excel(ListFilename)
-    os.chdir(QCDir)
 
     # --------------------------------------
     # Final time stamp

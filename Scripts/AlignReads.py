@@ -26,6 +26,10 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy
 import pysam
+from matplotlib.ticker import FuncFormatter
+
+def kilos(x, pos):
+    return '%1.0fk' % (x*1e-3)
 
 def CountReadsPerGene(g):
     global GeneList
@@ -62,12 +66,12 @@ def MapAndCount(sample):
     LibDir = config['LibDir']
     AlnStemDir = config['AlignDir']
     AlnDir = AlnStemDir+sample+'/'
-    QCDir = config['QCDir']
-    LogDir = QCDir+sample+'/'       
+    OutputDir = config['AlnQCDir']+sample    
     seq_5_end = config['seq_5_end']
     seq_3_end = config['seq_3_end']
     CutErrorTol = config['CutErrorTol']
     R_min = config['R_min']
+    minN = config['Cutoff']
     LibFilename = config['LibFilename']
     LibFormat = LibFilename[-3:]
     if LibFormat == 'tsv':
@@ -80,6 +84,7 @@ def MapAndCount(sample):
     i_bw = config['i_bw']
     N0 = 1000000
     res = config['dpi']
+    svg = config['svg']
     AlnOutput = config['AlnOutput']
     keepCutReads = config['keepCutReads']
     AlnFileSuffix = '_bw2Aln.tsv'
@@ -114,9 +119,9 @@ def MapAndCount(sample):
                         +' -e '+str(CutErrorTol) \
                         +' --minimum-length '+str(R_min)+' > '+cutadaptLog
     os.system(CutAdaptCmdLine)
-    if not os.path.exists(LogDir):
-        os.makedirs(LogDir)
-    mv_cmdline = 'mv '+cutadaptLog+' '+LogDir
+    if not os.path.exists(OutputDir):
+        os.makedirs(OutputDir)
+    mv_cmdline = 'mv '+cutadaptLog+' '+OutputDir
     os.system(mv_cmdline)
     print('Read clipping completed.')
     end = time.time()    
@@ -226,10 +231,8 @@ def MapAndCount(sample):
         time_unit = ' [mins]'
     else:
         aln_time = aln_time/3600
-        time_unit = ' [hours]'
-    if not os.path.exists(LogDir):
-        os.makedirs(LogDir)      
-    os.chdir(LogDir)    
+        time_unit = ' [hours]'   
+    os.chdir(OutputDir)    
     LogFile = open(logfilename,'w')         
     LogFile.write(sample+' Alignment Results\n')
     LogFile.write('**************************************\n')
@@ -255,17 +258,20 @@ def MapAndCount(sample):
     LogFile.write('Ambiguity Cutoff: '+str(Theta)+'\n')    
     LogFile.close()              
     # DRAW PLOTS
-    # Plot mapping quality histogram
-    os.chdir(LogDir)
+    # MAPPING QUALITY HISTOGRAM
+    os.chdir(OutputDir)
     print('Plotting mapping quality ...')
     maxQuality = max(mapQ)
+    plt.figure(figsize=(5,4))
     plt.hist(mapQ, bins = range(maxQuality+1), align = 'left')
-    plt.title(sample+' Mapping Quality', fontsize=14, fontweight='bold')
-    plt.xlabel('Mapping Quality', fontsize=14)
-    plt.ylabel('Number of Reads', fontsize=14)
+    plt.title(sample+' Mapping Quality', fontsize=14)
+    plt.xlabel('Mapping Quality', fontsize=12)
+    plt.ylabel('Number of Reads', fontsize=12)
     plt.tight_layout()
     plt.savefig(sample+'_MappingQuality.png',dpi=res)  
-    # Alignment score barplot
+    if svg:
+        plt.savefig(sample+'_MappingQuality.svg')  
+    # ALIGNMENT SCORE BARPLOT
     print('Plotting alignment scores ...')
     primScoreKeep = [primScore[k] for k in range(NReads) if AlnStatus[k] in ['Unique','Tolerate']]
     secScoreKeep = [secScore[k] for k in range(NReads) if AlnStatus[k] in ['Unique','Tolerate']]    
@@ -288,19 +294,23 @@ def MapAndCount(sample):
     dx = numpy.ones(len(x))
     dy = numpy.ones(len(y))
     # Show plot    
-    fig = plt.figure()
+    fig = plt.figure(figsize=(6,5))
     ax = fig.gca(projection='3d')
     ax.bar3d(X,Y,Z_off,dX,dY,Z,color='#00FF00')
     green_proxy = plt.Rectangle((0, 0), 1, 1, fc='#00FF00')
     ax.bar3d(x,y,z_off,dx,dy,z,color='#FF3333')
     red_proxy = plt.Rectangle((0, 0), 1, 1, fc='#FF3333')
-    ax.legend([green_proxy,red_proxy],['Matched','Discarded'],loc='upper left')
-    plt.suptitle(sample+' Alignment Scores', fontsize=14, fontweight='bold')
-    ax.set_xlabel('Primary Alignment Score')
-    ax.set_ylabel('Secondary Alignment Score')
-    ax.set_zlabel('Number of Reads')
+    ax.legend([green_proxy,red_proxy],['Matched','Discarded'],loc='upper left',prop={'size':10})
+    plt.suptitle(sample+' Alignment Scores', fontsize=14)
+    ax.set_xlabel('Prim. Alignment Score', fontsize=12)
+    ax.set_ylabel('Sec. Alignment Score', fontsize=12)
+    formatter = FuncFormatter(kilos)
+    ax.zaxis.set_major_formatter(formatter)    
+    ax.set_zlabel('Number of Reads',fontsize=12)
     plt.tight_layout()
-    plt.savefig(sample+'_AlignmentScores.png',dpi=res)        
+    plt.savefig(sample+'_AlignmentScores.png',dpi=res)   
+    if svg:
+        plt.savefig(sample+'_AlignmentScores.svg',dpi=res)
     print('Alignment analysis completed.')  
     end = time.time()
     # Time stamp
@@ -338,8 +348,12 @@ def MapAndCount(sample):
     global ReadsPerGuide
     ReadsPerGuide = list()
     for sgRNA in sgIDs:
-        ReadsPerGuide.append(ReadCounts[sgRNA])        
-    os.chdir(LogDir)         
+        ReadsPerGuide.append(ReadCounts[sgRNA])      
+    # Apply read count cut-off
+    ReadSel = [ReadsPerGuide[k] >= NReads/N0*minN for k in range(L)]
+    ReadsPerGuide = [ReadSel[k]*ReadsPerGuide[k] for k in range(L)]
+    # Write read counts   
+    os.chdir(OutputDir)         
     GuideCountsFilename = sample + GuideCount_Suffix
     GuideCounts = open(GuideCountsFilename,'w')
     for k in range(L):

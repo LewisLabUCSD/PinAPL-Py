@@ -10,20 +10,18 @@ ScreenType: 'enrichment'                    # type of screen ['enrichment'/'depl
 LibFilename: 'GeCKOv2_library.tsv'            # filename of library spreadsheet  
 seq_5_end: 'TCTTGTGGAAAGGACGAAACACCG'       # sequence 5' of sgRNA in read
 seq_3_end: 'GTTTTAGAGCTAGAAATAGCAAGTT'       # sequence 3' of sgRNA in read
-NonTargetPrefix: 'NonTargeting'             # prefix for non-targeting sgRNAs in library (keep at default if none present)
-sgRNAsPerGene: 6                       # number of sgRNAs targeting each gene (excluding non-targeting controls and miRNAs). 
-                                       #    ONLY IMPORTANT IF 'ES' is chosen for gene ranking method !
 
 # ANALYSIS OPTIONS
 AlnOutput: 'Compress'                  # keep raw alignment output? ['Keep'/'Compress'/'Delete']
 keepCutReads: False                    # keep files containing trimmed reads? ['True'/'False']
-Normalization: 'cpm'                  # Normalization of read counts (counts per mio reads or size-factor) ['cpm'/'size']
-VarEst: 'model'                        # method for count variance estimation ['model'/'sample')]
+Normalization: 'cpm'                  # Normalization of read counts (counts per mio reads / size-factor) ['cpm'/'size']
+Cutoff: 0                           # set counts (cpm) below this number to 0 
 GeneMetric: 'aRRA'                    # metric for gene ranking ['aRRA'/'STARS'/'ES']
 scatter_annotate: False                 # annotate scatterplot with sgRNA IDs? ['True'/'False']
-ClusterBy: 'variance'                  # clustering criterion ['variance'/'counts']
+ClusterBy: 'counts'                  # clustering criterion ['variance'/'counts']
 TopN: 25                              # number of top sgRNAs to take into account for clustering
 HitListFormat: 'tsv'                  # Format of results spreadsheets (sgRNA hits and gene ranking) ['tsv'/'xlsx']
+NonTargetPrefix: 'NonTargeting'        # prefix for non-targeting sgRNAs in library (keep at default if none present)
 
 # TECHNICAL PARAMETERS
 CutErrorTol: 0.25                       # Cutadapt error tolerance
@@ -34,21 +32,23 @@ i_bw: 'S,1,0.75'                       # Bowtie2 -i parameter (interval function
 Theta: 2                               # alignment ambiguity tolerance
 max_q: 95                              # maximum quantile for histogram plots
 alpha: 0.01                            # significance level    
-pcorr: 'fdr_bh'                        # method for p-value correction ['fdr_bh'/'fdr_tsbh']
+padj: 'fdr_bh'                        # method for p-value adjustment ['fdr_bh'/'fdr_tsbh']
 Np_ES: 10                             # number of permutations for gene ranking analysis (ES)
-Np_aRRA: 100                         # number of permutations for gene ranking analysis (aRRA)
-Np_STARS: 10                          # number of permutations for gene ranking analysis (STARS)
+sgRNAsPerGene: 6                       # number of sgRNAs targeting each gene (excluding non-targeting controls and miRNAs). 
+                                       #    ONLY IMPORTANT IF 'ES' is chosen for gene ranking method !
+Np_aRRA: 1000                         # number of permutations for gene ranking analysis (aRRA)
+Np_STARS: 100                          # number of permutations for gene ranking analysis (STARS)
 thr_STARS: 10                          # Threshold percentage for STARS analysis
-delta_d: 0.01                         # count shift for computing fold changes (avoid division by zero)
+delta_d: 0.01                         # count shift for computing fold changes and size-factors (avoid division by zero)
+delta_2: 1                              # count shift cases of zeros in control count variance (avoid division by zero)
+delta_s: 0.1                         # count shift before log transformation in scatterplots
+delta_p: 1                             # count shift before log transformation in heatmap
 
 # VISUALIZATION PARAMETERS
-# Scatterplots
 dpi: 300                               # resolution of PNG plots
-delta_s: 0.1                         # count shift before log transformation in scatterplots
+svg: False                              # save figures as vector graphics?  ['True'/'False']            
 dotsize: 10                            # size of dots in scatterplot
 logbase: 10                            # base for log transformation of counts in scatterplots
-# Heatmap
-delta_p: 1                             # count shift before log transformation in heatmap
 width_p: 800                            # width of heatmap image (pixels)
 height_p: 800                            # height of heatmap image (pixels)
 fontsize_p: 14                          # fontsize in heatmap image
@@ -62,17 +62,21 @@ IndexDir: '/workingdir/Library/Bowtie2_Index/'
 ScriptsDir: '/opt/PinAPL-Py/Scripts/'
 AlignDir: '/workingdir/Alignments/'
 AnalysisDir: '/workingdir/Analysis/'
-HitDir: '/workingdir/Analysis/Hit Lists'
-GeneDir: '/workingdir/Analysis/Gene Rankings'
+HitDir: '/workingdir/Analysis/Hit_Lists'
+GeneDir: '/workingdir/Analysis/Gene_Rankings'
 ControlDir: '/workingdir/Analysis/Control/'
 HeatDir: '/workingdir/Analysis/Heatmap/'
-QCDir: '/workingdir/Analysis/QC/'
-ScatterDir: '/workingdir/Analysis/Scatterplots/'
-EffDir: '/workingdir/Analysis/sgRNA Efficiency/'
-DepthDir: '/workingdir/Analysis/Read Depth/' 
+AlnQCDir: '/workingdir/Analysis/Alignment_Statistics/'
+CountQCDir: '/workingdir/Analysis/ReadCount_Statistics/'
+ScatterDir: '/workingdir/Analysis/ReadCount_Scatterplots/'
+CorrelDir: '/workingdir/Analysis/Replicate_Correlation/'
+EffDir: '/workingdir/Analysis/sgRNA_Efficiency/'
+DepthDir: '/workingdir/Analysis/Read_Depth/' 
+pvalDir: '/workingdir/Analysis/p-values/' 
 bw2Dir: '/usr/bin/'
 CutAdaptDir: '/root/.local/bin/'   
 STARSDir: '/opt/PinAPL-Py/Scripts/STARS_mod/'
+
 
 # SCRIPT FILENAMES
 script00: 'BuildLibraryIndex'

@@ -39,13 +39,13 @@ def Repl_Scatterplot(Repl1,Repl2):
     configFile.close()
     WorkingDir = config['WorkingDir'] 
     AnalysisDir = config['AnalysisDir']
-    QCDir = config['QCDir']
-    PlotDir = config['ScatterDir']
+    AlnQCDir = config['AlnQCDir']
+    PlotDir = config['CorrelDir']
     alpha = config['alpha']
-    pcorr = config['pcorr']
     delta = config['delta_s']
     NonTPrefix = config['NonTargetPrefix']
     res = config['dpi']
+    svg = config['svg']    
     dotsize = config['dotsize']
     logbase = config['logbase']    
    
@@ -54,11 +54,11 @@ def Repl_Scatterplot(Repl1,Repl2):
     # ------------------------------------------------
     print('Reading counts ...')    
     colnames = ['sgRNA','gene','counts']
-    os.chdir(QCDir+Repl1)
+    os.chdir(AlnQCDir+Repl1)
     filename1 = glob.glob('*_GuideCounts_0.tsv')[0]
     ListFile1 = pd.read_table(filename1, sep='\t',low_memory=False,names=colnames)    
     ListFile1 = ListFile1.sort_values('sgRNA')    
-    os.chdir(QCDir+Repl2)    
+    os.chdir(AlnQCDir+Repl2)    
     filename2 = glob.glob('*_GuideCounts_0.tsv')[0]
     ListFile2 = pd.read_table(filename2, sep='\t',low_memory=False,names=colnames)
     ListFile2 = ListFile2.sort_values('sgRNA')    
@@ -100,20 +100,26 @@ def Repl_Scatterplot(Repl1,Repl2):
     if not os.path.exists(PlotDir):
         os.makedirs(PlotDir)      
     os.chdir(PlotDir)   
-    plt.figure()
-    plt.scatter(repl1_rest,repl2_rest,s=dotsize,facecolor='black',lw=0)
+    plt.figure(figsize=(6,5))
+    plt.scatter(repl1_rest,repl2_rest,s=dotsize,facecolor='black',lw=0,alpha=0.35)
     if len(K_nonT)>0:
-        plt.scatter(repl1_nonT,repl2_nonT,s=dotsize,facecolor=(255/255,0,255/255),lw=0,label='Non Targeting')
+        plt.scatter(repl1_nonT,repl2_nonT,s=dotsize,facecolor='orange',lw=0,alpha=0.75,\
+            label='Non Targeting')
     axes = plt.gca()
     x0 = axes.get_xlim()  
-    plt.plot((0,x0[1]-1), (0,x0[1]-1), ls="--", color=(51/255,153/255,1))
-    plt.suptitle('Correlation '+Repl1+' '+Repl2, fontsize=12, fontweight='bold')
-    plt.xlabel('log'+str(logbase)+' counts '+Repl1+' [norm.]', fontsize=14)    
-    plt.ylabel('log'+str(logbase)+' counts '+Repl2+' [norm.]', fontsize=14)
+    plt.plot((x0[0],x0[1]), (x0[0],x0[1]), ls="--", color=(51/255,153/255,1))
+    plt.title('Correlation '+Repl1+' '+Repl2, fontsize=14)
+    plt.xlabel(Repl1+' log'+str(logbase)+' counts [norm.]', fontsize=12)    
+    plt.ylabel(Repl2+' log'+str(logbase)+' counts [norm.]', fontsize=12)
     plt.legend(loc='upper left', prop={'size':10})
-    plt.text(.6,.2,'Corr (Pearson) = '+str(round(CorrCoeffP*1000)/1000),transform=axes.transAxes) 
-    plt.text(.6,.15,'Corr (Spearman) = '+str(round(CorrCoeffS*1000)/1000),transform=axes.transAxes)    
-    plt.savefig(Repl1+' '+Repl2+' correlation.png', dpi=res)        
+    plt.text(.6,.2,'Corr (Pearson) = '+str(round(CorrCoeffP*1000)/1000),transform=axes.transAxes,\
+        fontsize=10) 
+    plt.text(.6,.15,'Corr (Spearman) = '+str(round(CorrCoeffS*1000)/1000),transform=axes.transAxes,\
+        fontsize=10)    
+    plt.savefig(Repl1+' '+Repl2+' correlation.png', dpi=res)  
+    if svg:
+        plt.savefig(Repl1+' '+Repl2+' correlation.svg')
+    plt.tight_layout()      
     plt.close()
 
     # --------------------------------------

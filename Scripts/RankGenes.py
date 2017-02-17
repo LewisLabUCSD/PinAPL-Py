@@ -28,6 +28,7 @@ from statsmodels.sandbox.stats.multicomp import multipletests
 from collections import Counter
 from decimal import *
 import sys
+from pvalPlots import *
 
 
 def computeES(g):
@@ -152,12 +153,15 @@ def PrepareGeneList(sample):
     GeneDir = config['GeneDir']
     global alpha
     alpha = config['alpha']            
-    pcorr = config['pcorr']
+    padj = config['padj']
     num_cores = multiprocessing.cpu_count()
     global r
     r = config['sgRNAsPerGene']
     GeneMetric = config['GeneMetric']
     SheetFormat = config['HitListFormat']
+    pvalDir = config['pvalDir']
+    res = config['dpi']
+    svg = config['svg']
     
     # --------------------------        
     # Read data from sgRNA list
@@ -175,7 +179,7 @@ def PrepareGeneList(sample):
     genes = list(HitList['gene'].values)
     counts = list(HitList['counts [norm.]'].values)
     global NB_pval
-    NB_pval = list(HitList['NB_pval'].values)
+    NB_pval = list(HitList['p-value'].values)
     sig = list(HitList['significant'].values)
     global L        
     L = len(sgIDs)
@@ -210,12 +214,15 @@ def PrepareGeneList(sample):
         if not os.path.exists(EffDir):
             os.makedirs(EffDir)
         os.chdir(EffDir)
-        plt.figure()
+        plt.figure(figsize=(5,4))
         plt.hist(guidesPerGene, bins = range(1,r+2), align = 'left',color="g")
-        plt.suptitle(sample+': on-Target Efficiency', fontsize=14, fontweight='bold')
-        plt.xlabel('# sign. sgRNAs', fontsize=14)
-        plt.ylabel('Number of Genes', fontsize=14)
-        plt.savefig(sample+'_sgRNA_Efficiency.png')
+        plt.title(sample+': on-Target Efficiency', fontsize=14)
+        plt.xlabel('Number of sign. sgRNAs', fontsize=12)
+        plt.ylabel('Number of Genes', fontsize=12)
+        plt.tight_layout()
+        plt.savefig(sample+'_sgRNA_Efficiency.png',dpi=res)   
+        if svg:
+            plt.savefig(sample+'_sgRNA_Efficiency.svg')               
     else: # no control replicates
         print('WARNING: No control replicates found! No significant sgRNAs counted.')
         sigGuides = ['N/A' for k in range(G)]
@@ -223,12 +230,13 @@ def PrepareGeneList(sample):
         if not os.path.exists(EffDir):
             os.makedirs(EffDir)
         os.chdir(EffDir)
-        plt.figure()
+        plt.figure(figsize=(5,4))
         plt.figtext(0.5,0.5,'N/A')
-        plt.suptitle(sample+': on-Target Efficiency', fontsize=14, fontweight='bold')
-        plt.xlabel('# sign. sgRNAs', fontsize=14)
+        plt.suptitle(sample+': on-Target Efficiency', fontsize=18)
+        plt.xlabel('Number of sign. sgRNAs', fontsize=14)
         plt.ylabel('Number of Genes', fontsize=14)
-        plt.savefig(sample+'_sgRNA_Efficiency.png')        
+        plt.tight_layout()
+        plt.savefig(sample+'_sgRNA_Efficiency.png',dpi=res)        
     
     # -------------------------------------------        
     # Compute sgRNA count ranks
@@ -268,8 +276,9 @@ def PrepareGeneList(sample):
             pval = 1 - ecdf(metric[g])
             pval_list.append(pval)
         # Determine critical p value (FDR correction)
-        pval_corr = multipletests(pval_list,alpha,pcorr)
-        metric_sig = pval_corr[0]
+        multTest = multipletests(pval_list,alpha,padj)
+        metric_sig = multTest[0]
+        pval_list0 = multTest[1]
     elif GeneMetric == 'aRRA':            
         # -------------------------------------------------        
         # compute aRRA 
@@ -300,8 +309,9 @@ def PrepareGeneList(sample):
                 pval = ecdf(metric[g])
                 pval_list.append(pval)
             # Determine critical p value (FDR correction)
-            pval_corr = multipletests(pval_list,alpha,pcorr)
-            metric_sig = pval_corr[0]
+            multTest = multipletests(pval_list,alpha,padj)
+            metric_sig = multTest[0]
+            pval_list0 = multTest[1]
         else: # no control replicates
             print('ERROR: Cannot compute a-RRA scores without control replicates!')
             SortFlag = True
@@ -357,13 +367,20 @@ def PrepareGeneList(sample):
         sigGuides = sigGuides_s
         metric = list(STARS['STARS Score'].values)
         pval_list = list(STARS['p-value'].values)
-        pval_corr = multipletests(pval_list,alpha,pcorr)
-        metric_sig = pval_corr[0]                     
+        multTest = multipletests(pval_list,alpha,padj)
+        metric_sig = multTest[0]  
+        pval_list0 = multTest[1]                   
         # Deleting STARS files            
         os.system('rm STARS_input.txt STARS_chip.txt')
         os.system('rm Null_STARSOutput8_'+str(thr)+'.txt')
         os.system('rm '+STARS_output)
-            
+
+
+    # -------------------------------------------------  
+    # p-value plots
+    # -------------------------------------------------  
+    print('Plotting p-values ...')
+    pvalHist_metric(pval_list,pval_list0,GeneMetric,pvalDir,sample,res,svg)           
             
     # -------------------------------------------------  
     # Output list
@@ -375,10 +392,11 @@ def PrepareGeneList(sample):
     Results_df = pd.DataFrame(data = {'gene': [geneList[g] for g in range(G)],
                                     GeneMetric: [metric[g] for g in range(G)],
                                      GeneMetric+' p_value': ['%.2E' % Decimal(pval_list[g]) for g in range(G)],
+                                    GeneMetric+' adj. p_value': ['%.2E' % Decimal(pval_list0[g]) for g in range(G)],
                                      'significant': [metric_sig[g] for g in range(G)],                                                    
-                                     'signif. sgRNAs': [sigGuides[g] for g in range(G)]},
-                            columns = ['gene',GeneMetric,GeneMetric+' p_value','significant',\
-                            'signif. sgRNAs'])
+                                     '# signif. sgRNAs': [sigGuides[g] for g in range(G)]},
+                            columns = ['gene',GeneMetric,GeneMetric+' p_value',GeneMetric+' adj. p_value',\
+                            'significant','# signif. sgRNAs'])
     Results_df_0 = Results_df.sort_values(['significant',GeneMetric],ascending=[False,SortFlag])
     if SheetFormat == 'tsv':
         GeneListFilename = filename[0:-14]+'_'+GeneMetric+'_'+'P'+str(Np)+'_GeneList.tsv'

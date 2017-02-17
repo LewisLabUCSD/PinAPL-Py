@@ -36,17 +36,19 @@ def EstimateControlCounts():
     config = yaml.load(configFile)
     configFile.close()
     WorkingDir = config['WorkingDir']
-    QCDir = config['QCDir']
+    AlnQCDir = config['AlnQCDir']
     ControlDir = config['ControlDir']
+    res = config['dpi']
+    svg = config['dpi']
     CtrlCounts_Filename = 'Control_GuideCounts_0.tsv'
-
+    
    
     # --------------------------------    
     # Generate table of control counts
     # --------------------------------    
     print('Reading control counts ...')    
-    os.chdir(QCDir)
-    ControlSamples = [d for d in os.listdir(QCDir) if 'Control' in d]
+    os.chdir(AlnQCDir)
+    ControlSamples = [d for d in os.listdir(AlnQCDir) if 'Control' in d]
     os.chdir(ControlSamples[0])
     colnames = ['sgID','gene','counts']                      
     CountFile = pd.read_table(glob.glob('*GuideCounts_0.tsv')[0], sep='\t',names=colnames)
@@ -59,14 +61,14 @@ def EstimateControlCounts():
     if len(ControlSamples) == 0:
         print('ERROR: No control sample directories found!')
     else:
-        os.chdir(QCDir)
+        os.chdir(AlnQCDir)
         for controlsample in ControlSamples:
             os.chdir(controlsample)
             filename = glob.glob('*GuideCounts_0.tsv')[0]                          
             CountFile = pd.read_table(filename, sep='\t',names=colnames)
             counts = list(CountFile['counts'].values)
             CtrlCounts_df[controlsample] = counts
-            os.chdir(QCDir)
+            os.chdir(AlnQCDir)
     
     # --------------------------------------------    
     # Compute sample means and sample variance
@@ -110,7 +112,7 @@ def EstimateControlCounts():
     # --------------------------------    
     # Plots
     # -------------------------------- 
-    plt.figure(figsize=(12,5))
+    plt.figure(figsize=(8,3.33))
     # Mean/Variance plot
     print('Generating dispersion plot ...')
     plt.subplot(121)        
@@ -118,28 +120,35 @@ def EstimateControlCounts():
         Mmax = numpy.percentile(Mean_array,99)
         x = [Mean[k] for k in range(L) if Mean[k] < Mmax]
         y = [Var[k] for k in range(L) if Mean[k] < Mmax]
-        plt.scatter(x,y,s=2)
-        plt.plot(x,x,'g--')
+        plt.scatter(x,y,s=2,lw=0,alpha=0.35)
+        plt.plot(x,x,'g--',label='Mean = Variance')
+        plt.legend(loc='upper left', prop={'size':8})
     else: # no control replicates
         plt.figtext(0.25,0.5,'N/A')
-    plt.xlabel('Mean', fontsize=14)    
-    plt.ylabel('Variance', fontsize=14)
-    plt.title('Read Counts (Control Samples)', fontsize=16)
+    plt.xlabel('Mean', fontsize=12)    
+    plt.ylabel('Variance', fontsize=12)    
+    plt.title('Read Count Overdispersion', fontsize=14)
     # Log Plot with Regression
     print('Generating log regression plot ...')
     plt.subplot(122)
     if max(Var) > 0:
         logx = [numpy.log(Mean[k]) for k in range(L) if Mean[k]>0 and Var[k]>Mean[k]]
         logy = [numpy.log(Var[k]-Mean[k]) for k in range(L) if Mean[k]>0 and Var[k]>Mean[k]]
-        plt.scatter(logx,logy,s=2)  
+        plt.scatter(logx,logy,s=2,lw=0,alpha=0.35)  
         logy_0 = [2*logx[k] + c_0 for k in range(len(logx))]
         plt.plot(logx,logy_0,'r--')
+        Disp = '%.2f' % D
+        plt.figtext(0.62,0.8,'Var = Mean+'+Disp+'Mean2',color='red',fontsize=8)
     else: # no control replicates
         plt.figtext(0.75,0.5,'N/A')
-    plt.xlabel('log (Mean)', fontsize=14)    
-    plt.ylabel('log (Variance - Mean)', fontsize=14)     
-    plt.title('log Regression', fontsize=16)
-    plt.savefig('Control_MeanVariance.png')
+    plt.xlabel('log (Mean)', fontsize=12)    
+    plt.ylabel('log (Variance - Mean)', fontsize=12)     
+    plt.title('Mean/Variance Model', fontsize=14)
+    plt.tight_layout()
+    plt.savefig('Control_MeanVariance.png',dpi=res)
+    if svg:
+        plt.savefig('Control_MeanVariance.svg')    
+    
 
     # --------------------------------------
     # Final time stamp
