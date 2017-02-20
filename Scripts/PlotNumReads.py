@@ -22,13 +22,14 @@ def millions(x, pos):
 
 def PlotReadDepth():    
     # Get parameters    
-    configFile = open('configuration.yaml','r')
+    configFile = open('../configuration.yaml','r')
     config = yaml.load(configFile)
     configFile.close()
     DataDir = config['DataDir']
     WorkingDir = config['WorkingDir']
     AnalysisDir = config['AnalysisDir']
     DepthDir = config['DepthDir']
+    ScriptsDir = config['ScriptsDir']
     res = config['dpi']
     svg = config['svg']
     
@@ -66,7 +67,8 @@ def PlotReadDepth():
     os.chdir(DepthDir)
     plt.savefig('Read_Depth.png',dpi=res)
     if svg:
-        plt.savefig('Read_Depth.svg')        
+        plt.savefig('Read_Depth.svg')
+    os.chdir(ScriptsDir)
 
 
     

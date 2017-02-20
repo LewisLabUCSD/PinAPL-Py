@@ -29,7 +29,7 @@ def TopN_Clustering():
     # ------------------------------------------------
     # Get parameters
     # ------------------------------------------------
-    configFile = open('configuration.yaml','r')
+    configFile = open('../configuration.yaml','r')
     config = yaml.load(configFile)
     configFile.close()
     WorkingDir = config['WorkingDir']
@@ -153,6 +153,7 @@ def TopN_Clustering():
     # --------------------------------------
     # Final time stamp
     # --------------------------------------        
+    os.chdir(ScriptsDir)    
     end_total = time.time()
     # Final time stamp
     print('------------------------------------------------')

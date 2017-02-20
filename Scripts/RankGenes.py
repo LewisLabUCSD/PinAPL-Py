@@ -144,9 +144,10 @@ def PrepareGeneList(sample):
     # ------------------------------------------------
     # Get parameters
     # ------------------------------------------------
-    configFile = open('configuration.yaml','r')
+    configFile = open('../configuration.yaml','r')
     config = yaml.load(configFile)
     configFile.close()    
+    ScriptsDir = config['ScriptsDir']
     AnalysisDir = config['AnalysisDir']
     ListDir = config['HitDir']
     EffDir = config['EffDir']
@@ -411,6 +412,7 @@ def PrepareGeneList(sample):
     sec_elapsed = end_total - start_total    
     TimeStamp(sec_elapsed,'Total')
     print('\n')
+    os.chdir(ScriptsDir)
 
 if __name__ == "__main__":
     input1 = sys.argv[1]

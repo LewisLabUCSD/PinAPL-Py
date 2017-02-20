@@ -38,9 +38,10 @@ def AnalyzeCounts(sample):
     # ------------------------------------------------
     # Get parameters
     # ------------------------------------------------
-    configFile = open('configuration.yaml','r')
+    configFile = open('../configuration.yaml','r')
     config = yaml.load(configFile)
     configFile.close()
+    ScriptsDir = config['ScriptsDir']    
     DataDir = config['DataDir']
     AnalysisDir = config['AnalysisDir']
     ScreenType = config['ScreenType']
@@ -208,6 +209,7 @@ def AnalyzeCounts(sample):
     # --------------------------------------
     # Final time stamp
     # --------------------------------------        
+    os.chdir(ScriptsDir)    
     end_total = time.time()
     # Final time stamp
     print('------------------------------------------------')

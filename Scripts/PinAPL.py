@@ -43,6 +43,9 @@ script09 = config['script09']
 script10 = config['script10']
 script11 = config['script11']
 
+
+os.chdir(ScriptsDir)
+
 # Print Header
 os.system('python -u PrintStatus.py Header blank 2>&1 | tee PinAPL-Py.log')
 start = time.time()
@@ -56,18 +59,15 @@ if not os.path.exists(IndexDir):
     os.system('python -u PrintStatus.py Done "'+DoneMsg+'" 2>&1 | tee -a PinAPL-Py.log')    
 
 # Read Samples
-os.chdir(ScriptsDir)
 StatMsg = 'Reading data ...'
 os.system('python -u PrintStatus.py SubHeader "'+StatMsg+'" 2>&1 | tee -a PinAPL-Py.log')
 os.system('python -u '+script01+'.py 2>&1 | tee -a PinAPL-Py.log')
 SampleNames, Treatments, Replicates = GetSamples()
-os.chdir(ScriptsDir)
 os.system('python -u '+script02+'.py 2>&1 | tee -a PinAPL-Py.log')
 DoneMsg = '\nData input completed.'    
 os.system('python -u PrintStatus.py Done "'+DoneMsg+'" 2>&1 | tee -a PinAPL-Py.log')
     
 # Align Reads
-os.chdir(ScriptsDir)
 StatMsg = 'Aligning reads ...'
 os.system('python -u PrintStatus.py SubHeader "'+StatMsg+'" 2>&1 | tee -a PinAPL-Py.log')
 for sample in SampleNames:
@@ -75,13 +75,11 @@ for sample in SampleNames:
         os.system('python -u PrintStatus.py SkipSample '+sample+' 2>&1 | tee -a PinAPL-Py.log')
     else:        
         os.system('python -u PrintStatus.py ProcessSample '+sample+' 2>&1 | tee -a PinAPL-Py.log')
-        os.system('python -u '+script03+'.py '+sample+' 2>&1 | tee -a PinAPL-Py.log')
-        
+        os.system('python -u '+script03+'.py '+sample+' 2>&1 | tee -a PinAPL-Py.log')        
 DoneMsg = 'Read alignments completed.'
 os.system('python -u PrintStatus.py Done "'+DoneMsg+'" 2>&1 | tee -a PinAPL-Py.log')
 
 # Normalize Counts
-os.chdir(ScriptsDir)
 StatMsg = 'Normalizing read counts ...'
 os.system('python -u PrintStatus.py SubHeader "'+StatMsg+'" 2>&1 | tee -a PinAPL-Py.log')
 os.system('python -u '+script04+'.py'+' 2>&1 | tee -a PinAPL-Py.log' )
@@ -89,7 +87,6 @@ DoneMsg = 'Normalization completed.'
 os.system('python -u PrintStatus.py Done "'+DoneMsg+'" 2>&1 | tee -a PinAPL-Py.log')
 
 # Analyze Counts
-os.chdir(ScriptsDir)
 StatMsg = 'Analyzing read counts ...'
 os.system('python -u PrintStatus.py SubHeader "'+StatMsg+'" 2>&1 | tee -a PinAPL-Py.log')
 for sample in SampleNames:
@@ -99,7 +96,6 @@ DoneMsg = 'Read count analysis completed.'
 os.system('python -u PrintStatus.py Done "'+DoneMsg+'" 2>&1 | tee -a PinAPL-Py.log')
 
 # Analyze Controls
-os.chdir(ScriptsDir)
 StatMsg = 'Analyzing controls ...'
 os.system('python -u PrintStatus.py SubHeader "'+StatMsg+'" 2>&1 | tee -a PinAPL-Py.log')
 os.system('python -u '+script06+'.py'+' 2>&1 | tee -a PinAPL-Py.log')
@@ -107,7 +103,6 @@ DoneMsg = 'Control analysis completed.'
 os.system('python -u PrintStatus.py Done "'+DoneMsg+'" 2>&1 | tee -a PinAPL-Py.log')
 
 # Find sgRNA hits
-os.chdir(ScriptsDir)
 StatMsg = 'sgRNA '+ScreenType+' analysis ...'
 os.system('python -u PrintStatus.py SubHeader "'+StatMsg+'" 2>&1 | tee -a PinAPL-Py.log')
 for sample in SampleNames: 
@@ -118,7 +113,6 @@ DoneMsg = 'sgRNA '+ScreenType+' analysis completed.'
 os.system('python -u PrintStatus.py Done "'+DoneMsg+'" 2>&1 | tee -a PinAPL-Py.log')
 
 # Rank genes
-os.chdir(ScriptsDir)
 StatMsg = 'Gene ranking analysis ...'
 os.system('python -u PrintStatus.py SubHeader "'+StatMsg+'" 2>&1 | tee -a PinAPL-Py.log')
 for sample in SampleNames:
@@ -129,7 +123,6 @@ DoneMsg = 'Gene ranking analysis completed.'
 os.system('python -u PrintStatus.py Done "'+DoneMsg+'" 2>&1 | tee -a PinAPL-Py.log')
 
 # Prepare sample scatterplots
-os.chdir(ScriptsDir)
 StatMsg = 'Read count scatterplots ...'
 os.system('python -u PrintStatus.py SubHeader "'+StatMsg+'" 2>&1 | tee -a PinAPL-Py.log')
 for sample in SampleNames:
@@ -140,7 +133,6 @@ DoneMsg = 'Read count scatterplots completed.'
 os.system('python -u PrintStatus.py Done "'+DoneMsg+'" 2>&1 | tee -a PinAPL-Py.log')
 
 # Prepare replicate scatterplots
-os.chdir(ScriptsDir)
 StatMsg = 'Replicate correlation ...'
 os.system('python -u PrintStatus.py SubHeader "'+StatMsg+'" 2>&1 | tee -a PinAPL-Py.log')
 for treatment in Treatments:
@@ -153,7 +145,6 @@ DoneMsg = '\nReplicate correlation analysis completed.'
 os.system('python -u PrintStatus.py Done "'+DoneMsg+'" 2>&1 | tee -a PinAPL-Py.log')
 
 # Prepare heatmap
-os.chdir(ScriptsDir)
 StatMsg = 'Clustering analysis ...'
 os.system('python -u PrintStatus.py SubHeader "'+StatMsg+'" 2>&1 | tee -a PinAPL-Py.log')
 os.system('python -u '+script11+'.py'+' 2>&1 | tee -a PinAPL-Py.log' )

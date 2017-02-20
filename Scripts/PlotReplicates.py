@@ -34,9 +34,10 @@ def Repl_Scatterplot(Repl1,Repl2):
     # ------------------------------------------------
     # Get parameters
     # ------------------------------------------------
-    configFile = open('configuration.yaml','r')
+    configFile = open('../configuration.yaml','r')
     config = yaml.load(configFile)
     configFile.close()
+    ScriptsDir = config['ScriptsDir']
     WorkingDir = config['WorkingDir'] 
     AnalysisDir = config['AnalysisDir']
     AlnQCDir = config['AlnQCDir']
@@ -125,6 +126,7 @@ def Repl_Scatterplot(Repl1,Repl2):
     # --------------------------------------
     # Final time stamp
     # --------------------------------------        
+    os.chdir(ScriptsDir)    
     end_total = time.time()
     # Final time stamp
     print('------------------------------------------------')

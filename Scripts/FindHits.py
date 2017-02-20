@@ -38,9 +38,10 @@ def PrepareHitList(sample):
     # ------------------------------------------------
     # Get parameters
     # ------------------------------------------------
-    configFile = open('configuration.yaml','r')
+    configFile = open('../configuration.yaml','r')
     config = yaml.load(configFile)
     configFile.close()
+    ScriptsDir = config['ScriptsDir']    
     WorkingDir = config['WorkingDir']
     AnalysisDir = config['AnalysisDir']
     InputDir = config['AlnQCDir']+sample
@@ -175,6 +176,7 @@ def PrepareHitList(sample):
     # --------------------------------------
     # Final time stamp
     # --------------------------------------        
+    os.chdir(ScriptsDir)
     end_total = time.time()
     # Final time stamp
     print('------------------------------------------------')

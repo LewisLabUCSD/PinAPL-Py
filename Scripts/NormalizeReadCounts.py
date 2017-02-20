@@ -31,9 +31,10 @@ def Normalization():
     # ------------------------------------------------
     # Get parameters
     # ------------------------------------------------
-    configFile = open('configuration.yaml','r')
+    configFile = open('../configuration.yaml','r')
     config = yaml.load(configFile)
     configFile.close()
+    ScriptsDir = config['ScriptsDir']
     AlnQCDir = config['AlnQCDir']     
     DepthDir = config['DepthDir']
     delta = config['delta_d']
@@ -148,6 +149,7 @@ def Normalization():
     # --------------------------------------
     # Time stamp
     # --------------------------------------        
+    os.chdir(ScriptsDir)
     end = time.time()
     # Final time stamp
     print('------------------------------------------------')
