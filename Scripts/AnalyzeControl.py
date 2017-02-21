@@ -32,14 +32,15 @@ def EstimateControlCounts():
     # ------------------------------------------------
     # Get parameters
     # ------------------------------------------------
-    configFile = open('configuration.yaml','r')
+    configFile = open('../configuration.yaml','r')
     config = yaml.load(configFile)
     configFile.close()
+    ScriptsDir = config['ScriptsDir']
     WorkingDir = config['WorkingDir']
     AlnQCDir = config['AlnQCDir']
     ControlDir = config['ControlDir']
     res = config['dpi']
-    svg = config['dpi']
+    svg = config['svg']
     CtrlCounts_Filename = 'Control_GuideCounts_0.tsv'
     
    
@@ -153,6 +154,7 @@ def EstimateControlCounts():
     # --------------------------------------
     # Final time stamp
     # --------------------------------------        
+    os.chdir(ScriptsDir)
     end_total = time.time()
     # Final time stamp
     print('------------------------------------------------')

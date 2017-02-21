@@ -28,9 +28,10 @@ def BuildBowtieIndex():
     # ------------------------------------------------
     # Get parameters
     # ------------------------------------------------
-    configFile = open('configuration.yaml','r')
+    configFile = open('../configuration.yaml','r')
     config = yaml.load(configFile)
     configFile.close()
+    ScriptsDir = config['ScriptsDir']
     bw2Dir = config['bw2Dir']    
     LibDir = config['LibDir']
     IndexDir = config['IndexDir']
@@ -68,6 +69,7 @@ def BuildBowtieIndex():
     # --------------------------------------
     # Final time stamp
     # --------------------------------------        
+    os.chdir(ScriptsDir)    
     end_total = time.time()
     # Final time stamp
     print('------------------------------------------------')

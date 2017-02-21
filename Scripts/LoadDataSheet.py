@@ -14,10 +14,11 @@ import pandas
 
 def LoadExcelDataSheet():
     # Get parameters
-    configFile = open('configuration.yaml','r')
+    configFile = open('../configuration.yaml','r')
     config = yaml.load(configFile)
     configFile.close()
     WorkingDir = config['WorkingDir']    
+    ScriptsDir = config['ScriptsDir']
 
     # Get read files
     os.chdir(WorkingDir)
@@ -36,7 +37,7 @@ def LoadExcelDataSheet():
                print('Found sample '+SampleNames[j])
     DataSheet['SAMPLE NAME'] = SampleNames           
     DataSheet.to_excel('DataSheet.xlsx',columns=['FILENAME','TREATMENT','SAMPLE NAME'])
-  
+    os.chdir(ScriptsDir)
     
     
 if __name__ == "__main__":

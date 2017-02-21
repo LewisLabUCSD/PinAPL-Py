@@ -33,9 +33,10 @@ def GOI_Scatterplot(sample,GOI='None'):
     # ------------------------------------------------
     # Get parameters
     # ------------------------------------------------
-    configFile = open('configuration.yaml','r')
+    configFile = open('../configuration.yaml','r')
     config = yaml.load(configFile)
     configFile.close()
+    ScriptsDir = config['ScriptsDir']
     WorkingDir = config['WorkingDir'] 
     AnalysisDir = config['AnalysisDir']
     ListDir = config['HitDir']
@@ -147,6 +148,7 @@ def GOI_Scatterplot(sample,GOI='None'):
     # --------------------------------------
     # Time stamp
     # --------------------------------------        
+    os.chdir(ScriptsDir)
     end_total = time.time()
     # Final time stamp
     print('------------------------------------------------')

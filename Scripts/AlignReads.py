@@ -54,9 +54,10 @@ def MapAndCount(sample):
     # ------------------------------------------------
     # Get parameters
     # ------------------------------------------------
-    configFile = open('configuration.yaml','r')
+    configFile = open('../configuration.yaml','r')
     config = yaml.load(configFile)
     configFile.close()
+    ScriptsDir = config['ScriptsDir']
     WorkingDir = config['WorkingDir']
     DataDir = config['DataDir']
     AnalysisDir = config['AnalysisDir']
@@ -431,6 +432,7 @@ def MapAndCount(sample):
     # --------------------------------------
     # Final time stamp
     # --------------------------------------        
+    os.chdir(ScriptsDir)    
     end_total = time.time()
     # Final time stamp
     print('------------------------------------------------')
