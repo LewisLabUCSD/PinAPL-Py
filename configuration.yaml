@@ -7,41 +7,39 @@
 
 # PROJECT PARAMETERS
 ScreenType: 'enrichment'                    # type of screen ['enrichment'/'depletion']
+
+# LIBRARY PARAMETERS
 LibFilename: 'GeCKOv2_library.tsv'            # filename of library spreadsheet  
 seq_5_end: 'TCTTGTGGAAAGGACGAAACACCG'       # sequence 5' of sgRNA in read
 seq_3_end: 'GTTTTAGAGCTAGAAATAGCAAGTT'       # sequence 3' of sgRNA in read
+NonTargetPrefix: 'NonTargeting'        # prefix for non-targeting sgRNAs in library (keep at default if none present)
+sgRNAsPerGene: 6                       # number of sgRNAs targeting each gene (excluding non-targeting controls and miRNAs). 
+                                       #    ONLY IMPORTANT IF 'ES' is chosen for gene ranking method !
 
 # ANALYSIS OPTIONS
 AlnOutput: 'Compress'                  # keep raw alignment output? ['Keep'/'Compress'/'Delete']
 keepCutReads: False                    # keep files containing trimmed reads? ['True'/'False']
-Normalization: 'cpm'                  # Normalization of read counts (counts per mio reads / size-factor) ['cpm'/'size']
+Normalization: 'size-factor'                  # Normalization of read counts (counts per mio reads / size-factor) ['cpm'/'size']
 Cutoff: 0                           # set counts (cpm) below this number to 0 
 GeneMetric: 'aRRA'                    # metric for gene ranking ['aRRA'/'STARS'/'ES']
-Np: 1000                         # number of permutations for gene ranking analysis 
-thr_STARS: 10                          # Threshold percentage for STARS analysis
-scatter_annotate: False                 # annotate scatterplot with sgRNA IDs? ['True'/'False']
-ClusterBy: 'counts'                  # clustering criterion ['variance'/'counts']
-TopN: 25                              # number of top sgRNAs to take into account for clustering
+ClusterBy: 'variance'                  # clustering criterion ['variance'/'counts']
 HitListFormat: 'tsv'                  # Format of results spreadsheets (sgRNA hits and gene ranking) ['tsv'/'xlsx']
-NonTargetPrefix: 'NonTargeting'        # prefix for non-targeting sgRNAs in library (keep at default if none present)
+alpha: 0.01                            # significance level    
+padj: 'fdr_tsbh'                        # method for p-value adjustment ['fdr_bh'/'fdr_tsbh']
+
 
 # TECHNICAL PARAMETERS
+TopN: 25                              # number of top sgRNAs to take into account for clustering
+Np: 100                         # number of permutations for gene ranking analysis 
+thr_STARS: 10                          # Threshold percentage for STARS analysis
 CutErrorTol: 0.25                       # Cutadapt error tolerance
 R_min:  10                             # minimal required read length after cutadapt trimming
 L_bw: 11                               # Bowtie2 -L parameter (seed length)
 N_bw: 1                                # Bowtie2 -N parameter (seed mismatch)
 i_bw: 'S,1,0.75'                       # Bowtie2 -i parameter (interval function)
 Theta: 2                               # alignment ambiguity tolerance
-max_q: 95                              # maximum quantile for histogram plots
-alpha: 0.01                            # significance level    
-padj: 'fdr_bh'                        # method for p-value adjustment ['fdr_bh'/'fdr_tsbh']
-sgRNAsPerGene: 6                       # number of sgRNAs targeting each gene (excluding non-targeting controls and miRNAs). 
-                                       #    ONLY IMPORTANT IF 'ES' is chosen for gene ranking method !
+delta: 1                             # count shift to avoid zero counts in log transformation/fold change etc.
 
-delta_d: 0.01                         # count shift for computing fold changes and size-factors (avoid division by zero)
-delta_2: 1                              # count shift cases of zeros in control count variance (avoid division by zero)
-delta_s: 0.1                         # count shift before log transformation in scatterplots
-delta_p: 1                             # count shift before log transformation in heatmap
 
 # VISUALIZATION PARAMETERS
 dpi: 300                               # resolution of PNG plots
@@ -52,6 +50,8 @@ width_p: 800                            # width of heatmap image (pixels)
 height_p: 800                            # height of heatmap image (pixels)
 fontsize_p: 14                          # fontsize in heatmap image
 marginsize: 7                           # size of margin in heatmap image (increase if sample names are clipped)
+scatter_annotate: False                 # annotate scatterplot with sgRNA IDs? ['True'/'False']
+max_q: 95                              # maximum quantile for histogram plots
 
 # DIRECTORIES
 WorkingDir: '/home/philipp/Documents/Projects/PinAPL-Py/'
