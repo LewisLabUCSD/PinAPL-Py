@@ -159,6 +159,7 @@ def PrepareGeneList(sample):
     global r
     r = config['sgRNAsPerGene']
     GeneMetric = config['GeneMetric']
+    Np = config['Np']
     SheetFormat = config['HitListFormat']
     pvalDir = config['pvalDir']
     res = config['dpi']
@@ -261,7 +262,6 @@ def PrepareGeneList(sample):
         TimeStamp(sec_elapsed,'ES Computation')
         # Permutation
         start = time.time()
-        Np = config['Np_ES']
         print('Estimating ES null distribution ('+str(Np)+' Permutations) ...')
         I_perm = numpy.random.choice(L,size=(Np,r),replace=False)          
         metric_null = Parallel(n_jobs=num_cores)(delayed(computeESnull)(I) for I in I_perm)
@@ -294,7 +294,6 @@ def PrepareGeneList(sample):
             TimeStamp(sec_elapsed,'a-RRA Computation')        
             # Permutation
             start = time.time()
-            Np = config['Np_aRRA']
             print('Estimating a-RRA null distribution ('+str(Np)+' Permutations)...')
             I_perm = numpy.random.choice(L,size=(Np,r),replace=False)
             metric_null = Parallel(n_jobs=num_cores)(delayed(compute_aRRA_null)(I) for I in I_perm)
@@ -316,7 +315,6 @@ def PrepareGeneList(sample):
         else: # no control replicates
             print('ERROR: Cannot compute a-RRA scores without control replicates!')
             SortFlag = True
-            Np = config['Np_aRRA']
             metric = [-1 for k in range(G)]
             pval_list = [-1 for k in range(G)]
             metric_sig = ['N/A' for k in range(G)]
@@ -326,7 +324,6 @@ def PrepareGeneList(sample):
         # -------------------------------------------------            
         start = time.time()
         STARSDir = config['STARSDir']
-        Np = config['Np_STARS']
         thr = config['thr_STARS']
         screentype = config['ScreenType']
         os.chdir(ListDir)

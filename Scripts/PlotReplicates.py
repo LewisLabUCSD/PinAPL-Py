@@ -43,7 +43,7 @@ def Repl_Scatterplot(Repl1,Repl2):
     AlnQCDir = config['AlnQCDir']
     PlotDir = config['CorrelDir']
     alpha = config['alpha']
-    delta = config['delta_s']
+    delta = config['delta']
     NonTPrefix = config['NonTargetPrefix']
     res = config['dpi']
     svg = config['svg']    

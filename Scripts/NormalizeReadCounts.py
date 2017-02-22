@@ -37,7 +37,7 @@ def Normalization():
     ScriptsDir = config['ScriptsDir']
     AlnQCDir = config['AlnQCDir']     
     DepthDir = config['DepthDir']
-    delta = config['delta_d']
+    delta = config['delta']
     norm = config['Normalization']
     NormSuffix = '_0.tsv'
     N0 = 1000000

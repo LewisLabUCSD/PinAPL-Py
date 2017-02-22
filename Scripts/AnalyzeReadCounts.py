@@ -50,7 +50,7 @@ def AnalyzeCounts(sample):
     OutputDir = config['CountQCDir']+sample
     res = config['dpi']    
     svg = config['svg']
-    logfilename = sample+'_ReadStatistics.txt'
+    logfilename = sample+'_ReadCount_Statistics.txt'
    
     # --------------------------------------
     # Load counts

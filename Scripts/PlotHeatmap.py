@@ -39,7 +39,7 @@ def TopN_Clustering():
     ScriptsDir = config['ScriptsDir']
     ClusterBy = config['ClusterBy']
     N = config['TopN']
-    delta = config['delta_p']
+    delta = config['delta']
     width = config['width_p']
     height = config['height_p']
     fontsize = config['fontsize_p']

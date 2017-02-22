@@ -112,16 +112,6 @@ for sample in SampleNames:
 DoneMsg = 'sgRNA '+ScreenType+' analysis completed.'
 os.system('python -u PrintStatus.py Done "'+DoneMsg+'" 2>&1 | tee -a PinAPL-Py.log')
 
-# Rank genes
-StatMsg = 'Gene ranking analysis ...'
-os.system('python -u PrintStatus.py SubHeader "'+StatMsg+'" 2>&1 | tee -a PinAPL-Py.log')
-for sample in SampleNames:
-    if 'Control' not in sample:
-        os.system('python -u PrintStatus.py ProcessSample '+sample+' 2>&1 | tee -a PinAPL-Py.log')
-        os.system('python -u '+script08+'.py '+sample+' 2>&1 | tee -a PinAPL-Py.log')
-DoneMsg = 'Gene ranking analysis completed.'
-os.system('python -u PrintStatus.py Done "'+DoneMsg+'" 2>&1 | tee -a PinAPL-Py.log')
-
 # Prepare sample scatterplots
 StatMsg = 'Read count scatterplots ...'
 os.system('python -u PrintStatus.py SubHeader "'+StatMsg+'" 2>&1 | tee -a PinAPL-Py.log')
@@ -149,6 +139,16 @@ StatMsg = 'Clustering analysis ...'
 os.system('python -u PrintStatus.py SubHeader "'+StatMsg+'" 2>&1 | tee -a PinAPL-Py.log')
 os.system('python -u '+script11+'.py'+' 2>&1 | tee -a PinAPL-Py.log' )
 DoneMsg = 'Clustering analysis completed.'
+os.system('python -u PrintStatus.py Done "'+DoneMsg+'" 2>&1 | tee -a PinAPL-Py.log')
+
+# Rank genes
+StatMsg = 'Gene ranking analysis ...'
+os.system('python -u PrintStatus.py SubHeader "'+StatMsg+'" 2>&1 | tee -a PinAPL-Py.log')
+for sample in SampleNames:
+    if 'Control' not in sample:
+        os.system('python -u PrintStatus.py ProcessSample '+sample+' 2>&1 | tee -a PinAPL-Py.log')
+        os.system('python -u '+script08+'.py '+sample+' 2>&1 | tee -a PinAPL-Py.log')
+DoneMsg = 'Gene ranking analysis completed.'
 os.system('python -u PrintStatus.py Done "'+DoneMsg+'" 2>&1 | tee -a PinAPL-Py.log')
 
 # Final Time Stamp

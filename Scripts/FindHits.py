@@ -52,7 +52,7 @@ def PrepareHitList(sample):
     alpha = config['alpha']    
     padj = config['padj']
     SheetFormat = config['HitListFormat']
-    delta = config['delta_2']
+    delta = config['delta']
     pvalDir = config['pvalDir']
     res = config['dpi']
     svg = config['svg']
