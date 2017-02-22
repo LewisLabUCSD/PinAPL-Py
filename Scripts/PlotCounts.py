@@ -49,19 +49,14 @@ def GOI_Scatterplot(sample,GOI='None'):
     svg = config['svg']
     dotsize = config['dotsize']
     logbase = config['logbase']
-    SheetFormat = config['HitListFormat']    
     
     # ------------------------------------------------
     # Reading counts from sample and control
     # ------------------------------------------------
     print('Reading counts ...')    
     os.chdir(ListDir)
-    if SheetFormat == 'tsv':
-        filename = glob.glob(sample+'_*sgRNAList.tsv')[0]
-        HitList = pd.read_table(filename, sep='\t')
-    elif SheetFormat == 'xlsx':
-        filename = glob.glob(sample+'_*sgRNAList.xlsx')[0]
-        HitList = pd.read_excel(filename)        
+    filename = glob.glob(sample+'_*sgRNAList.tsv')[0]
+    HitList = pd.read_table(filename, sep='\t')       
     sgIDs = list(HitList['sgRNA'].values)
     genes = list(HitList['gene'].values)  
     L = len(sgIDs)

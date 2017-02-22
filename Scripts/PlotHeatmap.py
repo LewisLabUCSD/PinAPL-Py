@@ -45,6 +45,7 @@ def TopN_Clustering():
     fontsize = config['fontsize_p']
     marginsize = config['marginsize']
     ScreenType = config['ScreenType']
+    svg = config['svg']
     
     # ------------------------------------------------
     # Dataframe containing all counts 
@@ -89,7 +90,7 @@ def TopN_Clustering():
            os.makedirs(ClusterDir)
         os.chdir(ClusterDir)
         Q.to_csv(OutputSheetname,sep='\t',index=False)     
-        HeatmapFilename = 'Heatmap_Top'+str(N)+'_most_variable_sgRNAs.png'
+        HeatmapFilename = 'Heatmap_Top'+str(N)+'_most_variable_sgRNAs'
     elif ClusterBy == 'counts':
         TopGuides = set()  
         # Assembling top N guides        
@@ -132,7 +133,7 @@ def TopN_Clustering():
             os.makedirs(ClusterDir)  
         os.chdir(ClusterDir)
         TopGuides_df.to_csv(OutputSheetname,sep='\t',index=False)
-        HeatmapFilename = 'Heatmap_combined_Top'+str(N)+'_highest_sgRNA_counts.png'
+        HeatmapFilename = 'Heatmap_combined_Top'+str(N)+'_highest_sgRNA_counts'
    
 
     # ------------------------------------------------
@@ -144,7 +145,7 @@ def TopN_Clustering():
     command = 'Rscript'
     path2script = ScriptsDir+'ClusterAnalysis_Heatmap.r'
     args = [ClusterDir,OutputSheetname,str(delta),HeatmapFilename,\
-            str(width),str(height),str(fontsize),str(marginsize)]  
+            str(width),str(height),str(fontsize),str(marginsize),str(svg)]  
     cmd = [command, path2script] + args    
     # Run R script
     subprocess.check_output(cmd)

@@ -170,12 +170,8 @@ def PrepareGeneList(sample):
     # --------------------------   
     os.chdir(ListDir)
     print('Loading sgRNA counts ...')        
-    if SheetFormat == 'tsv':
-        filename = glob.glob(sample+'_*sgRNAList.tsv')[0]
-        HitList = pd.read_table(filename, sep='\t')
-    elif SheetFormat == 'xlsx':
-        filename = glob.glob(sample+'_*sgRNAList.xlsx')[0]
-        HitList = pd.read_excel(filename)    
+    filename = glob.glob(sample+'_*sgRNAList.tsv')[0]
+    HitList = pd.read_table(filename, sep='\t')  
     sgIDs = list(HitList['sgRNA'].values)
     global genes
     genes = list(HitList['gene'].values)
@@ -396,10 +392,9 @@ def PrepareGeneList(sample):
                             columns = ['gene',GeneMetric,GeneMetric+' p_value',GeneMetric+' adj. p_value',\
                             'significant','# signif. sgRNAs'])
     Results_df_0 = Results_df.sort_values(['significant',GeneMetric],ascending=[False,SortFlag])
-    if SheetFormat == 'tsv':
-        GeneListFilename = filename[0:-14]+'_'+GeneMetric+'_'+'P'+str(Np)+'_GeneList.tsv'
-        Results_df_0.to_csv(GeneListFilename, sep = '\t', index = False)      
-    elif SheetFormat == 'xlsx':
+    GeneListFilename = filename[0:-14]+'_'+GeneMetric+'_'+'P'+str(Np)+'_GeneList.tsv'
+    Results_df_0.to_csv(GeneListFilename, sep = '\t', index = False)      
+    if SheetFormat == 'xlsx':
         GeneListFilename = filename[0:-14]+'_'+GeneMetric+'_'+'P'+str(Np)+'_GeneList.xlsx'
         Results_df_0.to_excel(GeneListFilename)              
     

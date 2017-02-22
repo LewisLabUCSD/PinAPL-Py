@@ -165,10 +165,9 @@ def PrepareHitList(sample):
         Results_df_0 = Results_df.sort_values(['significant','fold change'],ascending=[0,0])                
     elif ScreenType == 'depletion':
         Results_df_0 = Results_df.sort_values(['significant','fold change'],ascending=[0,1])            
-    if SheetFormat == 'tsv':
-        ListFilename = sample+'_'+str(alpha)+'_'+padj+'_sgRNAList.tsv'
-        Results_df_0.to_csv(ListFilename, sep = '\t', index = False)
-    elif SheetFormat == 'xlsx':
+    ListFilename = sample+'_'+str(alpha)+'_'+padj+'_sgRNAList.tsv'
+    Results_df_0.to_csv(ListFilename, sep = '\t', index = False)
+    if SheetFormat == 'xlsx':
         print('Converting to xlsx ...')
         ListFilename = sample+'_'+str(alpha)+'_'+padj+'_sgRNAList.xlsx'
         Results_df_0.to_excel(ListFilename)
