@@ -25,12 +25,12 @@ GeneMetric: 'aRRA'                    # metric for gene ranking ['aRRA'/'STARS'/
 ClusterBy: 'variance'                  # clustering criterion ['variance'/'counts']
 HitListFormat: 'tsv'                  # Format of results spreadsheets (sgRNA hits and gene ranking) ['tsv'/'xlsx']
 alpha: 0.01                            # significance level    
-padj: 'fdr_tsbh'                        # method for p-value adjustment ['fdr_bh'/'fdr_tsbh']
+padj: 'fdr_bh'                        # method for p-value adjustment ['fdr_bh'/'fdr_tsbh']
 
 
 # TECHNICAL PARAMETERS
 TopN: 25                              # number of top sgRNAs to take into account for clustering
-Np: 100                         # number of permutations for gene ranking analysis 
+Np: 1000                         # number of permutations for gene ranking analysis 
 thr_STARS: 10                          # Threshold percentage for STARS analysis
 CutErrorTol: 0.25                       # Cutadapt error tolerance
 R_min:  10                             # minimal required read length after cutadapt trimming
@@ -58,7 +58,7 @@ WorkingDir: '/workingdir/'
 DataDir: '/workingdir/Data/'
 LibDir: '/workingdir/Library/'
 IndexDir: '/workingdir/Library/Bowtie2_Index/'
-ScriptsDir: '/opt/PinAPL-Py/Scripts/'
+ScriptsDir: '/workingdir/Scripts/'
 AlignDir: '/workingdir/Alignments/'
 AnalysisDir: '/workingdir/Analysis/'
 HitDir: '/workingdir/Analysis/sgRNA_Rankings'
@@ -74,7 +74,7 @@ DepthDir: '/workingdir/Analysis/Read_Depth/'
 pvalDir: '/workingdir/Analysis/p-values/' 
 bw2Dir: '/usr/bin/'
 CutAdaptDir: '/root/.local/bin/'   
-STARSDir: '/opt/PinAPL-Py/Scripts/STARS_mod/'
+STARSDir: '/workingdir/Scripts/STARS_mod/'
 
 
 # SCRIPT FILENAMES
