@@ -9,6 +9,8 @@ Created on Sat Feb 11 12:23:50 2017
 # Number of reads barplot
 # =======================================================================
 # Imports
+import matplotlib
+matplotlib.use('Agg') 
 import matplotlib.pyplot as plt
 import os
 import subprocess
