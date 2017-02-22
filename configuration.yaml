@@ -19,7 +19,7 @@ sgRNAsPerGene: 6                       # number of sgRNAs targeting each gene (e
 # ANALYSIS OPTIONS
 AlnOutput: 'Compress'                  # keep raw alignment output? ['Keep'/'Compress'/'Delete']
 keepCutReads: False                    # keep files containing trimmed reads? ['True'/'False']
-Normalization: 'size-factor'                  # Normalization of read counts (counts per mio reads / size-factor) ['cpm'/'size']
+Normalization: 'cpm'                  # Normalization of read counts (counts per mio reads / size-factor) ['cpm'/'size']
 Cutoff: 0                           # set counts (cpm) below this number to 0 
 GeneMetric: 'aRRA'                    # metric for gene ranking ['aRRA'/'STARS'/'ES']
 ClusterBy: 'variance'                  # clustering criterion ['variance'/'counts']
