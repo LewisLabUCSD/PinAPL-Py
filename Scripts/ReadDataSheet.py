@@ -12,7 +12,7 @@ import yaml
 import pandas
 
 def GetSamples():
-    configFile = open('../configuration.yaml','r')
+    configFile = open('configuration.yaml','r')
     config = yaml.load(configFile)
     configFile.close()
     WorkingDir = config['WorkingDir']     

@@ -30,6 +30,7 @@ DataDir = config['DataDir']
 ScriptsDir = config['ScriptsDir']
 AlignDir = config['AlignDir']
 AlnQCDir = config['AlnQCDir']
+LogFileDir = config['LogFileDir']
 script00 = config['script00']
 script01 = config['script01']
 script02 = config['script02']
@@ -43,7 +44,8 @@ script09 = config['script09']
 script10 = config['script10']
 script11 = config['script11']
 
-
+# Make config file accessible
+os.system('cp configuration.yaml '+ScriptsDir)
 os.chdir(ScriptsDir)
 
 # Print Header
@@ -168,5 +170,8 @@ else:
     StatMsg = 'Time elapsed [hours]: ' + '%.3f' % time_elapsed +'\n'
     os.system('python -u PrintStatus.py TimeStamp "'+StatMsg+'" 2>&1 | tee -a PinAPL-Py.log')
     
-# Move Log File  
-os.system('mv PinAPL-Py.log '+WorkingDir)
+# Move Log File 
+if not os.path.exists(LogFileDir):
+	os.makedirs(LogFileDir) 
+os.system('cp configuration.yaml '+LogFileDir)
+os.system('mv PinAPL-Py.log '+LogFileDir)

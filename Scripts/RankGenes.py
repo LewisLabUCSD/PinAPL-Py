@@ -13,7 +13,7 @@ from __future__ import division # floating point division by default
 import yaml
 import os
 import time
-import pandas as pd
+import pandas
 import glob
 import numpy
 import matplotlib
@@ -132,7 +132,7 @@ def TimeStamp(sec_elapsed,ProcessName):
 
 
 
-def PrepareGeneList(sample):
+def GeneRankingAnalysis(sample):
     # ------------------------------------------------
     # Print header
     # ------------------------------------------------
@@ -144,7 +144,7 @@ def PrepareGeneList(sample):
     # ------------------------------------------------
     # Get parameters
     # ------------------------------------------------
-    configFile = open('../configuration.yaml','r')
+    configFile = open('configuration.yaml','r')
     config = yaml.load(configFile)
     configFile.close()    
     ScriptsDir = config['ScriptsDir']
@@ -152,12 +152,10 @@ def PrepareGeneList(sample):
     ListDir = config['HitDir']
     EffDir = config['EffDir']
     GeneDir = config['GeneDir']
-    global alpha
-    alpha = config['alpha']            
+    global alpha; alpha = config['alpha']            
     padj = config['padj']
     num_cores = multiprocessing.cpu_count()
-    global r
-    r = config['sgRNAsPerGene']
+    global r; r = config['sgRNAsPerGene']
     GeneMetric = config['GeneMetric']
     Np = config['Np']
     SheetFormat = config['HitListFormat']
@@ -165,34 +163,38 @@ def PrepareGeneList(sample):
     res = config['dpi']
     svg = config['svg']
     
-    # --------------------------        
-    # Read data from sgRNA list
-    # --------------------------   
+    # ------------------------------------------------
+    # Read sgRNA enrichment/depletion table
+    # ------------------------------------------------
     os.chdir(ListDir)
-    print('Loading sgRNA counts ...')        
+    print('Loading sgRNA enrichment/depletion table ...')    
     filename = glob.glob(sample+'_*sgRNAList.tsv')[0]
-    HitList = pd.read_table(filename, sep='\t')  
-    sgIDs = list(HitList['sgRNA'].values)
-    global genes
-    genes = list(HitList['gene'].values)
-    counts = list(HitList['counts [norm.]'].values)
-    global NB_pval
-    NB_pval = list(HitList['p-value'].values)
-    sig = list(HitList['significant'].values)
-    global L        
-    L = len(sgIDs)
-    global geneList
-    geneList = list(set(genes))
-    global G
-    G = len(geneList)
+    HitList = pandas.read_table(filename, sep='\t')  
+    HitList = HitList.sort_values(['fold change'],ascending=False)
+    sgIDs = list(HitList['sgRNA'])
+    global genes; genes = list(HitList['gene'])
+    global geneList; geneList = list(set(genes))
+    counts = list(HitList['counts [norm.]'])
+    fc = list(HitList['fold change'])
+    global NB_pval; NB_pval = list(HitList['p-value'])
+    global L; L = len(sgIDs)
+    global G; G = len(geneList)
+    NB_sig = list(HitList['significant'].values)
     
     # ------------------------------------------
     # Find number of significant sgRNAs per gene
     # ------------------------------------------
     if min(NB_pval) > -1:    
+        # Find genes with at least 1 signif. sgRNA
         print('Looking for sgRNAs with significant fold change ...')
-        n0 = sig.index(False)
-        sigGenes = [genes[k] for k in range(n0)]
+        Temp_DF = pandas.DataFrame(data = {'gene': genes,
+                                           'NB_significant': NB_sig},
+                                           columns = ['gene','NB_significant'])        
+        Temp_DF = Temp_DF.sort_values(['NB_significant'],ascending=False)
+        NB_sig = list(Temp_DF['NB_significant'])
+        genes0 = list(Temp_DF['gene'])
+        n0 = NB_sig.index(False)
+        sigGenes = [genes0[k] for k in range(n0)]
         sigGenesList = list(set(sigGenes))
         # count significant sgRNAs for all genes with at least 1 sign. sgRNA        
         guidesPerGene = list()
@@ -207,7 +209,7 @@ def PrepareGeneList(sample):
             if gene not in sigGenesList:
                 sigGuides.append(0)
             else:
-                sigGuides.append(guidesPerGene[sigGenesList.index(gene)])             
+                sigGuides.append(guidesPerGene[sigGenesList.index(gene)])  
         # Plot histogram
         if not os.path.exists(EffDir):
             os.makedirs(EffDir)
@@ -223,7 +225,7 @@ def PrepareGeneList(sample):
             plt.savefig(sample+'_sgRNA_Efficiency.svg')               
     else: # no control replicates
         print('WARNING: No control replicates found! No significant sgRNAs counted.')
-        sigGuides = ['N/A' for k in range(G)]
+        sigGuides = ['N/A' for k in range(len(sigGuides))]
         # Plot histogram
         if not os.path.exists(EffDir):
             os.makedirs(EffDir)
@@ -237,21 +239,23 @@ def PrepareGeneList(sample):
         plt.savefig(sample+'_sgRNA_Efficiency.png',dpi=res)        
     
     # -------------------------------------------        
-    # Compute sgRNA count ranks
+    # Rank data sheet after fold change
     # -------------------------------------------
-    countsDF = pd.DataFrame(data = {'counts': [counts[k] for k in range(L)]},
-                                columns = ['counts'])
-    countsDF_Ranked = countsDF.rank(ascending=True)
-    global ranks
-    ranks = countsDF_Ranked['counts'].tolist()    
-    
+    fc_DF = pandas.DataFrame(data = {'fc': list(HitList['fold change'])},
+                                 columns = ['fc'])
+    fc_DF = fc_DF.rank()
+    global ranks; ranks = list(fc_DF['fc'])    
+        
+    # -------------------------------------------        
+    # Carry out gene ranking analysis
+    # -------------------------------------------    
     if GeneMetric == 'ES':
         # -------------------------------------------------        
         # compute ES 
         # -------------------------------------------------
         start = time.time()
-        SortFlag = True        
-        print('Computing gene enrichment scores ...')
+        SortFlag = False                
+        print('Computing gene enrichment scores (ES) ...')
         metric = Parallel(n_jobs=num_cores)(delayed(computeES)(g) for g in range(G))
         end = time.time()
         sec_elapsed = end - start
@@ -267,15 +271,15 @@ def PrepareGeneList(sample):
         # p-value
         print('Computing ES p-values ...')        
         ecdf = ECDF(metric_null)
-        pval_list= list()
+        metric_pval= list()
         for g in range(G):
             GOI = geneList[g]
             pval = 1 - ecdf(metric[g])
-            pval_list.append(pval)
+            metric_pval.append(pval)
         # Determine critical p value (FDR correction)
-        multTest = multipletests(pval_list,alpha,padj)
+        multTest = multipletests(metric_pval,alpha,padj)
         metric_sig = multTest[0]
-        pval_list0 = multTest[1]
+        metric_pval0 = multTest[1]
     elif GeneMetric == 'aRRA':            
         # -------------------------------------------------        
         # compute aRRA 
@@ -299,20 +303,20 @@ def PrepareGeneList(sample):
             # p-value
             print('Computing a-RRA p-values ...')
             ecdf = ECDF(metric_null)
-            pval_list = list()
+            metric_pval = list()
             for g in range(G):    
                 GOI = geneList[g]
                 pval = ecdf(metric[g])
-                pval_list.append(pval)
+                metric_pval.append(pval)
             # Determine critical p value (FDR correction)
-            multTest = multipletests(pval_list,alpha,padj)
+            multTest = multipletests(metric_pval,alpha,padj)
             metric_sig = multTest[0]
-            pval_list0 = multTest[1]
+            metric_pval0 = multTest[1]
         else: # no control replicates
             print('ERROR: Cannot compute a-RRA scores without control replicates!')
             SortFlag = True
             metric = [-1 for k in range(G)]
-            pval_list = [-1 for k in range(G)]
+            metric_pval = [-1 for k in range(G)]
             metric_sig = ['N/A' for k in range(G)]
     elif GeneMetric == 'STARS':
         # -------------------------------------------------        
@@ -352,7 +356,7 @@ def PrepareGeneList(sample):
         os.system(STARS_cmd)
         # Extracting statistics
         STARS_output = glob.glob('counts_STARSOutput*.txt')[0]
-        STARS = pd.read_table(STARS_output, sep='\t')
+        STARS = pandas.read_table(STARS_output, sep='\t')
         geneList_s = list(STARS['Gene Symbol'].values)
         G = len(geneList_s)
         s_index = [geneList.index(geneList_s[k]) for k in range(G)]
@@ -360,10 +364,10 @@ def PrepareGeneList(sample):
         sigGuides_s = [sigGuides[s_index[k]] for k in range(G)]
         sigGuides = sigGuides_s
         metric = list(STARS['STARS Score'].values)
-        pval_list = list(STARS['p-value'].values)
-        multTest = multipletests(pval_list,alpha,padj)
+        metric_pval = list(STARS['p-value'].values)
+        multTest = multipletests(metric_pval,alpha,padj)
         metric_sig = multTest[0]  
-        pval_list0 = multTest[1]                   
+        metric_pval0 = multTest[1]                   
         # Deleting STARS files            
         os.system('rm STARS_input.txt STARS_chip.txt')
         os.system('rm Null_STARSOutput8_'+str(thr)+'.txt')
@@ -374,7 +378,7 @@ def PrepareGeneList(sample):
     # p-value plots
     # -------------------------------------------------  
     print('Plotting p-values ...')
-    pvalHist_metric(pval_list,pval_list0,GeneMetric,pvalDir,sample,res,svg)           
+    pvalHist_metric(metric_pval,metric_pval0,GeneMetric,pvalDir,sample,res,svg)           
             
     # -------------------------------------------------  
     # Output list
@@ -383,10 +387,10 @@ def PrepareGeneList(sample):
         os.makedirs(GeneDir)
     os.chdir(GeneDir)
     print('Writing results dataframe ...')
-    Results_df = pd.DataFrame(data = {'gene': [geneList[g] for g in range(G)],
+    Results_df = pandas.DataFrame(data = {'gene': [geneList[g] for g in range(G)],
                                     GeneMetric: [metric[g] for g in range(G)],
-                                     GeneMetric+' p_value': ['%.2E' % Decimal(pval_list[g]) for g in range(G)],
-                                    GeneMetric+' adj. p_value': ['%.2E' % Decimal(pval_list0[g]) for g in range(G)],
+                                     GeneMetric+' p_value': ['%.2E' % Decimal(metric_pval[g]) for g in range(G)],
+                                    GeneMetric+' adj. p_value': ['%.2E' % Decimal(metric_pval0[g]) for g in range(G)],
                                      'significant': [metric_sig[g] for g in range(G)],                                                    
                                      '# signif. sgRNAs': [sigGuides[g] for g in range(G)]},
                             columns = ['gene',GeneMetric,GeneMetric+' p_value',GeneMetric+' adj. p_value',\
@@ -408,4 +412,4 @@ def PrepareGeneList(sample):
 
 if __name__ == "__main__":
     input1 = sys.argv[1]
-    PrepareGeneList(input1) 
+    GeneRankingAnalysis(input1) 
