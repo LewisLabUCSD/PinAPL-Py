@@ -174,4 +174,4 @@ else:
 if not os.path.exists(LogFileDir):
 	os.makedirs(LogFileDir) 
 os.system('cp configuration.yaml '+LogFileDir)
-os.system('mv PinAPL-Py.log '+LogFileDir)
+os.system('cp PinAPL-Py.log '+LogFileDir)

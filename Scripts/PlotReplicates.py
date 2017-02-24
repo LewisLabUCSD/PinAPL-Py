@@ -29,6 +29,7 @@ def Repl_Scatterplot(Repl1,Repl2):
     print('++++++++++++++++++++++++++++++++')
     print('PinAPL-Py: Replicate Scatterplot')
     print('++++++++++++++++++++++++++++++++')  
+    print('Sample 1: '+Repl1+' | Sample 2: '+Repl2)
     start_total = time.time()  
     
     # ------------------------------------------------
@@ -49,7 +50,7 @@ def Repl_Scatterplot(Repl1,Repl2):
     svg = config['svg']    
     dotsize = config['dotsize']
     logbase = config['logbase']    
-   
+        
     # ------------------------------------------------
     # Reading counts from sample and control
     # ------------------------------------------------
