@@ -174,7 +174,6 @@ def GeneRankingAnalysis(sample):
     sgIDs = list(HitList['sgRNA'])
     global genes; genes = list(HitList['gene'])
     global geneList; geneList = list(set(genes))
-    counts = list(HitList['counts [norm.]'])
     fc = list(HitList['fold change'])
     global NB_pval; NB_pval = list(HitList['p-value'])
     global L; L = len(sgIDs)
@@ -335,13 +334,13 @@ def GeneRankingAnalysis(sample):
         STARS_chip = open('STARS_chip.txt','w')
         STARS_chip.write('sgID\tgene\n')
         for k in range(L):
-            STARS_input.write(sgIDs[k]+'\t'+str(counts[k])+'\n')
+            STARS_input.write(sgIDs[k]+'\t'+str(fc[k])+'\n')
             STARS_chip.write(sgIDs[k]+'\t'+genes[k]+'\n')                
         STARS_input.close()    
         STARS_chip.close()
         os.system('mv STARS_input.txt STARS_chip.txt '+STARSDir)
         os.chdir(STARSDir)
-        STARS_null_cmd = 'python stars_null_v1.2.py --input-file \
+        STARS_null_cmd = 'python -u stars_null_v1.2.py --input-file \
             STARS_input.txt --chip-file STARS_chip.txt --thr '+str(thr)+' --num-ite '+str(Np)
         os.system(STARS_null_cmd)
         # Computing STARS score
@@ -350,7 +349,7 @@ def GeneRankingAnalysis(sample):
             d = 'P'
         elif screentype == 'depletion':
             d = 'N'
-        STARS_cmd = 'python stars_v1.2.py --input-file STARS_input.txt \
+        STARS_cmd = 'python -u stars_v1.2.py --input-file STARS_input.txt \
             --chip-file STARS_chip.txt --thr '+str(thr)+' --dir '+d+' \
             --null Null_STARSOutput8_'+str(thr)+'.txt'
         os.system(STARS_cmd)
