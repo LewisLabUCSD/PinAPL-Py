@@ -41,6 +41,7 @@ def Normalization():
     norm = config['Normalization']
     NormSuffix = '_0.tsv'
     N0 = 1000000
+    eps = 0.001 
     
     # ------------------------------------------------
     # Normalization
@@ -92,7 +93,10 @@ def Normalization():
         sgIDs = list(SampleFile['sgRNA'].values)
         genes = list(SampleFile['gene'].values)
         L = len(sgIDs)
-        Counts = pandas.DataFrame(data = {'sgRNA': [sgIDs[k] for k in range(L)],
+        RawCounts = pandas.DataFrame(data = {'sgRNA': [sgIDs[k] for k in range(L)],
+                                         'gene': [genes[k] for k in range(L)]},
+                                columns = ['sgRNA','gene'])
+        SizeFactors = pandas.DataFrame(data = {'sgRNA': [sgIDs[k] for k in range(L)],
                                          'gene': [genes[k] for k in range(L)]},
                                 columns = ['sgRNA','gene'])
         # Compute geometric means for all sgRNAs
@@ -103,24 +107,25 @@ def Normalization():
             filename = glob.glob('*GuideCounts.tsv')[0]
             SampleFile = pandas.read_table(filename, sep='\t',names=colnames_u)
             x = list(SampleFile['counts'].values)
-            Counts[sample] = [x[k]+delta for k in range(L)]
-            os.chdir(AlnQCDir)
-        geomean = [sc.gmean(list(Counts.iloc[k,2:])) for k in range(L)]
-        Counts['Geom mean'] = geomean
+            RawCounts[sample] = x
+            SizeFactors[sample] = [x[k] if x[k]>0 else x[k]+eps for k in range(L)]
+            os.chdir(AlnQCDir)        
+        geomean = [sc.gmean(list(SizeFactors.iloc[k,2:])) for k in range(L)]
+        SizeFactors['Geom mean'] = geomean
         # Compute size-factors for each sgRNA and each sample   
         print('Computing sgRNA size-factors ...')
         for sample in SampleNames:
-            x = Counts[sample]
-            g0 = Counts['Geom mean']
+            x = SizeFactors[sample]
+            g0 = SizeFactors['Geom mean']
             x0_k = [x[k]/g0[k] for k in range(L)]
-            Counts[sample+' sgRNA size-factors'] = [x0_k[k] for k in range(L)]
+            SizeFactors[sample+' sgRNA size-factors'] = [x0_k[k] for k in range(L)]
         # Compute size-factor for each sample
         print('Computing sample size-factors ...')
         for sample in SampleNames:
-            Counts[sample+' size-factor'] = numpy.median(Counts[sample+' sgRNA size-factors'])
+            SizeFactors[sample+' size-factor'] = numpy.median(SizeFactors[sample+' sgRNA size-factors'])
         # Write size-factor dataframe
         os.chdir(DepthDir)
-        Counts.to_csv('Size-factors.tsv',sep='\t',index=False)
+        SizeFactors.to_csv('Size-factors.tsv',sep='\t',index=False)
         # Write normalized counts dataframe
         print('Writing normalized read counts ...')
         os.chdir(AlnQCDir)        
@@ -132,13 +137,13 @@ def Normalization():
                                 columns = ['gene'])
         for sample in SampleNames:
             os.chdir(sample)
-            Counts0[sample] = [int(numpy.ceil(Counts[sample][k]/Counts[sample+' size-factor'][k])) \
+            Counts0[sample] = [int(numpy.ceil(RawCounts[sample][k]/SizeFactors[sample+' size-factor'][k])) \
                 for k in range(L)]            
             Counts0.to_csv(sample+'_GuideCounts'+NormSuffix,sep='\t',columns=['sgRNA','gene',sample],\
                 header=False,index=False)            
             GeneCounts = pandas.read_table(glob.glob('*GeneCounts.tsv')[0],sep='\t',names=colnames_g) 
             ReadsPerGene = list(GeneCounts['counts'].values)
-            GeneCounts0[sample] = [int(numpy.ceil(ReadsPerGene[j]/Counts[sample+' size-factor'][0])) \
+            GeneCounts0[sample] = [int(numpy.ceil(ReadsPerGene[j]/SizeFactors[sample+' size-factor'][0])) \
                 for j in range(G)]
             GeneCounts0.to_csv(sample+'_GeneCounts'+NormSuffix,sep='\t',columns=['gene',sample],\
                 header=False,index=False)                        
