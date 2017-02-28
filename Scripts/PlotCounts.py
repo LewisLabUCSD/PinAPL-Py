@@ -100,7 +100,7 @@ def GOI_Scatterplot(sample,GOI='None'):
     plt.scatter(control_rest,sample_rest,s=dotsize,facecolor='black',lw=0,alpha=0.35)
     plt.scatter(control_sig,sample_sig,s=dotsize,facecolor='green',lw=0,alpha=0.35,label='Significant')
     if GOI != 'None':
-        plt.scatter(control_goi,sample_goi,s=1.5*dotsize,facecolor='red',lw=0,alpha=0.35,label=GOI)
+        plt.scatter(control_goi,sample_goi,s=1.5*dotsize,facecolor='red',lw=0,alpha=1.00,label=GOI)
     if len(K_nonT)>0:
         plt.scatter(control_nonT,sample_nonT,s=dotsize,facecolor='orange',lw=0,alpha=0.75,\
             label='Non Targeting')
@@ -110,7 +110,7 @@ def GOI_Scatterplot(sample,GOI='None'):
     plt.title(sample+' log'+str(logbase)+' counts [norm.]', fontsize=14)
     plt.xlabel('Control (avg.)', fontsize=12)    
     plt.ylabel(sample, fontsize=12)
-    plt.legend(loc='upper left', prop={'size':10})
+    plt.legend(loc='upper left', prop={'size':8})
     if annotate:
         for label, x, y in zip(goi_sgIDs,control_goi,sample_goi):
             plt.annotate(label,xy=(x,y),color='red',fontsize=8)  

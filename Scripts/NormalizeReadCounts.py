@@ -66,7 +66,7 @@ def Normalization():
             GuideCounts0 = open(GuideCounts0_Filename,'w')
             ReadsPerGuide_0 = list()
             for k in range(len(sgIDs)):      
-                ReadsPerGuide_0 = int(numpy.ceil(ReadsPerGuide[k]/N * N0))
+                ReadsPerGuide_0 = int(numpy.round(ReadsPerGuide[k]/N * N0))
                 GuideCounts0.write(str(sgIDs[k]) + '\t' + str(geneIDs[k]) + '\t' + \
                     str(ReadsPerGuide_0) + '\n')
             GuideCounts0.close()
@@ -80,10 +80,56 @@ def Normalization():
             GeneCounts0 = open(GeneCounts0_Filename,'w')
             ReadsPerGene_0 = list()
             for j in range(len(geneIDs)):    
-                ReadsPerGene_0 = int(numpy.ceil(ReadsPerGene[j]/N * N0))
+                ReadsPerGene_0 = int(numpy.round(ReadsPerGene[j]/N * N0))
                 GeneCounts0.write(str(geneIDs[j]) + '\t' + str(ReadsPerGene_0) + '\n')
             GeneCounts0.close()            
+            os.chdir(AlnQCDir)   
+    
+    elif norm == 'total':
+        print('Normalizing to mean total read count ...')
+        TotalCounts = list()
+        for sample in SampleNames:
+            os.chdir(sample)
+            filename = glob.glob('*GuideCounts.tsv')[0]
+            SampleFile = pandas.read_table(filename, sep='\t',names=colnames_u)
+            x = list(SampleFile['counts'].values)
+            TotalCounts.append(numpy.sum(x))
             os.chdir(AlnQCDir)
+        MeanCount = numpy.mean(TotalCounts)
+        # Compute normalized counts
+        for sample in SampleNames:
+            print('Processing '+sample+' ...') 
+            os.chdir(sample)
+            # sgRNA counts            
+            GuideCountsFilename = glob.glob('*GuideCounts.tsv')[0]
+            GuideCounts = pandas.read_table(GuideCountsFilename,sep='\t',names=colnames_u)
+            sgIDs = list(GuideCounts['sgRNA'].values)        
+            geneIDs = list(GuideCounts['gene'].values)                            
+            ReadsPerGuide = list(GuideCounts['counts'].values)
+            N = sum(ReadsPerGuide)
+            GuideCounts0_Filename = GuideCountsFilename[0:-4] + NormSuffix
+            GuideCounts0 = open(GuideCounts0_Filename,'w')
+            ReadsPerGuide_0 = list()
+            for k in range(len(sgIDs)):      
+                ReadsPerGuide_0 = int(numpy.round(ReadsPerGuide[k]/N * MeanCount))
+                GuideCounts0.write(str(sgIDs[k]) + '\t' + str(geneIDs[k]) + '\t' + \
+                    str(ReadsPerGuide_0) + '\n')
+            GuideCounts0.close()
+            # gene counts
+            GeneCountsFilename = glob.glob('*GeneCounts.tsv')[0]
+            GeneCounts = pandas.read_table(GeneCountsFilename,sep='\t',names=colnames_g)            
+            geneIDs = list(GeneCounts['gene'].values)                            
+            ReadsPerGene = list(GeneCounts['counts'].values)    
+            N = sum(ReadsPerGene)                    
+            GeneCounts0_Filename = GeneCountsFilename[0:-4] + NormSuffix
+            GeneCounts0 = open(GeneCounts0_Filename,'w')
+            ReadsPerGene_0 = list()
+            for j in range(len(geneIDs)):    
+                ReadsPerGene_0 = int(numpy.round(ReadsPerGene[j]/N * MeanCount))
+                GeneCounts0.write(str(geneIDs[j]) + '\t' + str(ReadsPerGene_0) + '\n')
+            GeneCounts0.close()            
+            os.chdir(AlnQCDir)            
+    
     elif norm == 'size':
         print('Normalizing by size-factors ...')       
         # Establish data frame
