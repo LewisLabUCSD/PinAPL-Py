@@ -85,7 +85,7 @@ def compute_aRRA(g):
     GOI = geneList[g]    
     GOI_ranks_sig = list()    
     for i in range(L):
-        if GOI == genes[i] and (NB_pval[i] < alpha):
+        if GOI == genes[i] and (NB_pval[i] < P_0):
             GOI_ranks_sig.append(ranks[i])
     j = len(GOI_ranks_sig)
     if j>0:
@@ -103,7 +103,7 @@ def compute_aRRA(g):
 def compute_aRRA_null(I):
     I_ranks_sig = list()
     for i in range(L):
-        if (i in I) and (NB_pval[i] < alpha):
+        if (i in I) and (NB_pval[i] < P_0):
             I_ranks_sig.append(ranks[i])
     j = len(I_ranks_sig)
     if j>0:
@@ -152,7 +152,7 @@ def GeneRankingAnalysis(sample):
     ListDir = config['HitDir']
     EffDir = config['EffDir']
     GeneDir = config['GeneDir']
-    global alpha; alpha = config['alpha']            
+    alpha = config['alpha']            
     padj = config['padj']
     num_cores = multiprocessing.cpu_count()
     global r; r = config['sgRNAsPerGene']
@@ -162,6 +162,7 @@ def GeneRankingAnalysis(sample):
     pvalDir = config['pvalDir']
     res = config['dpi']
     svg = config['svg']
+    global P_0; P_0 = 0.05 # p-value Threshold for aRRA analysis
     
     # ------------------------------------------------
     # Read sgRNA enrichment/depletion table
@@ -224,7 +225,7 @@ def GeneRankingAnalysis(sample):
             plt.savefig(sample+'_sgRNA_Efficiency.svg')               
     else: # no control replicates
         print('WARNING: No control replicates found! No significant sgRNAs counted.')
-        sigGuides = ['N/A' for k in range(len(sigGuides))]
+        sigGuides = ['N/A' for k in range(G)]
         # Plot histogram
         if not os.path.exists(EffDir):
             os.makedirs(EffDir)
@@ -316,6 +317,7 @@ def GeneRankingAnalysis(sample):
             SortFlag = True
             metric = [-1 for k in range(G)]
             metric_pval = [-1 for k in range(G)]
+            metric_pval0 = [-1 for k in range(G)]            
             metric_sig = ['N/A' for k in range(G)]
     elif GeneMetric == 'STARS':
         # -------------------------------------------------        
@@ -376,8 +378,9 @@ def GeneRankingAnalysis(sample):
     # -------------------------------------------------  
     # p-value plots
     # -------------------------------------------------  
-    print('Plotting p-values ...')
-    pvalHist_metric(metric_pval,metric_pval0,GeneMetric,pvalDir,sample,res,svg)           
+    if min(NB_pval) > -1:    
+        print('Plotting p-values ...')
+        pvalHist_metric(metric_pval,metric_pval0,GeneMetric,pvalDir,sample,res,svg)           
             
     # -------------------------------------------------  
     # Output list
@@ -389,15 +392,16 @@ def GeneRankingAnalysis(sample):
     Results_df = pandas.DataFrame(data = {'gene': [geneList[g] for g in range(G)],
                                     GeneMetric: [metric[g] for g in range(G)],
                                      GeneMetric+' p_value': ['%.2E' % Decimal(metric_pval[g]) for g in range(G)],
-                                    GeneMetric+' adj. p_value': ['%.2E' % Decimal(metric_pval0[g]) for g in range(G)],
-                                     'significant': [metric_sig[g] for g in range(G)],                                                    
+                                    GeneMetric+' FDR': ['%.2E' % Decimal(metric_pval0[g]) for g in range(G)],
+                                     'significant': [str(metric_sig[g]) for g in range(G)],                                                    
                                      '# signif. sgRNAs': [sigGuides[g] for g in range(G)]},
-                            columns = ['gene',GeneMetric,GeneMetric+' p_value',GeneMetric+' adj. p_value',\
+                            columns = ['gene',GeneMetric,GeneMetric+' p_value',GeneMetric+' FDR',\
                             'significant','# signif. sgRNAs'])
     Results_df_0 = Results_df.sort_values(['significant',GeneMetric],ascending=[False,SortFlag])
     GeneListFilename = filename[0:-14]+'_'+GeneMetric+'_'+'P'+str(Np)+'_GeneList.tsv'
     Results_df_0.to_csv(GeneListFilename, sep = '\t', index = False)      
     if SheetFormat == 'xlsx':
+        print('Converting to xlsx ...')
         GeneListFilename = filename[0:-14]+'_'+GeneMetric+'_'+'P'+str(Np)+'_GeneList.xlsx'
         Results_df_0.to_excel(GeneListFilename)              
     

@@ -170,8 +170,10 @@ else:
     StatMsg = 'Time elapsed [hours]: ' + '%.3f' % time_elapsed +'\n'
     os.system('python -u PrintStatus.py TimeStamp "'+StatMsg+'" 2>&1 | tee -a PinAPL-Py.log')
     
-# Move Log File 
+# Move Log Files 
 if not os.path.exists(LogFileDir):
 	os.makedirs(LogFileDir) 
 os.system('cp configuration.yaml '+LogFileDir)
 os.system('cp PinAPL-Py.log '+LogFileDir)
+os.chdir(WorkingDir)
+os.system('cp DataSheet.xlsx '+LogFileDir)

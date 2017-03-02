@@ -120,9 +120,9 @@ def GOI_Scatterplot(sample,GOI='None'):
         if svg:
             plt.savefig(sample+' '+GOI+' counts.svg')
     else:
-        plt.savefig(sample+' '+' counts.png', dpi=res)
+        plt.savefig(sample+' counts.png', dpi=res)
         if svg:
-            plt.savefig(sample+' '+' counts.svg')
+            plt.savefig(sample+' counts.svg')
     plt.close()
 
     # ------------------------------------------------

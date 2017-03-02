@@ -157,10 +157,10 @@ def PrepareHitList(sample):
                                      'control stdev [norm.]': [numpy.sqrt(sigma2[k]) for k in range(L)],
                                      'fold change': [fc[k] for k in range(L)],   
                                      'p-value': ['%.2E' % Decimal(NBpval[k]) for k in range(L)],
-                                     'adj. p-value': ['%.2E' % Decimal(NBpval_0[k]) for k in range(L)],                                                 
+                                     'FDR': ['%.2E' % Decimal(NBpval_0[k]) for k in range(L)],                                                 
                                      'significant': [str(significant[k]) for k in range(L)]},
                             columns = ['sgRNA','gene','counts [norm.]','control mean [norm.]',\
-                            'control stdev [norm.]','fold change','p-value','adj. p-value','significant'])
+                            'control stdev [norm.]','fold change','p-value','FDR','significant'])
     if ScreenType == 'enrichment':
         Results_df_0 = Results_df.sort_values(['significant','fold change'],ascending=[0,0])                
     elif ScreenType == 'depletion':

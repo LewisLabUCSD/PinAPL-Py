@@ -9,7 +9,7 @@
 ScreenType: 'enrichment'                    # type of screen ['enrichment'/'depletion']
 
 # LIBRARY PARAMETERS
-LibFilename: 'GeCKOv2_library.tsv'            # filename of library spreadsheet  
+LibFilename: 'GeCKOv2_Human.tsv'            # filename of library spreadsheet  
 seq_5_end: 'TCTTGTGGAAAGGACGAAACACCG'       # sequence 5' of sgRNA in read
 seq_3_end: 'GTTTTAGAGCTAGAAATAGCAAGTT'       # sequence 3' of sgRNA in read
 NonTargetPrefix: 'NonTargeting'        # prefix for non-targeting sgRNAs in library (keep at default if none present)
@@ -22,9 +22,9 @@ keepCutReads: False                    # keep files containing trimmed reads? ['
 Normalization: 'cpm'                  # Normalization of read counts (counts per mio reads / size-factor) ['cpm'/'size']
 Cutoff: 0                           # set counts (cpm) below this number to 0 
 GeneMetric: 'aRRA'                    # metric for gene ranking ['aRRA'/'STARS'/'ES']
-ClusterBy: 'variance'                  # clustering criterion ['variance'/'counts']
+ClusterBy: 'counts'                  # clustering criterion ['variance'/'counts']
 HitListFormat: 'tsv'                  # Format of results spreadsheets (sgRNA hits and gene ranking) ['tsv'/'xlsx']
-alpha: 0.01                            # significance level    
+alpha: 0.10                            # false discovery rate
 padj: 'fdr_bh'                        # method for p-value adjustment ['fdr_bh'/'fdr_tsbh']
 
 

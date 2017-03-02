@@ -360,6 +360,9 @@ def MapAndCount(sample):
     for k in range(L):
         GuideCounts.write(str(sgIDs[k]) + '\t'+ str(geneIDs[k]) + '\t' + str(ReadsPerGuide[k]) + '\n')
     GuideCounts.close()
+    # No-mapping warning
+    if sum(ReadsPerGuide) == 0:
+        print('!! ERROR: Zero total read counts! Check library file and index !!')
     # Read counts per gene in library       
     print('Counting reads per gene ...')   
     global GeneList
