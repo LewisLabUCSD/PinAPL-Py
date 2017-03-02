@@ -183,60 +183,45 @@ def GeneRankingAnalysis(sample):
     
     # ------------------------------------------
     # Find number of significant sgRNAs per gene
-    # ------------------------------------------
-    if min(NB_pval) > -1:    
-        # Find genes with at least 1 signif. sgRNA
-        print('Looking for sgRNAs with significant fold change ...')
-        Temp_DF = pandas.DataFrame(data = {'gene': genes,
-                                           'NB_significant': NB_sig},
-                                           columns = ['gene','NB_significant'])        
-        Temp_DF = Temp_DF.sort_values(['NB_significant'],ascending=False)
-        NB_sig = list(Temp_DF['NB_significant'])
-        genes0 = list(Temp_DF['gene'])
-        n0 = NB_sig.index(False)
-        sigGenes = [genes0[k] for k in range(n0)]
-        sigGenesList = list(set(sigGenes))
-        # count significant sgRNAs for all genes with at least 1 sign. sgRNA        
-        guidesPerGene = list()
-        GeneCounts = Counter()
-        for gene in sigGenes:
-            GeneCounts[gene] += 1
-        for gene in sigGenesList:
-            guidesPerGene.append(GeneCounts[gene])
-        # Save number of significant sgRNAs per gene
-        sigGuides = list()
-        for gene in geneList:
-            if gene not in sigGenesList:
-                sigGuides.append(0)
-            else:
-                sigGuides.append(guidesPerGene[sigGenesList.index(gene)])  
-        # Plot histogram
-        if not os.path.exists(EffDir):
-            os.makedirs(EffDir)
-        os.chdir(EffDir)
-        plt.figure(figsize=(5,4))
-        plt.hist(guidesPerGene, bins = range(1,r+2), align = 'left',color="g")
-        plt.title(sample+': on-Target Efficiency', fontsize=14)
-        plt.xlabel('Number of sign. sgRNAs', fontsize=12)
-        plt.ylabel('Number of Genes', fontsize=12)
-        plt.tight_layout()
-        plt.savefig(sample+'_sgRNA_Efficiency.png',dpi=res)   
-        if svg:
-            plt.savefig(sample+'_sgRNA_Efficiency.svg')               
-    else: # no control replicates
-        print('WARNING: No control replicates found! No significant sgRNAs counted.')
-        sigGuides = ['N/A' for k in range(G)]
-        # Plot histogram
-        if not os.path.exists(EffDir):
-            os.makedirs(EffDir)
-        os.chdir(EffDir)
-        plt.figure(figsize=(5,4))
-        plt.figtext(0.5,0.5,'N/A')
-        plt.suptitle(sample+': on-Target Efficiency', fontsize=18)
-        plt.xlabel('Number of sign. sgRNAs', fontsize=14)
-        plt.ylabel('Number of Genes', fontsize=14)
-        plt.tight_layout()
-        plt.savefig(sample+'_sgRNA_Efficiency.png',dpi=res)        
+    # ------------------------------------------  
+    # Find genes with at least 1 signif. sgRNA
+    print('Looking for sgRNAs with significant fold change ...')
+    Temp_DF = pandas.DataFrame(data = {'gene': genes,
+                                       'NB_significant': NB_sig},
+                                       columns = ['gene','NB_significant'])        
+    Temp_DF = Temp_DF.sort_values(['NB_significant'],ascending=False)
+    NB_sig = list(Temp_DF['NB_significant'])
+    genes0 = list(Temp_DF['gene'])
+    n0 = NB_sig.index(False)
+    sigGenes = [genes0[k] for k in range(n0)]
+    sigGenesList = list(set(sigGenes))
+    # count significant sgRNAs for all genes with at least 1 sign. sgRNA        
+    guidesPerGene = list()
+    GeneCounts = Counter()
+    for gene in sigGenes:
+        GeneCounts[gene] += 1
+    for gene in sigGenesList:
+        guidesPerGene.append(GeneCounts[gene])
+    # Save number of significant sgRNAs per gene
+    sigGuides = list()
+    for gene in geneList:
+        if gene not in sigGenesList:
+            sigGuides.append(0)
+        else:
+            sigGuides.append(guidesPerGene[sigGenesList.index(gene)])  
+    # Plot histogram
+    if not os.path.exists(EffDir):
+        os.makedirs(EffDir)
+    os.chdir(EffDir)
+    plt.figure(figsize=(5,4))
+    plt.hist(guidesPerGene, bins = range(1,r+2), align = 'left',color="g")
+    plt.title(sample+': on-Target Efficiency', fontsize=14)
+    plt.xlabel('Number of sign. sgRNAs', fontsize=12)
+    plt.ylabel('Number of Genes', fontsize=12)
+    plt.tight_layout()
+    plt.savefig(sample+'_sgRNA_Efficiency.png',dpi=res)   
+    if svg:
+        plt.savefig(sample+'_sgRNA_Efficiency.svg')                   
     
     # -------------------------------------------        
     # Rank data sheet after fold change
@@ -284,7 +269,7 @@ def GeneRankingAnalysis(sample):
         # -------------------------------------------------        
         # compute aRRA 
         # -------------------------------------------------
-        if min(NB_pval) > -1:
+        if min(NB_pval) < 1:
             start = time.time()
             SortFlag = True
             print('Computing a-RRA scores ...')
@@ -313,7 +298,7 @@ def GeneRankingAnalysis(sample):
             metric_sig = multTest[0]
             metric_pval0 = multTest[1]
         else: # no control replicates
-            print('ERROR: Cannot compute a-RRA scores without control replicates!')
+            print('ERROR: Cannot compute a-RRA scores without significant sgRNAs!')
             SortFlag = True
             metric = [-1 for k in range(G)]
             metric_pval = [-1 for k in range(G)]

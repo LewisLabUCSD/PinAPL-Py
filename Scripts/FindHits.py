@@ -138,9 +138,9 @@ def PrepareHitList(sample):
         zScorePlot(fc,significant,pvalDir,ScreenType,sample,res,svg)
     else:         # no control replicates
         print('WARNING: No control replicates! No p-values computed...')
-        NBpval = [-1 for k in range(L)]
-        NBpval_0 = [-1 for k in range(L)]
-        significant = ['N/A' for k in range(L)]
+        NBpval = [1 for k in range(L)]
+        NBpval_0 = [1 for k in range(L)]
+        significant = [False for k in range(L)]
             
     # -----------------------------------------------
     # Save sgRNA dataframe
