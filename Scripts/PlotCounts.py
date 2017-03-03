@@ -116,13 +116,13 @@ def GOI_Scatterplot(sample,GOI='None'):
             plt.annotate(label,xy=(x,y),color='red',fontsize=8)  
     plt.tight_layout()
     if GOI != 'None':
-        plt.savefig(sample+' '+GOI+' counts.png', dpi=res)
+        plt.savefig(sample+'_'+GOI+'_counts.png', dpi=res)
         if svg:
-            plt.savefig(sample+' '+GOI+' counts.svg')
+            plt.savefig(sample+'_'+GOI+'_counts.svg')
     else:
-        plt.savefig(sample+' counts.png', dpi=res)
+        plt.savefig(sample+'_counts.png', dpi=res)
         if svg:
-            plt.savefig(sample+' counts.svg')
+            plt.savefig(sample+'_counts.svg')
     plt.close()
 
     # ------------------------------------------------
