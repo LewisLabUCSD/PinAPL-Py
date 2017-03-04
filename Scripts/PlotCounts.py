@@ -98,7 +98,7 @@ def GOI_Scatterplot(sample,GOI='None'):
     os.chdir(PlotDir)   
     plt.figure(figsize=(6,5))
     plt.scatter(control_rest,sample_rest,s=dotsize,facecolor='black',lw=0,alpha=0.35)
-    plt.scatter(control_sig,sample_sig,s=dotsize,facecolor='green',lw=0,alpha=0.35,label='Significant')
+    plt.scatter(control_sig,sample_sig,s=dotsize,facecolor='green',lw=0,alpha=0.35,label='FDR<'+str(alpha))
     if GOI != 'None':
         plt.scatter(control_goi,sample_goi,s=1.5*dotsize,facecolor='red',lw=0,alpha=1.00,label=GOI)
     if len(K_nonT)>0:
