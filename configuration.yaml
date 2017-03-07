@@ -19,7 +19,7 @@ sgRNAsPerGene: 6                       # number of sgRNAs targeting each gene (e
 # ANALYSIS OPTIONS
 AlnOutput: 'Compress'                  # keep raw alignment output? ['Keep'/'Compress'/'Delete']
 keepCutReads: False                    # keep files containing trimmed reads? ['True'/'False']
-Normalization: 'cpm'                  # Normalization of read counts (counts per mio reads / size-factor) ['cpm'/'size']
+Normalization: 'cpm'                  # Normalization of read counts (counts per mio reads / size-factor/ total) ['cpm'/'size'/'total']
 Cutoff: 0                           # set counts (cpm) below this number to 0 
 GeneMetric: 'aRRA'                    # metric for gene ranking ['aRRA'/'STARS'/'ES']
 ClusterBy: 'counts'                  # clustering criterion ['variance'/'counts']
@@ -49,7 +49,7 @@ logbase: 10                            # base for log transformation of counts i
 width_p: 800                            # width of heatmap image (pixels)
 height_p: 800                            # height of heatmap image (pixels)
 fontsize_p: 14                          # fontsize in heatmap image
-marginsize: 7                           # size of margin in heatmap image (increase if sample names are clipped)
+marginsize: 10                           # size of margin in heatmap image (increase if sample names are clipped)
 scatter_annotate: False                 # annotate scatterplot with sgRNA IDs? ['True'/'False']
 max_q: 95                              # maximum quantile for histogram plots
 
