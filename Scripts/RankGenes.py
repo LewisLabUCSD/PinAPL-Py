@@ -363,7 +363,7 @@ def GeneRankingAnalysis(sample):
     # -------------------------------------------------  
     # p-value plots
     # -------------------------------------------------  
-    if min(NB_pval) > -1:    
+    if min(NB_pval) < 1:    
         print('Plotting p-values ...')
         pvalHist_metric(metric_pval,metric_pval0,GeneMetric,pvalDir,sample,res,svg)           
             

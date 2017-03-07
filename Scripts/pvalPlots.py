@@ -93,7 +93,7 @@ def HalfVolcanoPlot(metric,pval_list,metric_sig,GeneMetric,pvalDir,ScreenType,sa
         plt.savefig(sample+'_'+GeneMetric+'_Metric.svg')        
     
     
-def VolcanoPlot(fc,NBpval2,significant,pvalDir,ScreenType,sample,res,svg): 
+def VolcanoPlot(fc,NBpval2,significant,pvalDir,ScreenType,sample,res,svg,alpha): 
     sampleDir = pvalDir+sample    
     if not os.path.exists(sampleDir):
         os.makedirs(sampleDir)
@@ -105,7 +105,7 @@ def VolcanoPlot(fc,NBpval2,significant,pvalDir,ScreenType,sample,res,svg):
     neglogp2_sig = [-numpy.log10(NBpval2[k]) for k in range(L) if significant[k]==True]    
     plt.figure(figsize=(5,4))
     plt.scatter(logfc,neglogp2,s=3,facecolor='grey',lw=0,alpha=0.35)
-    plt.scatter(logfc_sig,neglogp2_sig,s=3,facecolor='green',lw=0,alpha=0.35,label='Significant')    
+    plt.scatter(logfc_sig,neglogp2_sig,s=3,facecolor='green',lw=0,alpha=0.35,label='FDR<'+str(alpha))    
     xmin = min(min(logfc_sig),min(logfc))        
     xmax = max(max(logfc_sig),max(logfc))
     ymax = max(max(neglogp2_sig),max(neglogp2))
@@ -120,7 +120,7 @@ def VolcanoPlot(fc,NBpval2,significant,pvalDir,ScreenType,sample,res,svg):
         plt.savefig(sample+'_'+'sgRNA_volcano.svg')
 
 
-def QQPlot(NBpval,significant,pvalDir,sample,res,svg): 
+def QQPlot(NBpval,significant,pvalDir,sample,res,svg,alpha): 
     sampleDir = pvalDir+sample    
     if not os.path.exists(sampleDir):
         os.makedirs(sampleDir)
@@ -136,7 +136,7 @@ def QQPlot(NBpval,significant,pvalDir,sample,res,svg):
     S = list(sig).index(True)
     plt.figure(figsize=(5,4))
     plt.scatter(neglogpExp[0:S],neglogp[0:S],s=8,facecolor='grey',lw=0,alpha=0.35)
-    plt.scatter(neglogpExp[S:],neglogp[S:],s=8,facecolor='green',lw=0,alpha=0.35,label='Significant')
+    plt.scatter(neglogpExp[S:],neglogp[S:],s=8,facecolor='green',lw=0,alpha=0.35,label='FDR<'+str(alpha))
     xmax = 1.05*max(neglogpExp)
     ymax = 1.05*max(neglogp)
     plt.xlim([0,xmax]); plt.ylim([0,ymax])
@@ -150,7 +150,7 @@ def QQPlot(NBpval,significant,pvalDir,sample,res,svg):
     if svg:
         plt.savefig(sample+'_'+'sgRNA_QQ.svg') 
 
-def zScorePlot(fc,significant,pvalDir,ScreenType,sample,res,svg): 
+def zScorePlot(fc,significant,pvalDir,ScreenType,sample,res,svg,alpha): 
     sampleDir = pvalDir+sample    
     if not os.path.exists(sampleDir):
         os.makedirs(sampleDir)
@@ -169,7 +169,7 @@ def zScorePlot(fc,significant,pvalDir,ScreenType,sample,res,svg):
         zScores.sort(reverse=True);
     fig, ax = plt.subplots(figsize=(5,4))
     plt.scatter(range(1,S+1),zScores[0:S],s=4,lw=0,color='grey')
-    plt.scatter(range(S+1,L+1),zScores[S:],s=4,lw=0,color='green',label='Significant')
+    plt.scatter(range(S+1,L+1),zScores[S:],s=4,lw=0,color='green',label='FDR<'+str(alpha))
     plt.plot((0,L), (0,0), ls="--", color=(51/255,153/255,1))
     ymax = 1.05*max(zScores); ymin = 1.05*min(zScores)    
     plt.ylim([ymin,ymax]) 

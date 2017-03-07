@@ -133,9 +133,9 @@ def PrepareHitList(sample):
         # Plots
         print('Plotting p-values ...')
         pvalHist(NBpval,NBpval_0,pvalDir,sample,res,svg)
-        VolcanoPlot(fc,NBpval2,significant,pvalDir,ScreenType,sample,res,svg)
-        QQPlot(NBpval,significant,pvalDir,sample,res,svg)
-        zScorePlot(fc,significant,pvalDir,ScreenType,sample,res,svg)
+        VolcanoPlot(fc,NBpval2,significant,pvalDir,ScreenType,sample,res,svg,alpha)
+        QQPlot(NBpval,significant,pvalDir,sample,res,svg,alpha)
+        zScorePlot(fc,significant,pvalDir,ScreenType,sample,res,svg,alpha)
     else:         # no control replicates
         print('WARNING: No control replicates! No p-values computed...')
         NBpval = [1 for k in range(L)]

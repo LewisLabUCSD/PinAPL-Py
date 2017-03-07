@@ -28,8 +28,8 @@ import numpy
 import pysam
 from matplotlib.ticker import FuncFormatter
 
-def kilos(x, pos):
-    return '%1.0fk' % (x*1e-3)
+def millions(x, pos):
+    return '%1.1fM' % (x*1e-6)
 
 def CountReadsPerGene(g):
     global GeneList
@@ -217,7 +217,10 @@ def MapAndCount(sample):
     os.system('rm unique_alignments.bam')
     os.system('rm tolerated_alignments.bam')
     os.system('rm ambiguous_alignments.bam')              
-    # PRINT ANALYSIS LOGFILE
+
+    # ------------------------------------------
+    # Text output and plots
+    # ------------------------------------------ 
     print('Writing alignment logfile ...')
     NReads = NTol + NAmb + NUnique + NFail
     FracUnique = round(NUnique/NReads*1000)/10    
@@ -253,10 +256,10 @@ def MapAndCount(sample):
     LogFile.write('---- Alignment completed in %.2f' % time_elapsed + time_unit+' ----')
     LogFile.write('\n\n\n')        
     LogFile.write('Parameter settings\n')
-    LogFile.write('Seed Length: '+str(L_bw)+'\n')    
-    LogFile.write('Seed Mismatch: '+str(N_bw)+'\n')    
-    LogFile.write('Interval Function: '+str(i_bw)+'\n')        
-    LogFile.write('Ambiguity Cutoff: '+str(Theta)+'\n')    
+    LogFile.write('L_bw (Seed Length): '+str(L_bw)+'\n')    
+    LogFile.write('N_bw (Seed Mismatch): '+str(N_bw)+'\n')    
+    LogFile.write('i_bw (Interval Function): '+str(i_bw)+'\n')        
+    LogFile.write('Theta (Ambiguity Cutoff): '+str(Theta)+'\n')    
     LogFile.close()              
     # DRAW PLOTS
     # MAPPING QUALITY HISTOGRAM
@@ -305,7 +308,7 @@ def MapAndCount(sample):
     plt.suptitle(sample+' Alignment Scores', fontsize=14)
     ax.set_xlabel('Prim. Alignment Score', fontsize=12)
     ax.set_ylabel('Sec. Alignment Score', fontsize=12)
-    formatter = FuncFormatter(kilos)
+    formatter = FuncFormatter(millions)
     ax.zaxis.set_major_formatter(formatter)    
     ax.set_zlabel('Number of Reads',fontsize=12)
     plt.tight_layout()
