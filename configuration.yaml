@@ -17,13 +17,13 @@ sgRNAsPerGene: 6                       # number of sgRNAs targeting each gene (e
                                        #    ONLY IMPORTANT IF 'ES' is chosen for gene ranking method !
 
 # ANALYSIS OPTIONS
-AlnOutput: 'Compress'                  # keep raw alignment output? ['Keep'/'Compress'/'Delete']
+AlnOutput: 'Delete'                  # keep raw alignment output? ['Keep'/'Compress'/'Delete']
 keepCutReads: False                    # keep files containing trimmed reads? ['True'/'False']
-Normalization: 'cpm'                  # Normalization of read counts (counts per mio reads / size-factor) ['cpm'/'size']
+Normalization: 'cpm'                  # Normalization of read counts (counts per mio reads / size-factor/ total) ['cpm'/'size'/'total']
 Cutoff: 0                           # set counts (cpm) below this number to 0 
 GeneMetric: 'aRRA'                    # metric for gene ranking ['aRRA'/'STARS'/'ES']
 ClusterBy: 'counts'                  # clustering criterion ['variance'/'counts']
-HitListFormat: 'tsv'                  # Format of results spreadsheets (sgRNA hits and gene ranking) ['tsv'/'xlsx']
+HitListFormat: 'xlsx'                  # Format of results spreadsheets (sgRNA hits and gene ranking) ['tsv'/'xlsx']
 alpha: 0.10                            # false discovery rate
 padj: 'fdr_bh'                        # method for p-value adjustment ['fdr_bh'/'fdr_tsbh']
 
@@ -43,13 +43,13 @@ delta: 1                             # count shift to avoid zero counts in log t
 
 # VISUALIZATION PARAMETERS
 dpi: 300                               # resolution of PNG plots
-svg: False                              # save figures as vector graphics?  ['True'/'False']            
+svg: True                              # save figures as vector graphics?  ['True'/'False']            
 dotsize: 10                            # size of dots in scatterplot
 logbase: 10                            # base for log transformation of counts in scatterplots
 width_p: 800                            # width of heatmap image (pixels)
 height_p: 800                            # height of heatmap image (pixels)
 fontsize_p: 14                          # fontsize in heatmap image
-marginsize: 7                           # size of margin in heatmap image (increase if sample names are clipped)
+marginsize: 10                           # size of margin in heatmap image (increase if sample names are clipped)
 scatter_annotate: False                 # annotate scatterplot with sgRNA IDs? ['True'/'False']
 max_q: 95                              # maximum quantile for histogram plots
 
@@ -69,7 +69,7 @@ AlnQCDir: '/workingdir/Analysis/Alignment_Statistics/'
 CountQCDir: '/workingdir/Analysis/ReadCount_Statistics/'
 ScatterDir: '/workingdir/Analysis/ReadCount_Scatterplots/'
 CorrelDir: '/workingdir/Analysis/Replicate_Correlation/'
-EffDir: '/workingdir/Analysis/sgRNA_Efficiency/'
+EffDir: '/workingdir/Analysis/sgRNA_Efficacy/'
 DepthDir: '/workingdir/Analysis/Read_Depth/' 
 pvalDir: '/workingdir/Analysis/p-values/' 
 LogFileDir: '/workingdir/Analysis/Log_File/'

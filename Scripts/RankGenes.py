@@ -215,13 +215,13 @@ def GeneRankingAnalysis(sample):
     os.chdir(EffDir)
     plt.figure(figsize=(5,4))
     plt.hist(guidesPerGene, bins = range(1,r+2), align = 'left',color="g")
-    plt.title(sample+': on-Target Efficiency', fontsize=14)
+    plt.title(sample+': on-Target Efficacy', fontsize=14)
     plt.xlabel('Number of sign. sgRNAs', fontsize=12)
     plt.ylabel('Number of Genes', fontsize=12)
     plt.tight_layout()
-    plt.savefig(sample+'_sgRNA_Efficiency.png',dpi=res)   
+    plt.savefig(sample+'_sgRNA_Efficacy.png',dpi=res)   
     if svg:
-        plt.savefig(sample+'_sgRNA_Efficiency.svg')                   
+        plt.savefig(sample+'_sgRNA_Efficacy.svg')                   
     
     # -------------------------------------------        
     # Rank data sheet after fold change

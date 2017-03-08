@@ -99,9 +99,9 @@ def VolcanoPlot(fc,NBpval2,significant,pvalDir,ScreenType,sample,res,svg,alpha):
         os.makedirs(sampleDir)
     os.chdir(sampleDir)  
     L = len(fc)
-    logfc = [numpy.log10(fc[k]) for k in range(L) if significant[k]==False]
+    logfc = [numpy.log2(fc[k]) for k in range(L) if significant[k]==False]
     neglogp2 = [-numpy.log10(NBpval2[k]) for k in range(L) if significant[k]==False]
-    logfc_sig = [numpy.log10(fc[k]) for k in range(L) if significant[k]==True]
+    logfc_sig = [numpy.log2(fc[k]) for k in range(L) if significant[k]==True]
     neglogp2_sig = [-numpy.log10(NBpval2[k]) for k in range(L) if significant[k]==True]    
     plt.figure(figsize=(5,4))
     plt.scatter(logfc,neglogp2,s=3,facecolor='grey',lw=0,alpha=0.35)
@@ -110,7 +110,7 @@ def VolcanoPlot(fc,NBpval2,significant,pvalDir,ScreenType,sample,res,svg,alpha):
     xmax = max(max(logfc_sig),max(logfc))
     ymax = max(max(neglogp2_sig),max(neglogp2))
     plt.xlim([0.95*xmin,1.05*xmax]); plt.ylim([0,1.05*ymax])
-    plt.xlabel('log10 fold change', fontsize=12)    
+    plt.xlabel('log2 fold change', fontsize=12)    
     plt.ylabel('-log10 p-value (two-sided)', fontsize=12) 
     plt.title(sample+' sgRNA '+ScreenType, fontsize=14) 
     plt.legend(loc='lower right', prop={'size':10})
