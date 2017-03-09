@@ -67,7 +67,7 @@ def MapAndCount(sample):
     LibDir = config['LibDir']
     AlnStemDir = config['AlignDir']
     AlnDir = AlnStemDir+sample+'/'
-    OutputDir = config['AlnQCDir']+sample    
+    OutputDir = config['AlnQCDir']+sample   
     seq_5_end = config['seq_5_end']
     seq_3_end = config['seq_3_end']
     CutErrorTol = config['CutErrorTol']
