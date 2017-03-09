@@ -22,7 +22,7 @@ def RunSeqQC():
     ScriptsDir = config['ScriptsDir']
 
     # Run fastqc
-    os.mkdir(SeqQCDir)
+    os.makedirs(SeqQCDir)
     os.chdir(DataDir)
     FileNames = [d for d in os.listdir(DataDir)]
     for filename in FileNames:
