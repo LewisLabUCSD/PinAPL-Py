@@ -27,7 +27,7 @@ def RunSeqQC():
     os.chdir(DataDir)
     FileNames = [d for d in os.listdir(DataDir)]
     for filename in FileNames:
-        os.system('fastqc -o '+SeqQCDir+' '+filename)
+        os.system('fastqc -o '+SeqQCDir+' --extract '+filename)
     os.chdir(SeqQCDir)    
     os.system('rm *.zip')
     os.chdir(ScriptsDir)

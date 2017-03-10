@@ -46,7 +46,6 @@ def GOI_Scatterplot(sample,GOI='None'):
     delta = config['delta']
     NonTPrefix = config['NonTargetPrefix']
     res = config['dpi']
-    svg = config['svg']
     dotsize = config['dotsize']
     logbase = config['logbase']
     
@@ -117,12 +116,8 @@ def GOI_Scatterplot(sample,GOI='None'):
     plt.tight_layout()
     if GOI != 'None':
         plt.savefig(sample+'_'+GOI+'_counts.png', dpi=res)
-        if svg:
-            plt.savefig(sample+'_'+GOI+'_counts.svg')
     else:
         plt.savefig(sample+'_counts.png', dpi=res)
-        if svg:
-            plt.savefig(sample+'_counts.svg')
     plt.close()
 
     # ------------------------------------------------

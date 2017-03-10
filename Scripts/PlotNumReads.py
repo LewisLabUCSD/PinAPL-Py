@@ -18,6 +18,7 @@ import yaml
 import sys
 import re
 import pandas
+import numpy
 from matplotlib.ticker import FuncFormatter
 from matplotlib.font_manager import FontProperties
 
@@ -61,13 +62,19 @@ def PlotReadDepth():
         p = re.search('(?<=Number of Reads with failed Alignment: \t\t)\d+',Lines)
         n2.append(int(p.group(0)))
         os.chdir(AlnQCDir)
+    n2n1 = numpy.add(n2,n1)
+    n2n1N2 = numpy.add(n2n1,N2)
     
     # Plot    
     fig, ax = plt.subplots(figsize=(5,4))
-    plt.bar(range(S), N1, align='center', color=(66/255,128/255,244/255),label='Alignment Unique')
-    plt.bar(range(S), N2, align='center', color=(66/255,244/255,217/255),label='Alignment Tolerated')
-    plt.bar(range(S), n1, align='center', color=(244/255,188/255,66/255),label='Alignment Ambiguous')
-    plt.bar(range(S), n2, align='center', color=(244/255,66/255,66/255),label='Alignment Failed')
+    plt.bar(range(S), n2, align='center', color=(244/255,66/255,66/255),\
+        label='Alignment Failed')
+    plt.bar(range(S), n1, bottom = n2, align='center', color=(244/255,188/255,66/255),\
+        label='Alignment Ambiguous')
+    plt.bar(range(S), N2, bottom = n2n1, align='center', color=(66/255,244/255,217/255),\
+        label='Alignment Tolerated')    
+    plt.bar(range(S), N1, bottom = n2n1N2, align='center', color=(66/255,128/255,244/255),\
+        label='Alignment Unique')    
     plt.xticks(range(S), SampleNames, rotation='vertical')
     formatter = FuncFormatter(millions)
     ax.yaxis.set_major_formatter(formatter)
@@ -75,7 +82,8 @@ def PlotReadDepth():
     plt.ylabel('Number of Reads', fontsize=12)
     fontP = FontProperties()
     fontP.set_size('x-small')
-    ax.legend(prop=fontP,loc='lower center', bbox_to_anchor=(1.25, 0.5))
+    handles, labels = ax.get_legend_handles_labels()
+    ax.legend(handles[::-1], labels[::-1],prop=fontP,loc='lower center',bbox_to_anchor=(1.25, 0.5))
     if not os.path.exists(DepthDir):
         os.makedirs(DepthDir)
     os.chdir(DepthDir)

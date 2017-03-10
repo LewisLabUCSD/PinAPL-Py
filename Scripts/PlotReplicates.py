@@ -47,7 +47,6 @@ def Repl_Scatterplot(Repl1,Repl2):
     delta = config['delta']
     NonTPrefix = config['NonTargetPrefix']
     res = config['dpi']
-    svg = config['svg']    
     dotsize = config['dotsize']
     logbase = config['logbase']    
         
@@ -119,9 +118,7 @@ def Repl_Scatterplot(Repl1,Repl2):
     plt.text(.6,.15,'Corr (Spearman) = '+str(round(CorrCoeffS*1000)/1000),transform=axes.transAxes,\
         fontsize=10)    
     plt.tight_layout()  
-    plt.savefig(Repl1+'_'+Repl2+'_correlation.png', dpi=res)  
-    if svg:
-        plt.savefig(Repl1+'_'+Repl2+'_correlation.svg')        
+    plt.savefig(Repl1+'_'+Repl2+'_correlation.png', dpi=res)    
     plt.close()
 
     # --------------------------------------

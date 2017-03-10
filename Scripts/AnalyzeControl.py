@@ -40,7 +40,6 @@ def EstimateControlCounts():
     AlnQCDir = config['AlnQCDir']
     ControlDir = config['ControlDir']
     res = config['dpi']
-    svg = config['svg']
     CtrlCounts_Filename = 'Control_GuideCounts_0.tsv'
     
    
@@ -147,8 +146,6 @@ def EstimateControlCounts():
     plt.title('Mean/Variance Model', fontsize=14)
     plt.tight_layout()
     plt.savefig('Control_MeanVariance.png',dpi=res)
-    if svg:
-        plt.savefig('Control_MeanVariance.svg')    
     
 
     # --------------------------------------

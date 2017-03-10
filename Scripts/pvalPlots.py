@@ -88,9 +88,7 @@ def HalfVolcanoPlot(metric,pval_list,metric_sig,GeneMetric,pvalDir,ScreenType,sa
     plt.title(sample+' '+GeneMetric+' Metric', fontsize=14) 
     plt.legend(loc='lower right', prop={'size':10})
     plt.tight_layout()
-    plt.savefig(sample+'_'+GeneMetric+'_Metric.png', dpi=res)
-    if svg:
-        plt.savefig(sample+'_'+GeneMetric+'_Metric.svg')        
+    plt.savefig(sample+'_'+GeneMetric+'_Metric.png', dpi=res)   
     
     
 def VolcanoPlot(fc,NBpval2,significant,pvalDir,ScreenType,sample,res,svg,alpha): 
@@ -116,8 +114,6 @@ def VolcanoPlot(fc,NBpval2,significant,pvalDir,ScreenType,sample,res,svg,alpha):
     plt.legend(loc='lower right', prop={'size':10})
     plt.tight_layout()
     plt.savefig(sample+'_'+'sgRNA_volcano.png', dpi=res)
-    if svg:
-        plt.savefig(sample+'_'+'sgRNA_volcano.svg')
 
 
 def QQPlot(NBpval,significant,pvalDir,sample,res,svg,alpha): 
@@ -147,8 +143,6 @@ def QQPlot(NBpval,significant,pvalDir,sample,res,svg,alpha):
     plt.legend(loc='upper left', prop={'size':10})
     plt.tight_layout()
     plt.savefig(sample+'_'+'sgRNA_QQ.png', dpi=res)    
-    if svg:
-        plt.savefig(sample+'_'+'sgRNA_QQ.svg') 
 
 def zScorePlot(fc,significant,pvalDir,ScreenType,sample,res,svg,alpha): 
     sampleDir = pvalDir+sample    
@@ -180,6 +174,4 @@ def zScorePlot(fc,significant,pvalDir,ScreenType,sample,res,svg,alpha):
     plt.title(sample+' sgRNA '+ScreenType,fontsize=14)
     plt.legend(loc='upper left', prop={'size':10})
     plt.tight_layout()
-    plt.savefig(sample+'_'+'sgRNA_zScores.png', dpi=res)    
-    if svg:
-        plt.savefig(sample+'_'+'sgRNA_zScores.svg')     
+    plt.savefig(sample+'_'+'sgRNA_zScores.png', dpi=res)     
