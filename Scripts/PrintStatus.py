@@ -31,6 +31,9 @@ def PrintStatus_ProcessSample(sample):
 def PrintStatus_SkipSample(sample):
     print('Alignment data found for sample '+sample+'. Skipping alignment ... ')
 
+def PrintStatus_SkipSeqQC():
+    print('Sequence quality folder found. Skipping quality check ... ')
+
 def PrintStatus_AllDone():
     print('**************************************************')
     print('PinAPL-Py completed.')  
@@ -52,7 +55,9 @@ if __name__ == "__main__":
     elif input1 == 'ProcessSample':
         PrintStatus_ProcessSample(input2)
     elif input1 == 'SkipSample':
-        PrintStatus_SkipSample(input2)        
+        PrintStatus_SkipSample(input2)   
+    elif input1 == 'SkipSeqQC':
+        PrintStatus_SkipSeqQC()           
     elif input1 == 'AllDone':
         PrintStatus_AllDone()
     elif input1 == 'TimeStamp':

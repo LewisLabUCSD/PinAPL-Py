@@ -35,7 +35,8 @@ def computeES(g):
     GOI = geneList[g]
     GOI_ranks = list()
     noGOI_ranks = list()
-    for k in range(L):
+    u = genes[::-1].index(GOI)  # find lowest ranking sgRNA
+    for k in range(L-u):
         gene = genes[k]
         if GOI == gene:
             GOI_ranks.append(ranks[k])
@@ -43,6 +44,9 @@ def computeES(g):
         else:
             GOI_ranks.append(0)
             noGOI_ranks.append(1/(G-r))
+    for k in range(L-u,L):
+        GOI_ranks.append(0)
+        noGOI_ranks.append(1/(G-r))
     RankSum = sum(GOI_ranks)
     GOI_cumsum = numpy.cumsum(GOI_ranks).tolist()
     noGOI_cumsum = numpy.cumsum(noGOI_ranks).tolist()
@@ -60,13 +64,18 @@ def computeES(g):
 def computeESnull(I):
     I_ranks = list()
     noI_ranks = list()
-    for k in range(L):
+    I.sort()
+    Imax = I[-1]    # find lowest rank
+    for k in range(Imax+1):
         if k in I:
             I_ranks.append(ranks[k])
             noI_ranks.append(0)
         else:
             I_ranks.append(0)
             noI_ranks.append(1/(G-r))
+    for k in range(Imax+1,L):
+        I_ranks.append(0)
+        noI_ranks.append(1/(G-r))
     RankSum = sum(I_ranks)
     I_cumsum = numpy.cumsum(I_ranks).tolist()
     noI_cumsum = numpy.cumsum(noI_ranks).tolist()
@@ -92,8 +101,8 @@ def compute_aRRA(g):
         U = [GOI_ranks_sig[i]/L for i in range(j)]
         rho_k = list()
         for k in range(j):
-            kth_smallest = U[j-1-k]
-            pval = 1 - beta.cdf(kth_smallest,k+1,j-k)
+            kth_smallest = U[k]
+            pval = beta.cdf(kth_smallest,k+1,j-k)
             rho_k.append(pval)
         rho = min(rho_k)
     else:
@@ -110,8 +119,8 @@ def compute_aRRA_null(I):
         U = [I_ranks_sig[i]/L for i in range(j)]
         rho_k = list()
         for k in range(j):
-            kth_smallest = U[j-1-k]
-            pval = 1 - beta.cdf(kth_smallest,k+1,j-k)
+            kth_smallest = U[k]
+            pval = beta.cdf(kth_smallest,k+1,j-k)
             rho_k.append(pval)
         rho_null = min(rho_k)
     else:
@@ -154,6 +163,7 @@ def GeneRankingAnalysis(sample):
     GeneDir = config['GeneDir']
     alpha = config['alpha']            
     padj = config['padj']
+    screentype = config['ScreenType']    
     num_cores = multiprocessing.cpu_count()
     global r; r = config['sgRNAsPerGene']
     GeneMetric = config['GeneMetric']
@@ -162,16 +172,19 @@ def GeneRankingAnalysis(sample):
     pvalDir = config['pvalDir']
     res = config['dpi']
     svg = config['svg']
-    global P_0; P_0 = 0.05 # p-value Threshold for aRRA analysis
+    global P_0; P_0 = config['P_0']
     
     # ------------------------------------------------
     # Read sgRNA enrichment/depletion table
     # ------------------------------------------------
     os.chdir(ListDir)
-    print('Loading sgRNA enrichment/depletion table ...')    
+    print('Loading sgRNA '+screentype+' table ...')    
     filename = glob.glob(sample+'_*sgRNAList.tsv')[0]
-    HitList = pandas.read_table(filename, sep='\t')  
-    HitList = HitList.sort_values(['fold change'],ascending=False)
+    HitList = pandas.read_table(filename, sep='\t')
+    if screentype == 'enrichment':
+        HitList = HitList.sort_values(['significant','p-value','fold change','sgRNA'],ascending=[0,1,0,1])
+    elif screentype == 'depletion':
+        HitList = HitList.sort_values(['significant','p-value','fold change','sgRNA'],ascending=[0,1,1,1])        
     sgIDs = list(HitList['sgRNA'])
     global genes; genes = list(HitList['gene'])
     global geneList; geneList = list(set(genes))
@@ -228,7 +241,10 @@ def GeneRankingAnalysis(sample):
     # -------------------------------------------
     fc_DF = pandas.DataFrame(data = {'fc': list(HitList['fold change'])},
                                  columns = ['fc'])
-    fc_DF = fc_DF.rank()
+    if screentype == 'enrichment':
+        fc_DF = fc_DF.rank(ascending = False)
+    elif screentype == 'depletion':
+        fc_DF = fc_DF.rank(ascending = True)
     global ranks; ranks = list(fc_DF['fc'])    
         
     # -------------------------------------------        
@@ -311,7 +327,6 @@ def GeneRankingAnalysis(sample):
         start = time.time()
         STARSDir = config['STARSDir']
         thr = config['thr_STARS']
-        screentype = config['ScreenType']
         os.chdir(ListDir)
         SortFlag = False
         # Running null distribution
@@ -376,8 +391,8 @@ def GeneRankingAnalysis(sample):
     print('Writing results dataframe ...')
     Results_df = pandas.DataFrame(data = {'gene': [geneList[g] for g in range(G)],
                                     GeneMetric: [metric[g] for g in range(G)],
-                                     GeneMetric+' p_value': ['%.2E' % Decimal(metric_pval[g]) for g in range(G)],
-                                    GeneMetric+' FDR': ['%.2E' % Decimal(metric_pval0[g]) for g in range(G)],
+                                     GeneMetric+' p_value': [metric_pval[g] for g in range(G)],
+                                    GeneMetric+' FDR': [metric_pval0[g] for g in range(G)],
                                      'significant': [str(metric_sig[g]) for g in range(G)],                                                    
                                      '# signif. sgRNAs': [sigGuides[g] for g in range(G)]},
                             columns = ['gene',GeneMetric,GeneMetric+' p_value',GeneMetric+' FDR',\

@@ -19,7 +19,7 @@ def gini(data):
     d_x = x[0]
     y.insert(0,0)
     x.insert(0,0)
-    Y = [(y[k]+y[k+1])/2*d_x for k in range(N-1)]
+    Y = [(y[k]+y[k+1])/2*d_x for k in range(N)]
     I = sum(Y)
     G = 1 - 2*I
     return G, x, y

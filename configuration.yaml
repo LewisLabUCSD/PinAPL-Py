@@ -31,6 +31,7 @@ padj: 'fdr_bh'                        # method for p-value adjustment ['fdr_bh'/
 # TECHNICAL PARAMETERS
 TopN: 25                              # number of top sgRNAs to take into account for clustering
 Np: 1000                         # number of permutations for gene ranking analysis 
+P_0: 0.005                              # maximum p-value for sgRNA to be taken into account for aRRA analysis 
 thr_STARS: 10                          # Threshold percentage for STARS analysis
 CutErrorTol: 0.25                       # Cutadapt error tolerance
 R_min:  10                             # minimal required read length after cutadapt trimming

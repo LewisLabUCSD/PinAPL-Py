@@ -30,6 +30,7 @@ DataDir = config['DataDir']
 ScriptsDir = config['ScriptsDir']
 AlignDir = config['AlignDir']
 AlnQCDir = config['AlnQCDir']
+SeqQCDir = config['SeqQCDir']
 LogFileDir = config['LogFileDir']
 IndexScript = config['IndexScript']
 LoaderScript = config['LoaderScript']
@@ -72,7 +73,12 @@ os.system('python -u PrintStatus.py Done "'+DoneMsg+'" 2>&1 | tee -a PinAPL-Py.l
 # Run Sequence Quality Control
 StatMsg = 'Running sequence quality control ...'
 os.system('python -u PrintStatus.py SubHeader "'+StatMsg+'" 2>&1 | tee -a PinAPL-Py.log')
-os.system('python -u '+SeqQCScript+'.py 2>&1 | tee -a PinAPL-Py.log')
+if os.path.exists(SeqQCDir):
+    os.system('python -u PrintStatus.py SkipSeqQC blank 2>&1 | tee -a PinAPL-Py.log')
+else: 
+    os.system('python -u '+SeqQCScript+'.py 2>&1 | tee -a PinAPL-Py.log')
+DoneMsg = 'Sequence quality check completed.'
+os.system('python -u PrintStatus.py Done "'+DoneMsg+'" 2>&1 | tee -a PinAPL-Py.log')    
     
 # Align Reads
 StatMsg = 'Aligning reads ...'
@@ -83,8 +89,8 @@ for sample in SampleNames:
     else:        
         os.system('python -u PrintStatus.py ProcessSample '+sample+' 2>&1 | tee -a PinAPL-Py.log')
         os.system('python -u '+AlignScript+'.py '+sample+' 2>&1 | tee -a PinAPL-Py.log')        
-DoneMsg = 'Read alignments completed.'
 os.system('python -u '+ReadDepthScript+'.py 2>&1 | tee -a PinAPL-Py.log')
+DoneMsg = 'Read alignments completed.'
 os.system('python -u PrintStatus.py Done "'+DoneMsg+'" 2>&1 | tee -a PinAPL-Py.log')
 
 # Normalize Counts

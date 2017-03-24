@@ -156,15 +156,15 @@ def PrepareHitList(sample):
                                      'control mean [norm.]': [mu[k] for k in range(L)],
                                      'control stdev [norm.]': [numpy.sqrt(sigma2[k]) for k in range(L)],
                                      'fold change': [fc[k] for k in range(L)],   
-                                     'p-value': ['%.2E' % Decimal(NBpval[k]) for k in range(L)],
-                                     'FDR': ['%.2E' % Decimal(NBpval_0[k]) for k in range(L)],                                                 
+                                     'p-value': [NBpval[k] for k in range(L)],
+                                     'FDR': [NBpval_0[k] for k in range(L)],                                                 
                                      'significant': [str(significant[k]) for k in range(L)]},
                             columns = ['sgRNA','gene','counts [norm.]','control mean [norm.]',\
                             'control stdev [norm.]','fold change','p-value','FDR','significant'])
-    if ScreenType == 'enrichment':
-        Results_df_0 = Results_df.sort_values(['significant','fold change'],ascending=[0,0])                
-    elif ScreenType == 'depletion':
-        Results_df_0 = Results_df.sort_values(['significant','fold change'],ascending=[0,1])            
+    if ScreenType == 'enrichment': 
+        Results_df_0 = Results_df.sort_values(['significant','p-value','fold change','sgRNA'],ascending=[0,1,0,1])
+    elif ScreenType == 'depletion': 
+        Results_df_0 = Results_df.sort_values(['significant','p-value','fold change','sgRNA'],ascending=[0,1,1,1])
     ListFilename = sample+'_'+str(alpha)+'_'+padj+'_sgRNAList.tsv'
     Results_df_0.to_csv(ListFilename, sep = '\t', index = False)
     if SheetFormat == 'xlsx':
