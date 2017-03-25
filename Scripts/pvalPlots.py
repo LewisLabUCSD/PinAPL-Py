@@ -104,10 +104,11 @@ def VolcanoPlot(fc,NBpval2,significant,pvalDir,ScreenType,sample,res,svg,alpha):
     plt.figure(figsize=(5,4))
     plt.scatter(logfc,neglogp2,s=3,facecolor='grey',lw=0,alpha=0.35)
     plt.scatter(logfc_sig,neglogp2_sig,s=3,facecolor='green',lw=0,alpha=0.35,label='FDR<'+str(alpha))    
-    xmin = min(min(logfc_sig),min(logfc))        
-    xmax = max(max(logfc_sig),max(logfc))
-    ymax = max(max(neglogp2_sig),max(neglogp2))
-    plt.xlim([0.95*xmin,1.05*xmax]); plt.ylim([0,1.05*ymax])
+    if len(logfc_sig)>0 and len(neglogp2_sig)>0:
+        xmin = min(min(logfc_sig),min(logfc))        
+        xmax = max(max(logfc_sig),max(logfc))
+        ymax = max(max(neglogp2_sig),max(neglogp2))
+        plt.xlim([0.95*xmin,1.05*xmax]); plt.ylim([0,1.05*ymax])
     plt.xlabel('log2 fold change', fontsize=12)    
     plt.ylabel('-log10 p-value (two-sided)', fontsize=12) 
     plt.title(sample+' sgRNA Volcano Plot', fontsize=14) 
@@ -129,7 +130,10 @@ def QQPlot(NBpval,significant,pvalDir,sample,res,svg,alpha):
     neglogpExp.sort() 
     sig = [significant[k] for k in range(L)]
     sig.sort()
-    S = list(sig).index(True)
+    if True in sig:
+        S = list(sig).index(True)
+    else:
+        S = L
     plt.figure(figsize=(5,4))
     plt.scatter(neglogpExp[0:S],neglogp[0:S],s=8,facecolor='grey',lw=0,alpha=0.35)
     plt.scatter(neglogpExp[S:],neglogp[S:],s=8,facecolor='green',lw=0,alpha=0.35,label='FDR<'+str(alpha))
@@ -156,7 +160,10 @@ def zScorePlot(fc,significant,pvalDir,ScreenType,sample,res,svg,alpha):
     zScores = [(logfc[k]-m)/std for k in range(L)]
     sig = [significant[k] for k in range(L)]
     sig.sort()
-    S = list(sig).index(True)
+    if True in sig:
+        S = list(sig).index(True)
+    else:
+        S = L    
     if ScreenType == 'enrichment':    
         zScores.sort();
     elif ScreenType == 'depletion':
@@ -172,6 +179,9 @@ def zScorePlot(fc,significant,pvalDir,ScreenType,sample,res,svg,alpha):
     plt.xlabel('ranked sgRNAs', fontsize=12)
     plt.ylabel('z-Score', fontsize=12)
     plt.title(sample+' sgRNA '+ScreenType,fontsize=14)
-    plt.legend(loc='upper left', prop={'size':10})
+    if ScreenType == 'enrichment':
+        plt.legend(loc='upper left', prop={'size':10})
+    elif ScreenType == 'depletion':
+        plt.legend(loc='upper right', prop={'size':10})        
     plt.tight_layout()
     plt.savefig(sample+'_'+'sgRNA_zScores.png', dpi=res)     
