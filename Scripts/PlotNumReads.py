@@ -66,7 +66,8 @@ def PlotReadDepth():
     n1N2N1 = numpy.add(N2N1,n1)
     
     # Plot    
-    fig, ax = plt.subplots(figsize=(5,4))
+    S = len(SampleNames)
+    fig, ax = plt.subplots(figsize=(4,3.5))
     plt.bar(range(S), N1, align='center', color=(66/255,128/255,244/255),\
         label='Alignment Unique')      
     plt.bar(range(S), N2, bottom = N1, align='center', color=(66/255,244/255,217/255),\
@@ -75,15 +76,17 @@ def PlotReadDepth():
         label='Alignment Ambiguous')
     plt.bar(range(S), n2, bottom = n1N2N1, align='center', color=(244/255,66/255,66/255),\
         label='Alignment Failed')
-    plt.xticks(range(S), SampleNames, rotation='vertical')
+    plt.xticks(range(S), SampleNames, rotation='vertical', fontsize=14)
     formatter = FuncFormatter(millions)
     ax.yaxis.set_major_formatter(formatter)
-    plt.title('Read Depth', fontsize=14)
+    plt.title('Read Depth', fontsize=12)
     plt.ylabel('Number of Reads', fontsize=12)
+    plt.xlim([-1,S])    
+    plt.tick_params(labelsize=12)
     fontP = FontProperties()
     fontP.set_size('x-small')
     handles, labels = ax.get_legend_handles_labels()
-    ax.legend(handles[::-1], labels[::-1], prop=fontP,loc='lower center',bbox_to_anchor=(1.25, 0.5))
+    ax.legend(handles[::-1], labels[::-1], prop=fontP,loc='lower center',bbox_to_anchor=(1.3, 0.5))
     if not os.path.exists(DepthDir):
         os.makedirs(DepthDir)
     os.chdir(DepthDir)

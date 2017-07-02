@@ -25,7 +25,6 @@ import sys
 from pvalPlots import *
 
 
-
 def PrepareHitList(sample):
     # ------------------------------------------------
     # Print header
@@ -90,7 +89,7 @@ def PrepareHitList(sample):
     # Compute negative binomial p-values    
     if max(sigma2) > 0: 
         print('Computing p-values ...')
-        # Neg. Binom. Parameters  n: number of failures, p: probability of failure
+        # Neg. Binom. Parameters  n: number of failures, p: probability of failure       
         n = list(); p = list()
         for i in range(L):
             if mu[i]==0 or sigma2[i]==0:
@@ -152,21 +151,22 @@ def PrepareHitList(sample):
     print('Writing results dataframe ...')
     Results_df = pandas.DataFrame(data = {'sgRNA': [sgIDs[k] for k in range(L)],
                                      'gene': [genes[k] for k in range(L)],
-                                     'counts [norm.]': [x[k] for k in range(L)],
-                                     'control mean [norm.]': [mu[k] for k in range(L)],
-                                     'control stdev [norm.]': [numpy.sqrt(sigma2[k]) for k in range(L)],
+                                     'counts': [x[k] for k in range(L)],
+                                     'control mean': [mu[k] for k in range(L)],
+                                     'control stdev': [numpy.sqrt(sigma2[k]) for k in range(L)],
                                      'fold change': [fc[k] for k in range(L)],   
                                      'p-value': [NBpval[k] for k in range(L)],
                                      'FDR': [NBpval_0[k] for k in range(L)],                                                 
                                      'significant': [str(significant[k]) for k in range(L)]},
-                            columns = ['sgRNA','gene','counts [norm.]','control mean [norm.]',\
-                            'control stdev [norm.]','fold change','p-value','FDR','significant'])
+                            columns = ['sgRNA','gene','counts','control mean',\
+                            'control stdev','fold change','p-value','FDR','significant'])
     if ScreenType == 'enrichment': 
         Results_df_0 = Results_df.sort_values(['significant','p-value','fold change','sgRNA'],ascending=[0,1,0,1])
     elif ScreenType == 'depletion': 
         Results_df_0 = Results_df.sort_values(['significant','p-value','fold change','sgRNA'],ascending=[0,1,1,1])
     ListFilename = sample+'_'+str(alpha)+'_'+padj+'_sgRNAList.tsv'
     Results_df_0.to_csv(ListFilename, sep = '\t', index = False)
+    #Results_df_0.to_hdf(ListFilename+'.hdf','df')
     if SheetFormat == 'xlsx':
         print('Converting to xlsx ...')
         ListFilename = sample+'_'+str(alpha)+'_'+padj+'_sgRNAList.xlsx'

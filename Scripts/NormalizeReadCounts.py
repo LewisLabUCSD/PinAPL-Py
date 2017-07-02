@@ -39,6 +39,7 @@ def Normalization():
     DepthDir = config['DepthDir']
     delta = config['delta']
     norm = config['Normalization']
+    RoundCount = config['RoundCount']
     NormSuffix = '_0.tsv'
     N0 = 1000000
     eps = 0.001 
@@ -65,8 +66,11 @@ def Normalization():
             GuideCounts0_Filename = GuideCountsFilename[0:-4] + NormSuffix
             GuideCounts0 = open(GuideCounts0_Filename,'w')
             ReadsPerGuide_0 = list()
-            for k in range(len(sgIDs)):      
-                ReadsPerGuide_0 = int(numpy.round(ReadsPerGuide[k]/N * N0))
+            for k in range(len(sgIDs)):
+                if RoundCount:
+                    ReadsPerGuide_0 = int(numpy.round(ReadsPerGuide[k]/N * N0))
+                else:
+                    ReadsPerGuide_0 = ReadsPerGuide[k]/N * N0                    
                 GuideCounts0.write(str(sgIDs[k]) + '\t' + str(geneIDs[k]) + '\t' + \
                     str(ReadsPerGuide_0) + '\n')
             GuideCounts0.close()
@@ -79,8 +83,11 @@ def Normalization():
             GeneCounts0_Filename = GeneCountsFilename[0:-4] + NormSuffix
             GeneCounts0 = open(GeneCounts0_Filename,'w')
             ReadsPerGene_0 = list()
-            for j in range(len(geneIDs)):    
-                ReadsPerGene_0 = int(numpy.round(ReadsPerGene[j]/N * N0))
+            for j in range(len(geneIDs)):
+                if RoundCount:
+                    ReadsPerGene_0 = int(numpy.round(ReadsPerGene[j]/N * N0))
+                else:
+                    ReadsPerGene_0 = ReadsPerGene[j]/N * N0
                 GeneCounts0.write(str(geneIDs[j]) + '\t' + str(ReadsPerGene_0) + '\n')
             GeneCounts0.close()            
             os.chdir(AlnQCDir)   
@@ -110,8 +117,11 @@ def Normalization():
             GuideCounts0_Filename = GuideCountsFilename[0:-4] + NormSuffix
             GuideCounts0 = open(GuideCounts0_Filename,'w')
             ReadsPerGuide_0 = list()
-            for k in range(len(sgIDs)):      
-                ReadsPerGuide_0 = int(numpy.round(ReadsPerGuide[k]/N * MeanCount))
+            for k in range(len(sgIDs)): 
+                if RoundCount:
+                    ReadsPerGuide_0 = int(numpy.round(ReadsPerGuide[k]/N * MeanCount))
+                else:
+                    ReadsPerGuide_0 = ReadsPerGuide[k]/N * MeanCount
                 GuideCounts0.write(str(sgIDs[k]) + '\t' + str(geneIDs[k]) + '\t' + \
                     str(ReadsPerGuide_0) + '\n')
             GuideCounts0.close()
@@ -124,8 +134,11 @@ def Normalization():
             GeneCounts0_Filename = GeneCountsFilename[0:-4] + NormSuffix
             GeneCounts0 = open(GeneCounts0_Filename,'w')
             ReadsPerGene_0 = list()
-            for j in range(len(geneIDs)):    
-                ReadsPerGene_0 = int(numpy.round(ReadsPerGene[j]/N * MeanCount))
+            for j in range(len(geneIDs)):
+                if RoundCount:
+                    ReadsPerGene_0 = int(numpy.round(ReadsPerGene[j]/N * MeanCount))
+                else:
+                    ReadsPerGene_0 = ReadsPerGene[j]/N * MeanCount
                 GeneCounts0.write(str(geneIDs[j]) + '\t' + str(ReadsPerGene_0) + '\n')
             GeneCounts0.close()            
             os.chdir(AlnQCDir)            
@@ -183,14 +196,22 @@ def Normalization():
                                 columns = ['gene'])
         for sample in SampleNames:
             os.chdir(sample)
-            Counts0[sample] = [int(numpy.ceil(RawCounts[sample][k]/SizeFactors[sample+' size-factor'][k])) \
-                for k in range(L)]            
+            if RoundCount:
+                Counts0[sample] = [int(numpy.round(RawCounts[sample][k]/SizeFactors[sample+' size-factor'][k])) \
+                    for k in range(L)]
+            else:
+                Counts0[sample] = [RawCounts[sample][k]/SizeFactors[sample+' size-factor'][k] \
+                    for k in range(L)]                
             Counts0.to_csv(sample+'_GuideCounts'+NormSuffix,sep='\t',columns=['sgRNA','gene',sample],\
                 header=False,index=False)            
             GeneCounts = pandas.read_table(glob.glob('*GeneCounts.tsv')[0],sep='\t',names=colnames_g) 
             ReadsPerGene = list(GeneCounts['counts'].values)
-            GeneCounts0[sample] = [int(numpy.ceil(ReadsPerGene[j]/SizeFactors[sample+' size-factor'][0])) \
-                for j in range(G)]
+            if RoundCount:
+                GeneCounts0[sample] = [int(numpy.round(ReadsPerGene[j]/SizeFactors[sample+' size-factor'][0])) \
+                    for j in range(G)]
+            else:
+                GeneCounts0[sample] = [ReadsPerGene[j]/SizeFactors[sample+' size-factor'][0] \
+                    for j in range(G)]                
             GeneCounts0.to_csv(sample+'_GeneCounts'+NormSuffix,sep='\t',columns=['gene',sample],\
                 header=False,index=False)                        
             os.chdir(AlnQCDir)

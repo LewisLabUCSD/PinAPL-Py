@@ -20,6 +20,7 @@ import glob
 import yaml
 import sys
 import time
+from matplotlib.ticker import FormatStrFormatter
 
 def GOI_Scatterplot(sample,GOI='None'):
     # ------------------------------------------------
@@ -41,6 +42,8 @@ def GOI_Scatterplot(sample,GOI='None'):
     AnalysisDir = config['AnalysisDir']
     ListDir = config['HitDir']
     PlotDir = config['ScatterDir']
+    HiLiteDir = config['HiLiteDir']
+    ScreenType = config['ScreenType']
     annotate = config['scatter_annotate']
     alpha = config['alpha']
     delta = config['delta']
@@ -48,6 +51,8 @@ def GOI_Scatterplot(sample,GOI='None'):
     res = config['dpi']
     dotsize = config['dotsize']
     logbase = config['logbase']
+    ShowNonTargets = config['ShowNonTargets']
+    TransparencyLevel = config['TransparencyLevel']
     
     # ------------------------------------------------
     # Reading counts from sample and control
@@ -59,8 +64,8 @@ def GOI_Scatterplot(sample,GOI='None'):
     sgIDs = list(HitList['sgRNA'].values)
     genes = list(HitList['gene'].values)  
     L = len(sgIDs)
-    sample_counts = list(HitList['counts [norm.]'].values)
-    control_counts = list(HitList['control mean [norm.]'].values)
+    sample_counts = list(HitList['counts'].values)
+    control_counts = list(HitList['control mean'].values)
     sig = list(HitList['significant'].values)  
     # Log transformation
     print('Log'+str(logbase)+' transformation ...')
@@ -90,32 +95,54 @@ def GOI_Scatterplot(sample,GOI='None'):
 
     # ------------------------------------------------
     # Plotting
-    # ------------------------------------------------       
+    # ------------------------------------------------   
+    if len(sample_sig) > 100:
+        tpcy = TransparencyLevel
+    else:
+        tpcy = 1
     print('Generating scatterplot ...')
     if not os.path.exists(PlotDir):
         os.makedirs(PlotDir)      
     os.chdir(PlotDir)   
-    plt.figure(figsize=(6,5))
-    plt.scatter(control_rest,sample_rest,s=dotsize,facecolor='black',lw=0,alpha=0.35)
-    plt.scatter(control_sig,sample_sig,s=dotsize,facecolor='green',lw=0,alpha=0.35,label='FDR<'+str(alpha))
+    fig,ax = plt.subplots(figsize=(4,4.25))
+    plt.scatter(control_rest,sample_rest,s=dotsize,facecolor='black',lw=0,alpha=TransparencyLevel)
+    plt.scatter(control_sig,sample_sig,s=dotsize,facecolor='green',lw=0,alpha=tpcy,label='FDR<'+str(alpha))
     if GOI != 'None':
-        plt.scatter(control_goi,sample_goi,s=1.5*dotsize,facecolor='red',lw=0,alpha=1.00,label=GOI)
-    if len(K_nonT)>0:
-        plt.scatter(control_nonT,sample_nonT,s=dotsize,facecolor='orange',lw=0,alpha=0.75,\
+        plt.scatter(control_goi,sample_goi,s=2*dotsize,facecolor='red',lw=0,alpha=1.00,label=GOI)
+    if len(K_nonT)>0 and ShowNonTargets:
+        plt.scatter(control_nonT,sample_nonT,s=dotsize,facecolor='orange',lw=0,alpha=0.35,\
             label='Non Targeting')
+    if len(K_sig)>0:
+        xmax = 1.05*max([max(control_rest),max(control_sig)])
+        ymax = 1.25*max([max(sample_rest),max(sample_sig)])  
+        xmin = -0.1*max([max(control_rest),max(control_sig)])
+        ymin = -0.1*max([max(sample_rest),max(sample_sig)])
+    else:
+        xmax = 1.05*max(control_rest)
+        ymax = 1.25*max(sample_rest)
+        xmin = -0.1*max(control_rest)
+        ymin = -0.1*max(sample_rest)
+    plt.xlim([xmin,xmax]); plt.ylim([ymin,ymax])
+    plt.tick_params(labelsize=13)
     axes = plt.gca()
     x0 = axes.get_xlim()  
-    plt.plot((x0[0],x0[1]), (x0[0],x0[1]), ls="--", color=(51/255,153/255,1))
-    plt.title(sample+' log'+str(logbase)+' counts [norm.]', fontsize=14)
-    plt.xlabel('Control (avg.)', fontsize=12)    
-    plt.ylabel(sample, fontsize=12)
+    plt.plot((x0[0],x0[1]), (x0[0],x0[1]), ls="--", color=(51/255,153/255,1))    
+    ax.yaxis.set_major_formatter(FormatStrFormatter('%.1f'))
+    ax.xaxis.set_major_formatter(FormatStrFormatter('%.1f'))    
+    plt.xlabel('log'+str(logbase)+' counts (Control)', fontsize=14)    
+    plt.ylabel('log'+str(logbase)+' counts ('+sample+')', fontsize=14)
+    plt.title('sgRNA '+ScreenType, fontsize=14)
     plt.legend(loc='upper left', prop={'size':8})
     if annotate:
         for label, x, y in zip(goi_sgIDs,control_goi,sample_goi):
-            plt.annotate(label,xy=(x,y),color='red',fontsize=8)  
+            plt.annotate(label,xy=(x,y),color='red',fontsize=7)  
     plt.tight_layout()
     if GOI != 'None':
+        if not os.path.exists(HiLiteDir):
+        	os.makedirs(HiLiteDir)         
+        os.chdir(HiLiteDir)
         plt.savefig(sample+'_'+GOI+'_counts.png', dpi=res)
+        os.chdir(PlotDir)
     else:
         plt.savefig(sample+'_counts.png', dpi=res)
     plt.close()

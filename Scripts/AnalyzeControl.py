@@ -120,13 +120,14 @@ def EstimateControlCounts():
         Mmax = numpy.percentile(Mean_array,99)
         x = [Mean[k] for k in range(L) if Mean[k] < Mmax]
         y = [Var[k] for k in range(L) if Mean[k] < Mmax]
-        plt.scatter(x,y,s=2,lw=0,alpha=0.35)
-        plt.plot(x,x,'g--',label='Mean = Variance')
+        plt.scatter(x,y,s=4,lw=0,alpha=0.25)
+        plt.plot(x,x,'--',color='orange',label='Mean = Variance')
         plt.legend(loc='upper left', prop={'size':8})
     else: # no control replicates
         plt.figtext(0.25,0.5,'N/A')
     plt.xlabel('Mean', fontsize=12)    
     plt.ylabel('Variance', fontsize=12)    
+    plt.tick_params(labelsize=12)
     plt.title('Read Count Overdispersion', fontsize=14)
     # Log Plot with Regression
     print('Generating log regression plot ...')
@@ -134,7 +135,7 @@ def EstimateControlCounts():
     if max(Var) > 0:
         logx = [numpy.log(Mean[k]) for k in range(L) if Mean[k]>0 and Var[k]>Mean[k]]
         logy = [numpy.log(Var[k]-Mean[k]) for k in range(L) if Mean[k]>0 and Var[k]>Mean[k]]
-        plt.scatter(logx,logy,s=2,lw=0,alpha=0.35)  
+        plt.scatter(logx,logy,s=4,lw=0,alpha=0.25)  
         logy_0 = [2*logx[k] + c_0 for k in range(len(logx))]
         plt.plot(logx,logy_0,'r--')
         Disp = '%.2f' % D
@@ -144,6 +145,7 @@ def EstimateControlCounts():
     plt.xlabel('log (Mean)', fontsize=12)    
     plt.ylabel('log (Variance - Mean)', fontsize=12)     
     plt.title('Mean/Variance Model', fontsize=14)
+    plt.tick_params(labelsize=12)
     plt.tight_layout()
     plt.savefig('Control_MeanVariance.png',dpi=res)
     

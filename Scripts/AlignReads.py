@@ -31,6 +31,9 @@ from matplotlib.ticker import FuncFormatter
 def millions(x, pos):
     return '%1.1fM' % (x*1e-6)
 
+def millions2(x, pos):
+    return '%1.2fM' % (x*1e-6)    
+
 def CountReadsPerGene(g):
     global GeneList
     global geneIDs
@@ -39,6 +42,20 @@ def CountReadsPerGene(g):
     geneIndex = [i for i,x in enumerate(geneIDs) if x==gene]
     sgCounts = [ReadsPerGuide[i] for i in geneIndex]
     g_counts = sum(sgCounts)
+    return g_counts  
+
+def CountReadsPerGeneX(g):
+    gene = GeneList[g]        
+    I = geneIDs.index(gene)
+    j = I
+    g_counts = 0
+    terminate = False
+    while geneIDs[j] == gene and terminate == False:
+        g_counts = g_counts + ReadsPerGuide[j]
+        if j <= L-2:
+            j+=1  
+        else:
+            terminate = True
     return g_counts  
 
 
@@ -69,7 +86,6 @@ def MapAndCount(sample):
     AlnDir = AlnStemDir+sample+'/'
     OutputDir = config['AlnQCDir']+sample   
     seq_5_end = config['seq_5_end']
-    seq_3_end = config['seq_3_end']
     CutErrorTol = config['CutErrorTol']
     R_min = config['R_min']
     minN = config['Cutoff']
@@ -80,6 +96,7 @@ def MapAndCount(sample):
     elif LibFormat == 'csv':
         libsep = ','
     Theta = config['Theta']
+    AS_min = config['AS_min']
     L_bw = config['L_bw']
     N_bw = config['N_bw']
     i_bw = config['i_bw']
@@ -94,6 +111,19 @@ def MapAndCount(sample):
     cutadaptLog = sample+'_cutadapt_log.txt'
     logfilename = sample+'_AlignmentResults.txt'
     
+    # ------------------------------------------------
+    # Read library
+    # ------------------------------------------------  
+    os.chdir(LibDir)
+    LibCols = ['gene','ID','seq']
+    LibFile = pandas.read_table(LibFilename, sep = libsep, skiprows = 1, names = LibCols)
+    LibFile = LibFile.sort_values(['gene','ID'])    
+    sgIDs = list(LibFile['ID'])
+    global L
+    L = len(sgIDs)
+    global geneIDs
+    geneIDs = list(LibFile['gene'])
+    G = len(set(geneIDs))
     
     # ------------------------------------------------
     # Get sample read file
@@ -108,43 +138,46 @@ def MapAndCount(sample):
 
                
     # ------------------------------------------------
-    # Apply cutadapt to trim off the constant region
+    # Trim off adapters
     # ------------------------------------------------           
-    print('Read clipping in progress ...')        
+    print('Trimming 5\' adapters ...')        
     os.chdir(DataDir) 
-    Reads_filename = ReadsFilename[0:-9]
-    ReadsCutFilename = Reads_filename + '_cut.fastq.gz'
-    ReadsCut_filename = ReadsCutFilename[0:-9]
-    CutAdaptCmdLine = CutAdaptDir+'cutadapt -a '+seq_5_end+'...'+seq_3_end  \
-                        +' '+ReadsFilename+' -o '+ReadsCutFilename \
+    ReadsFilename5 = 'Trim5_'+ReadsFilename
+    ReadsFilename53 = 'Trim53_'+ReadsFilename
+    if ReadsFilename53[-3:] == '.gz':
+        ReadsFilename53 = ReadsFilename53[0:-3]
+    os.system(CutAdaptDir+'cutadapt -g '+seq_5_end  \
+                        +' '+ReadsFilename+' -o '+ReadsFilename5 \
                         +' -e '+str(CutErrorTol) \
-                        +' --minimum-length '+str(R_min)+' > '+cutadaptLog
-    os.system(CutAdaptCmdLine)
+                        +' --minimum-length '+str(R_min)+' > '+cutadaptLog)
+    print('5\' adapter trimming completed.\n')    
+    print('Trimming 3\' adapters...')        
+    os.system(CutAdaptDir+'cutadapt -l 20 '+ReadsFilename5+' > '+ReadsFilename53)
+    print('3\' adapter trimming completed.')    
     if not os.path.exists(OutputDir):
         os.makedirs(OutputDir)
     mv_cmdline = 'mv '+cutadaptLog+' '+OutputDir
     os.system(mv_cmdline)
-    print('Read clipping completed.')
     end = time.time()    
     # Time stamp
     sec_elapsed = end-start
     if sec_elapsed < 60:
         time_elapsed = sec_elapsed
-        print('Time elapsed (Read clipping) [secs]: ' + '%.3f' % time_elapsed +'\n')
+        print('Time elapsed (Read trimming) [secs]: ' + '%.3f' % time_elapsed +'\n')
     elif sec_elapsed < 3600:
         time_elapsed = sec_elapsed/60
-        print('Time elapsed (Read clipping) [mins]: ' + '%.3f' % time_elapsed +'\n')
+        print('Time elapsed (Read trimming) [mins]: ' + '%.3f' % time_elapsed +'\n')
     else:
         time_elapsed = sec_elapsed/3600
-        print('Time elapsed (Read clipping) [hours]: ' + '%.3f' % time_elapsed +'\n')    
+        print('Time elapsed (Read trimming) [hours]: ' + '%.3f' % time_elapsed +'\n')    
 
 
     # ----------------------------------------------
     # Run alignment
     # ----------------------------------------------                  
     start = time.time()  
-    print('Alignment in progress ...')        
-    RunBowtie2(ReadsCut_filename,DataDir,AlnDir,bw2Dir,IndexDir,L_bw,N_bw,i_bw)
+    print('Aligning reads to library ...')        
+    RunBowtie2(ReadsFilename53,DataDir,AlnDir,bw2Dir,IndexDir,L_bw,N_bw,i_bw)
     print('Alignment completed.')
     end = time.time()
     # Time stamp
@@ -167,7 +200,7 @@ def MapAndCount(sample):
     print('Analyzing alignment ...') 
     # CLASSIFY ALIGNMENTS 
     os.chdir(AlnDir)
-    bw2outputFilename = ReadsCut_filename + '_bw2output.sam'
+    bw2outputFilename = ReadsFilename53 + '_bw2output.sam'
     bw2sam = pysam.AlignmentFile(bw2outputFilename,'rb')
     fail = pysam.Samfile('failed_alignments.bam','wb',template=bw2sam)
     unique = pysam.Samfile('unique_alignments.bam','wb',template=bw2sam)
@@ -182,26 +215,37 @@ def MapAndCount(sample):
     for read in bw2sam.fetch():        
         mapQ.append(read.mapping_quality)
         # read with primary and seconday alignment
-        if read.has_tag('AS') and read.has_tag('XS'):
-            AS = read.get_tag('AS')
-            XS = read.get_tag('XS')       
-            primScore.append(AS)
-            secScore.append(XS)            
-            if XS <= AS - Theta:
-                keep.write(read); NTol += 1
-                AlnStatus.append('Tolerate')
-                sgRNA_Hitlist.append(read.reference_name)
+        if read.has_tag('AS'):
+            AS = read.get_tag('AS')            
+            if AS >= AS_min:                
+                if read.has_tag('XS'):
+                    XS = read.get_tag('XS')       
+                    primScore.append(AS)
+                    secScore.append(XS)            
+                    if XS <= AS - Theta:
+                        keep.write(read); NTol += 1
+                        AlnStatus.append('Tolerate')
+                        sgRNA_Hitlist.append(read.reference_name)
+                    else:
+                        toss.write(read); NAmb += 1  
+                        AlnStatus.append('Ambiguous')
+                # read with only primary alignment
+                else:
+                    primScore.append(AS)
+                    secScore.append(0)
+                    unique.write(read); NUnique += 1
+                    AlnStatus.append('Unique')
+                    sgRNA_Hitlist.append(read.reference_name)                
             else:
-                toss.write(read); NAmb += 1  
-                AlnStatus.append('Ambiguous')
-        # read with only primary alignment
-        elif read.has_tag('AS'):
-            AS = read.get_tag('AS')
-            primScore.append(AS)
-            secScore.append(0)
-            unique.write(read); NUnique += 1
-            AlnStatus.append('Unique')
-            sgRNA_Hitlist.append(read.reference_name)
+                # read with insufficient primary score 
+                primScore.append(AS)                
+                if read.has_tag('XS'):
+                    XS = read.get_tag('XS')
+                    secScore.append(XS)
+                else:
+                    secScore.append(0)          
+                fail.write(read); NFail += 1
+                AlnStatus.append('Fail')
         # read with failed alignment
         else:
             primScore.append(0)
@@ -259,18 +303,23 @@ def MapAndCount(sample):
     LogFile.write('L_bw (Seed Length): '+str(L_bw)+'\n')    
     LogFile.write('N_bw (Seed Mismatch): '+str(N_bw)+'\n')    
     LogFile.write('i_bw (Interval Function): '+str(i_bw)+'\n')        
-    LogFile.write('Theta (Ambiguity Cutoff): '+str(Theta)+'\n')    
+    LogFile.write('Theta (Ambiguity Threshold): '+str(Theta)+'\n')    
+    LogFile.write('AS_min (Matching Threshold): '+str(AS_min)+'\n')        
     LogFile.close()              
     # DRAW PLOTS
     # MAPPING QUALITY HISTOGRAM
     os.chdir(OutputDir)
     print('Plotting mapping quality ...')
     maxQuality = max(mapQ)
-    plt.figure(figsize=(5,4))
-    plt.hist(mapQ, bins = range(maxQuality+1), align = 'left')
-    plt.title(sample+' Mapping Quality', fontsize=14)
-    plt.xlabel('Mapping Quality', fontsize=12)
-    plt.ylabel('Number of Reads', fontsize=12)
+    fig, ax = plt.subplots(figsize=(5,3.5))
+    plt.hist(mapQ, bins = range(maxQuality+1), width = 1, align = 'left')
+    plt.xlim([-1,maxQuality+1])
+    plt.title('Read Alignment Rates', fontsize=14)
+    plt.xlabel('Mapping Quality', fontsize=14)
+    plt.ylabel('Number of Reads', fontsize=14)
+    plt.tick_params(labelsize=14)
+    formatter = FuncFormatter(millions2)
+    ax.yaxis.set_major_formatter(formatter) 
     plt.tight_layout()
     plt.savefig(sample+'_MappingQuality.png',dpi=res)  
     if svg:
@@ -304,14 +353,15 @@ def MapAndCount(sample):
     green_proxy = plt.Rectangle((0, 0), 1, 1, fc='#00FF00')
     ax.bar3d(x,y,z_off,dx,dy,z,color='#FF3333')
     red_proxy = plt.Rectangle((0, 0), 1, 1, fc='#FF3333')
-    ax.legend([green_proxy,red_proxy],['Matched','Discarded'],loc='upper left',prop={'size':10})
-    plt.suptitle(sample+' Alignment Scores', fontsize=14)
+    ax.legend([green_proxy,red_proxy],['Reads Matched','Reads Discarded'],loc='upper left',prop={'size':10})
+    ax.set_title('Alignment Analysis',fontsize=14)
     ax.set_xlabel('Prim. Alignment Score', fontsize=12)
     ax.set_ylabel('Sec. Alignment Score', fontsize=12)
     formatter = FuncFormatter(millions)
     ax.zaxis.set_major_formatter(formatter)    
     ax.set_zlabel('Number of Reads',fontsize=12)
-    plt.tight_layout()
+    ax.set_xticks([0,10,20,30,40]); ax.set_yticks([0,10,20,30,40]);
+    plt.tight_layout()    
     plt.savefig(sample+'_AlignmentScores.png',dpi=res)   
     if svg:
         plt.savefig(sample+'_AlignmentScores.svg',dpi=res)
@@ -335,15 +385,6 @@ def MapAndCount(sample):
     # --------------------------------------
     start = time.time()    
     print('Read counting in progress ...')
-    # Read library
-    os.chdir(LibDir)
-    LibCols = ['gene','ID','seq']
-    LibFile = pandas.read_table(LibFilename, sep = libsep, skiprows = 1, names = LibCols)
-    sgIDs = list(LibFile['ID'].values)
-    L = len(sgIDs)
-    global geneIDs
-    geneIDs = list(LibFile['gene'].values)
-    G = len(set(geneIDs))
     # Read counts per sgRNA
     print('Counting reads per sgRNA ...')
     ReadCounts = Counter()
@@ -372,7 +413,7 @@ def MapAndCount(sample):
     GeneList = list(set(geneIDs))   
     G = len(GeneList)  
     num_cores = multiprocessing.cpu_count()
-    ReadsPerGene = Parallel(n_jobs=num_cores)(delayed(CountReadsPerGene)(g) for g in range(G))  
+    ReadsPerGene = Parallel(n_jobs=num_cores)(delayed(CountReadsPerGeneX)(g) for g in range(G))  
     GeneCountsFilename = sample + GeneCount_Suffix
     GeneCounts = open(GeneCountsFilename,'w')
     for g in range(G):
@@ -398,9 +439,9 @@ def MapAndCount(sample):
     # --------------------------------------
     start = time.time()  
     # clipped reads file    
-    if not keepCutReads:
+    if not keepCutReads:        
         os.chdir(DataDir)
-        os.system('rm '+ReadsCutFilename)    
+        os.system('rm '+ReadsFilename53+' '+ReadsFilename5)
     # alignment output        
     if AlnOutput == 'Compress':
         print('Compressing raw alignment output...')

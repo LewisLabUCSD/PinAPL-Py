@@ -25,19 +25,27 @@ def LoadExcelDataSheet():
     DataSheet = pandas.read_excel('DataSheet.xlsx')
     FileNames = list(DataSheet['FILENAME'].values)
     TreatmentList = list(DataSheet['TREATMENT'].values)
-    Treatments = list(set(TreatmentList))    
-    N = len(FileNames)
-    SampleNames = ['' for n in range(N)]
-    for treatment in Treatments:    
-        n = 0
-        for j in range(N):    
-           if TreatmentList[j] == treatment:
-               n += 1
-               SampleNames[j] = treatment+'_'+str(n)
-               print('Found sample '+SampleNames[j])
-    DataSheet['SAMPLE NAME'] = SampleNames           
-    DataSheet.to_excel('DataSheet.xlsx',columns=['FILENAME','TREATMENT','SAMPLE NAME'])
-    os.chdir(ScriptsDir)
+    TreatmentList = [str(treatment).replace(' ','_') for treatment in TreatmentList]    # replace spaces   
+    Treatments = list(set(TreatmentList))
+    if 'Control' in Treatments:
+        N = len(FileNames)
+        SampleNames = ['' for n in range(N)]
+        for treatment in Treatments:    
+            n = 0
+            for j in range(N):    
+               if TreatmentList[j] == treatment:
+                   n += 1
+                   SampleNames[j] = treatment+'_'+str(n)
+            if n == 1:      # remove numbering if only one replicate
+                I = SampleNames.index(treatment+'_1')
+                SampleNames[I] = treatment
+        for j in range(N):
+            print('Found sample '+SampleNames[j])
+        DataSheet['SAMPLE NAME'] = SampleNames           
+        DataSheet.to_excel('DataSheet.xlsx',columns=['FILENAME','TREATMENT','SAMPLE NAME'])
+        os.chdir(ScriptsDir)
+    else:
+        print('ERROR: No control treatment defined!')
     
     
 if __name__ == "__main__":

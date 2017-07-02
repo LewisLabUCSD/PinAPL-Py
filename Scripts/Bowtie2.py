@@ -17,25 +17,17 @@ def BuildIndex(LibFastA,IndexDir,bw2Dir):
     bw2_cmdline = bw2Dir+'bowtie2-build -f library.fasta Library'
     os.system(bw2_cmdline)
 
-def RunBowtie2(ReadsCut_filename,DataDir,AlnDir,bw2Dir,IndexDir,L_bw,N_bw,i_bw):   
-    # ------------------------------------------    
-    # Set output parameters
-    # ------------------------------------------    
-    ReadsCutFilename = ReadsCut_filename + '.fastq.gz'    
-    bw2output = ReadsCut_filename + '_bw2output.sam'
-               
-    # ------------------------------------------
-    # Run bowtie alignment
-    # ------------------------------------------ 
+def RunBowtie2(ReadsFilename,DataDir,AlnDir,bw2Dir,IndexDir,L_bw,N_bw,i_bw):   
+    bw2output = ReadsFilename + '_bw2output.sam'
     os.chdir(DataDir) 
-    cp_cmdline = 'cp ' + ReadsCutFilename + ' ' + IndexDir   
+    cp_cmdline = 'cp ' + ReadsFilename + ' ' + IndexDir   
     os.system(cp_cmdline)
     os.chdir(IndexDir)
     num_cores = multiprocessing.cpu_count()
     bw2_cmdline = bw2Dir+'bowtie2 --local -L '+str(L_bw)+' -N '+str(N_bw)+' -i '+str(i_bw) +\
-        ' -q -x Library -U ' + ReadsCutFilename + ' -S ' + bw2output + ' -p '+str(num_cores)
+        ' -q -x Library -U ' + ReadsFilename + ' -S ' + bw2output + ' -p '+str(num_cores)
     os.system(bw2_cmdline)
-    rm_cmdline = 'rm ' + ReadsCutFilename
+    rm_cmdline = 'rm ' + ReadsFilename
     os.system(rm_cmdline)
     if not os.path.exists(AlnDir):
         os.makedirs(AlnDir)

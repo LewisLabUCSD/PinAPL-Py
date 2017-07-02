@@ -48,7 +48,9 @@ def Repl_Scatterplot(Repl1,Repl2):
     NonTPrefix = config['NonTargetPrefix']
     res = config['dpi']
     dotsize = config['dotsize']
-    logbase = config['logbase']    
+    logbase = config['logbase'] 
+    ShowNonTargets = config['ShowNonTargets']
+    TransparencyLevel = config['TransparencyLevel']
         
     # ------------------------------------------------
     # Reading counts from sample and control
@@ -101,22 +103,28 @@ def Repl_Scatterplot(Repl1,Repl2):
     if not os.path.exists(PlotDir):
         os.makedirs(PlotDir)      
     os.chdir(PlotDir)   
-    plt.figure(figsize=(6,5))
-    plt.scatter(repl1_rest,repl2_rest,s=dotsize,facecolor='black',lw=0,alpha=0.35)
-    if len(K_nonT)>0:
-        plt.scatter(repl1_nonT,repl2_nonT,s=dotsize,facecolor='orange',lw=0,alpha=0.75,\
+    fig,ax = plt.subplots(figsize=(4,4))
+    plt.scatter(repl1_rest,repl2_rest,s=dotsize,facecolor='black',lw=0,alpha=TransparencyLevel)
+    if len(K_nonT)>0 and ShowNonTargets:
+        plt.scatter(repl1_nonT,repl2_nonT,s=dotsize,facecolor='orange',lw=0,alpha=0.35,\
             label='Non Targeting')
+        plt.legend(loc='upper left', prop={'size':9})
     axes = plt.gca()
     x0 = axes.get_xlim()  
     plt.plot((x0[0],x0[1]), (x0[0],x0[1]), ls="--", color=(51/255,153/255,1))
-    plt.title('Correlation '+Repl1+' '+Repl2, fontsize=14)
-    plt.xlabel(Repl1+' log'+str(logbase)+' counts [norm.]', fontsize=12)    
-    plt.ylabel(Repl2+' log'+str(logbase)+' counts [norm.]', fontsize=12)
-    plt.legend(loc='upper left', prop={'size':10})
-    plt.text(.6,.2,'Corr (Pearson) = '+str(round(CorrCoeffP*1000)/1000),transform=axes.transAxes,\
-        fontsize=10) 
-    plt.text(.6,.15,'Corr (Spearman) = '+str(round(CorrCoeffS*1000)/1000),transform=axes.transAxes,\
-        fontsize=10)    
+    plt.title('Correlation '+Repl1+' '+Repl2, fontsize=12)
+    plt.xlabel(Repl1+' log'+str(logbase)+' counts', fontsize=12)    
+    plt.ylabel(Repl2+' log'+str(logbase)+' counts', fontsize=12)    
+    plt.text(.45,.15,'Corr (Pearson) = '+str(round(CorrCoeffP*1000)/1000),transform=axes.transAxes,\
+        fontsize=9, color='blue') 
+    plt.text(.45,.1,'Corr (Spearman) = '+str(round(CorrCoeffS*1000)/1000),transform=axes.transAxes,\
+        fontsize=9, color='blue')   
+    xmax = 1.05*(max([max(repl1_rest),max(repl1_nonT)]))
+    ymax = 1.05*(max([max(repl2_rest),max(repl2_nonT)]))    
+    xmin = -0.1*(max([max(repl1_rest),max(repl1_nonT)]))
+    ymin = -0.1*(max([max(repl2_rest),max(repl2_nonT)]))        
+    plt.xlim([xmin,xmax]); plt.ylim([ymin,ymax])
+    plt.tick_params(labelsize=13)
     plt.tight_layout()  
     plt.savefig(Repl1+'_'+Repl2+'_correlation.png', dpi=res)    
     plt.close()
