@@ -7,6 +7,7 @@ MAINTAINER Olivier Harismendy "oharismendy@ucsd.edu"
 WORKDIR /opt
 
 ### install
+RUN apt-get install liblzma-dev
 RUN apt-get update && apt-get install -y \
 autoconf \
 build-essential \
