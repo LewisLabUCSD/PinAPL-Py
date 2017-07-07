@@ -80,7 +80,7 @@ def compute_aRRA_nullx(I):
     
 def AverageLogFC(g):
     gene = geneList[g]        
-    geneIndex = [i for i,x in enumerate(genes) if x==gene]
+    geneIndex = [i for i,x in enumerate(genes) if x==pl-pygene]
     nG = len(geneIndex)
     logfcs = [numpy.log2(fc[i]) for i in geneIndex]
     avglfc = numpy.mean(logfcs)
@@ -202,12 +202,13 @@ def GeneRankingAnalysis(sample):
     os.chdir(EffDir)
     plt.figure(figsize=(4,3.5))
     if len(guidesPerGene) > 0:
-        plt.hist(guidesPerGene, bins = range(1,r+2), align = 'left',color='#42f4a1')
+        plt.hist(guidesPerGene, bins = range(1,r+2), align = 'left',color='#42f4a1',edgecolor='black')
     else:
         plt.figtext(0.5,0.5,'N/A')
     plt.title('on-Target Efficacy', fontsize=14)
     plt.xlabel('# Significant sgRNAs', fontsize=12)
     plt.ylabel('Number of Genes', fontsize=12)
+    plt.xticks(range(1,r+1))
     plt.tick_params(labelsize=12)
     plt.tight_layout()
     plt.savefig(sample+'_sgRNA_Efficacy.png',dpi=res)   

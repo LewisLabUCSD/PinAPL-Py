@@ -122,7 +122,8 @@ def EstimateControlCounts():
         y = [Var[k] for k in range(L) if Mean[k] < Mmax]
         plt.scatter(x,y,s=4,lw=0,alpha=0.25)
         plt.plot(x,x,'--',color='orange',label='Mean = Variance')
-        plt.legend(loc='upper left', prop={'size':8})
+        leg = plt.legend(loc='upper left', prop={'size':8})
+        for lh in leg.legendHandles: lh.set_alpha(1)
     else: # no control replicates
         plt.figtext(0.25,0.5,'N/A')
     plt.xlabel('Mean', fontsize=12)    

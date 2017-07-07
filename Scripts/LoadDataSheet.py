@@ -36,9 +36,6 @@ def LoadExcelDataSheet():
                if TreatmentList[j] == treatment:
                    n += 1
                    SampleNames[j] = treatment+'_'+str(n)
-            if n == 1:      # remove numbering if only one replicate
-                I = SampleNames.index(treatment+'_1')
-                SampleNames[I] = treatment
         for j in range(N):
             print('Found sample '+SampleNames[j])
         DataSheet['SAMPLE NAME'] = SampleNames           

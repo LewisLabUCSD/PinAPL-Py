@@ -36,6 +36,7 @@ IndexScript = config['IndexScript']
 LoaderScript = config['LoaderScript']
 ReadDepthScript = config['ReadDepthScript']
 SeqQCScript = config['SeqQCScript']
+TrimScript = config['TrimScript']
 AlignScript = config['AlignScript']
 NormalizeScript = config['NormalizeScript']
 StatsScript = config['StatsScript']
@@ -77,9 +78,16 @@ if os.path.exists(SeqQCDir):
     os.system('python -u PrintStatus.py SkipSeqQC blank 2>&1 | tee -a PinAPL-Py.log')
 else: 
     os.system('python -u '+SeqQCScript+'.py 2>&1 | tee -a PinAPL-Py.log')
-DoneMsg = 'Sequence quality check completed.'
+DoneMsg = 'Sequence quality control completed.'
 os.system('python -u PrintStatus.py Done "'+DoneMsg+'" 2>&1 | tee -a PinAPL-Py.log')    
-    
+  
+# Trim Adapters
+StatMsg = 'Trimming reads ...'
+os.system('python -u PrintStatus.py SubHeader "'+StatMsg+'" 2>&1 | tee -a PinAPL-Py.log')
+os.system('python -u '+TrimScript+'.py 2>&1 | tee -a PinAPL-Py.log')
+DoneMsg = 'Read trimming completed.'
+os.system('python -u PrintStatus.py Done "'+DoneMsg+'" 2>&1 | tee -a PinAPL-Py.log')
+  
 # Align Reads
 StatMsg = 'Aligning reads ...'
 os.system('python -u PrintStatus.py SubHeader "'+StatMsg+'" 2>&1 | tee -a PinAPL-Py.log')

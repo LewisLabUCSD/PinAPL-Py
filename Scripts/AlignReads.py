@@ -76,7 +76,7 @@ def MapAndCount(sample):
     configFile.close()
     ScriptsDir = config['ScriptsDir']
     WorkingDir = config['WorkingDir']
-    DataDir = config['DataDir']
+    TempDataDir = config['TempDataDir']
     AnalysisDir = config['AnalysisDir']
     CutAdaptDir = config['CutAdaptDir']
     bw2Dir = config['bw2Dir']
@@ -127,57 +127,22 @@ def MapAndCount(sample):
     
     # ------------------------------------------------
     # Get sample read file
-    # ------------------------------------------------  
-    start = time.time()   
+    # ------------------------------------------------      
     os.chdir(WorkingDir)
     DataSheet = pandas.read_excel('DataSheet.xlsx')
     FileNames = list(DataSheet['FILENAME'].values)
     n = len(FileNames)
     Samples = list(DataSheet['SAMPLE NAME'].values)
     ReadsFilename = [FileNames[j] for j in range(n) if Samples[j] == sample][0] 
-
-               
-    # ------------------------------------------------
-    # Trim off adapters
-    # ------------------------------------------------           
-    print('Trimming 5\' adapters ...')        
-    os.chdir(DataDir) 
-    ReadsFilename5 = 'Trim5_'+ReadsFilename
-    ReadsFilename53 = 'Trim53_'+ReadsFilename
-    if ReadsFilename53[-3:] == '.gz':
-        ReadsFilename53 = ReadsFilename53[0:-3]
-    os.system(CutAdaptDir+'cutadapt -g '+seq_5_end  \
-                        +' '+ReadsFilename+' -o '+ReadsFilename5 \
-                        +' -e '+str(CutErrorTol) \
-                        +' --minimum-length '+str(R_min)+' > '+cutadaptLog)
-    print('5\' adapter trimming completed.\n')    
-    print('Trimming 3\' adapters...')        
-    os.system(CutAdaptDir+'cutadapt -l 20 '+ReadsFilename5+' > '+ReadsFilename53)
-    print('3\' adapter trimming completed.')    
-    if not os.path.exists(OutputDir):
-        os.makedirs(OutputDir)
-    mv_cmdline = 'mv '+cutadaptLog+' '+OutputDir
-    os.system(mv_cmdline)
-    end = time.time()    
-    # Time stamp
-    sec_elapsed = end-start
-    if sec_elapsed < 60:
-        time_elapsed = sec_elapsed
-        print('Time elapsed (Read trimming) [secs]: ' + '%.3f' % time_elapsed +'\n')
-    elif sec_elapsed < 3600:
-        time_elapsed = sec_elapsed/60
-        print('Time elapsed (Read trimming) [mins]: ' + '%.3f' % time_elapsed +'\n')
-    else:
-        time_elapsed = sec_elapsed/3600
-        print('Time elapsed (Read trimming) [hours]: ' + '%.3f' % time_elapsed +'\n')    
-
+    ReadsFilename5 = 'Trim5_'+ReadsFilename    
+    ReadsFilename53 = 'Trim53_'+ReadsFilename             
 
     # ----------------------------------------------
     # Run alignment
     # ----------------------------------------------                  
     start = time.time()  
     print('Aligning reads to library ...')        
-    RunBowtie2(ReadsFilename53,DataDir,AlnDir,bw2Dir,IndexDir,L_bw,N_bw,i_bw)
+    RunBowtie2(ReadsFilename53,TempDataDir,AlnDir,bw2Dir,IndexDir,L_bw,N_bw,i_bw)
     print('Alignment completed.')
     end = time.time()
     # Time stamp
@@ -202,10 +167,6 @@ def MapAndCount(sample):
     os.chdir(AlnDir)
     bw2outputFilename = ReadsFilename53 + '_bw2output.sam'
     bw2sam = pysam.AlignmentFile(bw2outputFilename,'rb')
-    fail = pysam.Samfile('failed_alignments.bam','wb',template=bw2sam)
-    unique = pysam.Samfile('unique_alignments.bam','wb',template=bw2sam)
-    keep = pysam.Samfile('tolerated_alignments.bam','wb',template=bw2sam)
-    toss = pysam.Samfile('ambiguous_alignments.bam','wb',template=bw2sam)
     NFail = 0; NUnique = 0; NTol = 0; NAmb = 0
     mapQ = list()
     primScore = list()
@@ -223,17 +184,17 @@ def MapAndCount(sample):
                     primScore.append(AS)
                     secScore.append(XS)            
                     if XS <= AS - Theta:
-                        keep.write(read); NTol += 1
+                        NTol += 1
                         AlnStatus.append('Tolerate')
                         sgRNA_Hitlist.append(read.reference_name)
                     else:
-                        toss.write(read); NAmb += 1  
+                        NAmb += 1  
                         AlnStatus.append('Ambiguous')
                 # read with only primary alignment
                 else:
                     primScore.append(AS)
                     secScore.append(0)
-                    unique.write(read); NUnique += 1
+                    NUnique += 1
                     AlnStatus.append('Unique')
                     sgRNA_Hitlist.append(read.reference_name)                
             else:
@@ -244,23 +205,15 @@ def MapAndCount(sample):
                     secScore.append(XS)
                 else:
                     secScore.append(0)          
-                fail.write(read); NFail += 1
+                NFail += 1
                 AlnStatus.append('Fail')
         # read with failed alignment
         else:
             primScore.append(0)
             secScore.append(0)
-            fail.write(read); NFail += 1
+            NFail += 1
             AlnStatus.append('Fail')
-    bw2sam.close(); fail.close(); unique.close(); keep.close(); toss.close()   
-    os.system('samtools view failed_alignments.bam -o failed_alignments.txt')
-    os.system('samtools view unique_alignments.bam -o unique_alignments.txt')
-    os.system('samtools view tolerated_alignments.bam -o tolerated_alignments.txt')  
-    os.system('samtools view ambiguous_alignments.bam -o ambiguous_alignments.txt')  
-    os.system('rm failed_alignments.bam')
-    os.system('rm unique_alignments.bam')
-    os.system('rm tolerated_alignments.bam')
-    os.system('rm ambiguous_alignments.bam')              
+    bw2sam.close();          
 
     # ------------------------------------------
     # Text output and plots
@@ -279,7 +232,9 @@ def MapAndCount(sample):
         time_unit = ' [mins]'
     else:
         aln_time = aln_time/3600
-        time_unit = ' [hours]'   
+        time_unit = ' [hours]'  
+    if not os.path.exists(OutputDir):
+        os.makedirs(OutputDir)        
     os.chdir(OutputDir)    
     LogFile = open(logfilename,'w')         
     LogFile.write(sample+' Alignment Results\n')
@@ -353,7 +308,7 @@ def MapAndCount(sample):
     green_proxy = plt.Rectangle((0, 0), 1, 1, fc='#00FF00')
     ax.bar3d(x,y,z_off,dx,dy,z,color='#FF3333')
     red_proxy = plt.Rectangle((0, 0), 1, 1, fc='#FF3333')
-    ax.legend([green_proxy,red_proxy],['Reads Matched','Reads Discarded'],loc='upper left',prop={'size':10})
+    ax.legend([green_proxy,red_proxy],['Reads Accepted','Reads Discarded'],loc='upper left',prop={'size':10})
     ax.set_title('Alignment Analysis',fontsize=14)
     ax.set_xlabel('Prim. Alignment Score', fontsize=12)
     ax.set_ylabel('Sec. Alignment Score', fontsize=12)
@@ -440,7 +395,7 @@ def MapAndCount(sample):
     start = time.time()  
     # clipped reads file    
     if not keepCutReads:        
-        os.chdir(DataDir)
+        os.chdir(TempDataDir)
         os.system('rm '+ReadsFilename53+' '+ReadsFilename5)
     # alignment output        
     if AlnOutput == 'Compress':
@@ -451,12 +406,6 @@ def MapAndCount(sample):
         BAM_output = SAM_output[:-3] + 'bam'
         os.system('samtools view -buSH '+SAM_output+' > '+BAM_output)
         os.system('rm '+SAM_output) 
-        # zipping up txt outputs
-        os.system('tar -cvf - unique_alignments.txt | gzip -5 - > unique_alignments.tar.gz')
-        os.system('tar -cvf - failed_alignments.txt | gzip -5 - > failed_alignments.tar.gz')
-        os.system('tar -cvf - tolerated_alignments.txt | gzip -5 - > tolerated_alignments.tar.gz')
-        os.system('tar -cvf - ambiguous_alignments.txt | gzip -5 - > ambiguous_alignments.tar.gz')
-        os.system('rm *.txt')
     elif AlnOutput == 'Delete':
         print('Removing raw alignment output...')
         os.chdir(AlnDir)

@@ -22,7 +22,7 @@ import sys
 import time
 from matplotlib.ticker import FormatStrFormatter
 
-def GOI_Scatterplot(sample,GOI='None'):
+def GOI_Scatterplot(sample,GOI='None',Annot='none',NonT='none',Transp='none'):
     # ------------------------------------------------
     # Print header
     # ------------------------------------------------
@@ -43,16 +43,29 @@ def GOI_Scatterplot(sample,GOI='None'):
     ListDir = config['HitDir']
     PlotDir = config['ScatterDir']
     HiLiteDir = config['HiLiteDir']
-    ScreenType = config['ScreenType']
-    annotate = config['scatter_annotate']
+    ScreenType = config['ScreenType']    
     alpha = config['alpha']
     delta = config['delta']
     NonTPrefix = config['NonTargetPrefix']
     res = config['dpi']
     dotsize = config['dotsize']
     logbase = config['logbase']
-    ShowNonTargets = config['ShowNonTargets']
-    TransparencyLevel = config['TransparencyLevel']
+    if Annot == 'none':
+        annotate = config['scatter_annotate']    
+    elif Annot == 'False':
+        annotate = False
+    elif Annot == 'True':
+        annotate = True
+    if NonT == 'none':
+        ShowNonTargets = config['ShowNonTargets']
+    elif NonT == 'False':
+        ShowNonTargets = False
+    elif NonT == 'True':
+        ShowNonTargets = True
+    if Transp == 'none':        
+        TransparencyLevel = config['TransparencyLevel']
+    else:
+        TransparencyLevel = float(Transp)          
     
     # ------------------------------------------------
     # Reading counts from sample and control
@@ -107,11 +120,11 @@ def GOI_Scatterplot(sample,GOI='None'):
     fig,ax = plt.subplots(figsize=(4,4.25))
     plt.scatter(control_rest,sample_rest,s=dotsize,facecolor='black',lw=0,alpha=TransparencyLevel)
     plt.scatter(control_sig,sample_sig,s=dotsize,facecolor='green',lw=0,alpha=tpcy,label='FDR<'+str(alpha))
-    if GOI != 'None':
-        plt.scatter(control_goi,sample_goi,s=2*dotsize,facecolor='red',lw=0,alpha=1.00,label=GOI)
     if len(K_nonT)>0 and ShowNonTargets:
         plt.scatter(control_nonT,sample_nonT,s=dotsize,facecolor='orange',lw=0,alpha=0.35,\
             label='Non Targeting')
+    if GOI != 'None':
+        plt.scatter(control_goi,sample_goi,s=2*dotsize,facecolor='red',lw=0,alpha=1.00,label=GOI)
     if len(K_sig)>0:
         xmax = 1.05*max([max(control_rest),max(control_sig)])
         ymax = 1.25*max([max(sample_rest),max(sample_sig)])  
@@ -126,16 +139,17 @@ def GOI_Scatterplot(sample,GOI='None'):
     plt.tick_params(labelsize=13)
     axes = plt.gca()
     x0 = axes.get_xlim()  
-    plt.plot((x0[0],x0[1]), (x0[0],x0[1]), ls="--", color=(51/255,153/255,1))    
+    plt.plot((x0[0],x0[1]), (x0[0],x0[1]), ls="--", color=(51/255,153/255,1), alpha=0.75)    
     ax.yaxis.set_major_formatter(FormatStrFormatter('%.1f'))
     ax.xaxis.set_major_formatter(FormatStrFormatter('%.1f'))    
     plt.xlabel('log'+str(logbase)+' counts (Control)', fontsize=14)    
     plt.ylabel('log'+str(logbase)+' counts ('+sample+')', fontsize=14)
     plt.title('sgRNA '+ScreenType, fontsize=14)
-    plt.legend(loc='upper left', prop={'size':8})
+    leg = plt.legend(loc='upper left', prop={'size':8})
+    for lh in leg.legendHandles: lh.set_alpha(1)
     if annotate:
         for label, x, y in zip(goi_sgIDs,control_goi,sample_goi):
-            plt.annotate(label,xy=(x,y),color='red',fontsize=7)  
+            plt.annotate(label,xy=(x,y),color='red',fontsize=5,fontweight='bold')  
     plt.tight_layout()
     if GOI != 'None':
         if not os.path.exists(HiLiteDir):
@@ -183,10 +197,28 @@ def GOI_Scatterplot(sample,GOI='None'):
 
     
 if __name__ == "__main__":
-    if len(sys.argv) == 3:
+    if len(sys.argv) == 2:
+        input1 = sys.argv[1]
+        GOI_Scatterplot(input1)            
+    elif len(sys.argv) == 3:
         input1 = sys.argv[1]
         input2 = sys.argv[2]
         GOI_Scatterplot(input1,input2)    
-    else:
+    elif len(sys.argv) == 4:
         input1 = sys.argv[1]
-        GOI_Scatterplot(input1)            
+        input2 = sys.argv[2]
+        input3 = sys.argv[3]
+        GOI_Scatterplot(input1,input2,input3)            
+    elif len(sys.argv) == 5:
+        input1 = sys.argv[1]
+        input2 = sys.argv[2]
+        input3 = sys.argv[3]
+        input4 = sys.argv[4]
+        GOI_Scatterplot(input1,input2,input3,input4)
+    elif len(sys.argv) == 6:
+        input1 = sys.argv[1]
+        input2 = sys.argv[2]
+        input3 = sys.argv[3]
+        input4 = sys.argv[4]
+        input5 = sys.argv[5]
+        GOI_Scatterplot(input1,input2,input3,input4,input5)

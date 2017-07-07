@@ -33,8 +33,8 @@ def pvalHist(NBpval,NBpval_0,pvalDir,sample,res,svg):
     n = (max_edge-min_edge)/bin_size; Nplus1 = n + 1
     bin_list = numpy.linspace(min_edge, max_edge, Nplus1)    
     fig, ax = plt.subplots(figsize=(4.2,3.5))
-    plt.hist(NBpval,bin_list,color=(106/255,240/255,247/255),label='Unadjusted')
-    plt.hist(NBpval_0,bin_list,color=(232/255,27/255,16/255),rwidth=0.8,alpha=0.75,label='Adjusted')
+    plt.hist(NBpval,bin_list,color='#c8d1ca',label='Unadjusted')
+    plt.hist(NBpval_0,bin_list,color='#0be52c',rwidth=0.8,alpha=0.75,label='Adjusted')
     plt.xticks([0,.2,.4,.6,.8,1])
     plt.xlabel('p-value', fontsize=12)    
     plt.ylabel('Frequency', fontsize=12) 
@@ -58,9 +58,8 @@ def pvalHist_metric(pval_list,pval_list0,GeneMetric,pvalDir,sample,res,svg):
     n = (max_edge-min_edge)/bin_size; Nplus1 = n + 1
     bin_list = numpy.linspace(min_edge, max_edge, Nplus1)    
     fig, ax = plt.subplots(figsize=(4.2,3.5))
-    plt.hist(pval_list,bin_list,color=(150/255,255/255,94/255),label=GeneMetric+' Unadjusted')
-    plt.hist(pval_list0,bin_list,color=(222/255,32/255,247/255),rwidth=0.8,alpha=0.75,\
-        label=GeneMetric+' Adjusted')
+    plt.hist(pval_list,bin_list,color='#c8d1ca',label='Unadjusted')
+    plt.hist(pval_list0,bin_list,color='#0be52c',rwidth=0.75,alpha=0.75,label='Adjusted')
     plt.xticks([0,.2,.4,.6,.8,1])
     plt.xlabel('p-value', fontsize=12)    
     plt.ylabel('Frequency', fontsize=12) 
@@ -100,7 +99,8 @@ def HalfVolcanoPlot(metric,pval_list,metric_sig,GeneMetric,pvalDir,ScreenType,sa
     plt.ylabel('-log10 p-value', fontsize=12) 
     plt.tick_params(labelsize=12)
     plt.title(GeneMetric+' Metric', fontsize=14) 
-    plt.legend(loc='lower right', prop={'size':9})
+    leg = plt.legend(loc='lower right', prop={'size':9})
+    for lh in leg.legendHandles: lh.set_alpha(1)
     plt.tight_layout()
     plt.savefig(sample+'_'+GeneMetric+'_Metric.png', dpi=res)   
     
@@ -132,7 +132,8 @@ def VolcanoPlot(fc,NBpval2,significant,pvalDir,ScreenType,sample,res,svg,alpha):
     plt.tick_params(labelsize=12)
     plt.title('sgRNA Volcano Plot', fontsize=14) 
     if len(logfc_sig)>0:
-        plt.legend(loc='lower right', prop={'size':9})
+        leg = plt.legend(loc='lower right', prop={'size':9})
+        for lh in leg.legendHandles: lh.set_alpha(1)
     plt.tight_layout()
     plt.savefig(sample+'_'+'sgRNA_volcano.png', dpi=res)
 
@@ -170,7 +171,8 @@ def QQPlot(NBpval,significant,pvalDir,sample,res,svg,alpha):
     plt.tick_params(labelsize=12)
     plt.title('sgRNA QQ Plot', fontsize=14) 
     if True in sig:    
-        plt.legend(loc='lower right', prop={'size':9})
+        leg = plt.legend(loc='lower right', prop={'size':9})
+        for lh in leg.legendHandles: lh.set_alpha(1)
     plt.tight_layout()
     plt.savefig(sample+'_'+'sgRNA_QQ.png', dpi=res)    
 
@@ -195,7 +197,7 @@ def zScorePlot(fc,significant,pvalDir,ScreenType,sample,res,svg,alpha):
     elif ScreenType == 'depletion':
         zScores.sort(reverse=True);
     fig, ax = plt.subplots(figsize=(5,3.5))
-    plt.scatter(range(1,S+1),zScores[0:S],s=8,lw=0,color='grey')
+    plt.scatter(range(1,S+1),zScores[0:S],s=8,lw=0,color='#d3d3d3')
     plt.scatter(range(S+1,L+1),zScores[S:],s=8,lw=0,color='green',label='FDR<'+str(alpha))
     plt.plot((0,L), (0,0), ls="--", color=(51/255,153/255,1))
     ymax = 1.05*max(zScores); ymin = 1.05*min(zScores)    
@@ -208,8 +210,10 @@ def zScorePlot(fc,significant,pvalDir,ScreenType,sample,res,svg,alpha):
     plt.title('sgRNA '+ScreenType+' z-Scores',fontsize=14)
     if True in sig:
         if ScreenType == 'enrichment':
-            plt.legend(loc='upper left', prop={'size':9})
+            leg = plt.legend(loc='upper left', prop={'size':9})
+            for lh in leg.legendHandles: lh.set_alpha(1)
         elif ScreenType == 'depletion':
-            plt.legend(loc='upper right', prop={'size':9})        
+            leg = plt.legend(loc='upper right', prop={'size':9})        
+            for lh in leg.legendHandles: lh.set_alpha(1)
     plt.tight_layout()
     plt.savefig(sample+'_'+'sgRNA_zScores.png', dpi=res)     

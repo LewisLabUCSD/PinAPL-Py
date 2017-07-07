@@ -22,7 +22,7 @@ import sys
 import time
 import scipy.stats
 
-def Repl_Scatterplot(Repl1,Repl2):
+def Repl_Scatterplot(Repl1,Repl2,GOI='None',Annot='none',NonT='none',Transp='none'):
     # ------------------------------------------------
     # Print header
     # ------------------------------------------------
@@ -43,6 +43,7 @@ def Repl_Scatterplot(Repl1,Repl2):
     AnalysisDir = config['AnalysisDir']
     AlnQCDir = config['AlnQCDir']
     PlotDir = config['CorrelDir']
+    HiLiteDir2 = config['HiLiteDir2']
     alpha = config['alpha']
     delta = config['delta']
     NonTPrefix = config['NonTargetPrefix']
@@ -51,6 +52,22 @@ def Repl_Scatterplot(Repl1,Repl2):
     logbase = config['logbase'] 
     ShowNonTargets = config['ShowNonTargets']
     TransparencyLevel = config['TransparencyLevel']
+    if Annot == 'none':
+        annotate = config['scatter_annotate']      
+    elif Annot == 'False':
+        annotate = False
+    elif Annot == 'True':
+        annotate = True    
+    if NonT == 'none':
+        ShowNonTargets = config['ShowNonTargets']
+    elif NonT == 'False':
+        ShowNonTargets = False
+    elif NonT == 'True':
+        ShowNonTargets = True
+    if Transp == 'none':        
+        TransparencyLevel = config['TransparencyLevel']
+    else:
+        TransparencyLevel = float(Transp)
         
     # ------------------------------------------------
     # Reading counts from sample and control
@@ -82,12 +99,16 @@ def Repl_Scatterplot(Repl1,Repl2):
     # ------------------------------------------------
     # Creating gene subsets
     # ------------------------------------------------    
+    K_goi = [k for k in range(L) if genes[k] == GOI] 
     K_nonT = [k for k in range(L) if NonTPrefix in genes[k]]
-    K_rest = list(set(range(L)) - set(K_nonT)) 
+    K_rest = list(set(range(L)) - set.union(set(K_goi),set(K_nonT))) 
+    repl1_goi = [repl1_log[k] for k in K_goi]
+    repl2_goi = [repl2_log[k] for k in K_goi]
     repl1_nonT = [repl1_log[k] for k in K_nonT]
     repl2_nonT = [repl2_log[k] for k in K_nonT]
     repl1_rest = [repl1_log[k] for k in K_rest]
     repl2_rest = [repl2_log[k] for k in K_rest]
+    goi_sgIDs = [sgIDs[k] for k in K_goi]
 
     # ----------------------------------------    
     # Compute correlation
@@ -102,16 +123,23 @@ def Repl_Scatterplot(Repl1,Repl2):
     print('Generating scatterplot ...')
     if not os.path.exists(PlotDir):
         os.makedirs(PlotDir)      
+    goi_highlight = False; nonT_highlight = False
     os.chdir(PlotDir)   
     fig,ax = plt.subplots(figsize=(4,4))
     plt.scatter(repl1_rest,repl2_rest,s=dotsize,facecolor='black',lw=0,alpha=TransparencyLevel)
     if len(K_nonT)>0 and ShowNonTargets:
         plt.scatter(repl1_nonT,repl2_nonT,s=dotsize,facecolor='orange',lw=0,alpha=0.35,\
             label='Non Targeting')
-        plt.legend(loc='upper left', prop={'size':9})
+        nonT_highlight = True
+    if GOI != 'None':
+        plt.scatter(repl1_goi,repl2_goi,s=2*dotsize,facecolor='red',lw=0,alpha=1.00,label=GOI)
+        goi_highlight = True
+    if goi_highlight or nonT_highlight:
+        leg = plt.legend(loc='upper left', prop={'size':9})
+        for lh in leg.legendHandles: lh.set_alpha(1)
     axes = plt.gca()
     x0 = axes.get_xlim()  
-    plt.plot((x0[0],x0[1]), (x0[0],x0[1]), ls="--", color=(51/255,153/255,1))
+    plt.plot((x0[0],x0[1]), (x0[0],x0[1]), ls="--", color=(51/255,153/255,1), alpha=0.75)
     plt.title('Correlation '+Repl1+' '+Repl2, fontsize=12)
     plt.xlabel(Repl1+' log'+str(logbase)+' counts', fontsize=12)    
     plt.ylabel(Repl2+' log'+str(logbase)+' counts', fontsize=12)    
@@ -125,8 +153,18 @@ def Repl_Scatterplot(Repl1,Repl2):
     ymin = -0.1*(max([max(repl2_rest),max(repl2_nonT)]))        
     plt.xlim([xmin,xmax]); plt.ylim([ymin,ymax])
     plt.tick_params(labelsize=13)
+    if annotate:
+        for label, x, y in zip(goi_sgIDs,repl1_goi,repl2_goi):
+            plt.annotate(label,xy=(x,y),color='red',fontsize=5,fontweight='bold')     
     plt.tight_layout()  
-    plt.savefig(Repl1+'_'+Repl2+'_correlation.png', dpi=res)    
+    if GOI != 'None':
+        if not os.path.exists(HiLiteDir2):
+        	os.makedirs(HiLiteDir2)         
+        os.chdir(HiLiteDir2)
+        plt.savefig(Repl1+'_'+Repl2+'_'+GOI+'_correlation.png', dpi=res)
+        os.chdir(PlotDir) 
+    else:
+        plt.savefig(Repl1+'_'+Repl2+'_correlation.png', dpi=res)    
     plt.close()
 
     # --------------------------------------
@@ -150,6 +188,33 @@ def Repl_Scatterplot(Repl1,Repl2):
 
     
 if __name__ == "__main__":
-    input1 = sys.argv[1]
-    input2 = sys.argv[2]
-    Repl_Scatterplot(input1,input2)    
+    if len(sys.argv) == 3:
+        input1 = sys.argv[1]
+        input2 = sys.argv[2]
+        Repl_Scatterplot(input1,input2)    
+    elif len(sys.argv) == 4:
+        input1 = sys.argv[1]
+        input2 = sys.argv[2]
+        input3 = sys.argv[3]
+        Repl_Scatterplot(input1,input2,input3)
+    elif len(sys.argv) == 5:
+        input1 = sys.argv[1]
+        input2 = sys.argv[2]
+        input3 = sys.argv[3]
+        input4 = sys.argv[4]
+        Repl_Scatterplot(input1,input2,input3,input4)
+    elif len(sys.argv) == 6:
+        input1 = sys.argv[1]
+        input2 = sys.argv[2]
+        input3 = sys.argv[3]
+        input4 = sys.argv[4]
+        input5 = sys.argv[5]        
+        Repl_Scatterplot(input1,input2,input3,input4,input5)
+    elif len(sys.argv) == 7:
+        input1 = sys.argv[1]
+        input2 = sys.argv[2]
+        input3 = sys.argv[3]
+        input4 = sys.argv[4]
+        input5 = sys.argv[5]        
+        input6 = sys.argv[6] 
+        Repl_Scatterplot(input1,input2,input3,input4,input5,input6)
