@@ -24,9 +24,7 @@ def EstimateControlCounts():
     # ------------------------------------------------
     # Print header
     # ------------------------------------------------
-    print('+++++++++++++++++++++++++++++++++++')
-    print('PinAPL-Py: Control Count Estimation')
-    print('+++++++++++++++++++++++++++++++++++')
+    print('++++++++++++++++++++++++++++++++++++++++++++++++')
     start_total = time.time()    
        
     # ------------------------------------------------
@@ -35,6 +33,7 @@ def EstimateControlCounts():
     configFile = open('configuration.yaml','r')
     config = yaml.load(configFile)
     configFile.close()
+    delta = config['delta']
     ScriptsDir = config['ScriptsDir']
     WorkingDir = config['WorkingDir']
     AlnQCDir = config['AlnQCDir']
@@ -81,11 +80,11 @@ def EstimateControlCounts():
     Mean = list(Mean_array)   
     Var_matrix = numpy.var(CtrlCounts_matrix,axis=1)
     Var_array = numpy.array(Var_matrix.T)[0]
-    Var = list(Var_array)    
+    Var = list(Var_array)
 
     # -----------------------------------------------    
     # Estimate variance from negative binomial model
-    # -------------------------------- --------------
+    # -----------------------------------------------
     if max(Var)>0:   
         x = [numpy.log(Mean[k]) for k in range(L) if Mean[k]>0 and Var[k]>Mean[k]]
         y = [numpy.log(Var[k]-Mean[k]) for k in range(L) if Mean[k]>0 and Var[k]>Mean[k]]    
@@ -95,8 +94,23 @@ def EstimateControlCounts():
         Var_Model = [Mean[k] + D*Mean[k]**2 for k in range(L)]    
     else: # no control replicates present
         print('WARNING: No control replicates found!')
-        Var_Model = ['N/A' for k in range(len(Var))]
+        Var_Model = [0 for k in range(len(Var))]
     
+    # -----------------------------------------------    
+    # Compute parameters for neg. binom. distribution 
+    # n: number of failures, p: probability of failure
+    # -----------------------------------------------
+    print('Computing parameters of neg. binomial distribution ...')
+    n = list(); p = list()
+    for k in range(L):
+        if Mean[k]==0 or Var_Model[k]==0:
+            n.append(((Mean[k]+delta)**2/(Var_Model[k]+2*delta))/(1-(Mean[k]+delta)/(Var_Model[k]+2*delta)))
+            p.append((Mean[k]+delta)/(Var_Model[k]+2*delta))
+        else:
+            n.append((Mean[k]**2/Var_Model[k])/(1-Mean[k]/Var_Model[k]))
+            p.append(Mean[k]/Var_Model[k])
+
+
     # --------------------------------    
     # Write data frame
     # --------------------------------     
@@ -107,6 +121,8 @@ def EstimateControlCounts():
     CtrlCounts_df['Mean'] = Mean
     CtrlCounts_df['Sample Variance'] = Var
     CtrlCounts_df['Model Variance'] = Var_Model 
+    CtrlCounts_df['n'] = n
+    CtrlCounts_df['p'] = p
     CtrlCounts_df.to_csv(CtrlCounts_Filename,sep='\t')    
 
     # --------------------------------    

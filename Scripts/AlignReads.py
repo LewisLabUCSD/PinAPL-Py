@@ -63,9 +63,7 @@ def MapAndCount(sample):
     # ------------------------------------------------
     # Print header
     # ------------------------------------------------
-    print('++++++++++++++++++++++++++++++++++++')
-    print('PinAPL-Py: Alignment & Read Counting')
-    print('++++++++++++++++++++++++++++++++++++')  
+    print('++++++++++++++++++++++++++++++++++++++++++++++++')  
     start_total = time.time()   
 
     # ------------------------------------------------
@@ -134,28 +132,27 @@ def MapAndCount(sample):
     n = len(FileNames)
     Samples = list(DataSheet['SAMPLE NAME'].values)
     ReadsFilename = [FileNames[j] for j in range(n) if Samples[j] == sample][0] 
-    ReadsFilename5 = 'Trim5_'+ReadsFilename    
-    ReadsFilename53 = 'Trim53_'+ReadsFilename             
+    ReadsFilename0 = 'Trim_'+ReadsFilename    
 
     # ----------------------------------------------
     # Run alignment
     # ----------------------------------------------                  
     start = time.time()  
     print('Aligning reads to library ...')        
-    RunBowtie2(ReadsFilename53,TempDataDir,AlnDir,bw2Dir,IndexDir,L_bw,N_bw,i_bw)
+    RunBowtie2(ReadsFilename0,TempDataDir,AlnDir,bw2Dir,IndexDir,L_bw,N_bw,i_bw)
     print('Alignment completed.')
     end = time.time()
     # Time stamp
     aln_time = end-start
     if aln_time < 60: 
         time_elapsed = aln_time
-        print('Time elapsed (Alignment) [secs]: ' + '%.3f' % time_elapsed +'\n')
+        print('Time elapsed (Alignment) [secs]: ' + '%.3f' % time_elapsed)
     elif aln_time < 3600:
         time_elapsed = aln_time/60
-        print('Time elapsed (Alignment) [mins]: ' + '%.3f' % time_elapsed +'\n')
+        print('Time elapsed (Alignment) [mins]: ' + '%.3f' % time_elapsed)
     else:
         time_elapsed = aln_time/3600
-        print('Time elapsed (Alignment) [hours]: ' + '%.3f' % time_elapsed +'\n')
+        print('Time elapsed (Alignment) [hours]: ' + '%.3f' % time_elapsed)
 
 
     # ------------------------------------------
@@ -165,7 +162,7 @@ def MapAndCount(sample):
     print('Analyzing alignment ...') 
     # CLASSIFY ALIGNMENTS 
     os.chdir(AlnDir)
-    bw2outputFilename = ReadsFilename53 + '_bw2output.sam'
+    bw2outputFilename = ReadsFilename0 + '_bw2output.sam'
     bw2sam = pysam.AlignmentFile(bw2outputFilename,'rb')
     NFail = 0; NUnique = 0; NTol = 0; NAmb = 0
     mapQ = list()
@@ -326,13 +323,13 @@ def MapAndCount(sample):
     sec_elapsed = end-start
     if sec_elapsed < 60: 
         time_elapsed = sec_elapsed
-        print('Time elapsed (Alignment analysis) [secs]: ' + '%.3f' % time_elapsed +'\n')
+        print('Time elapsed (Alignment analysis) [secs]: ' + '%.3f' % time_elapsed)
     elif sec_elapsed < 3600:
         time_elapsed = sec_elapsed/60
-        print('Time elapsed (Alignment analysis) [mins]: ' + '%.3f' % time_elapsed +'\n')
+        print('Time elapsed (Alignment analysis) [mins]: ' + '%.3f' % time_elapsed)
     else:
         time_elapsed = sec_elapsed/3600
-        print('Time elapsed (Alignment analysis) [hours]: ' + '%.3f' % time_elapsed +'\n')
+        print('Time elapsed (Alignment analysis) [hours]: ' + '%.3f' % time_elapsed)
         
     
     # --------------------------------------
@@ -380,13 +377,13 @@ def MapAndCount(sample):
     sec_elapsed = end-start
     if sec_elapsed < 60:
         time_elapsed = sec_elapsed
-        print('Time elapsed (Read Counting) [secs]: ' + '%.3f' % time_elapsed +'\n')
+        print('Time elapsed (Read Counting) [secs]: ' + '%.3f' % time_elapsed)
     elif sec_elapsed < 3600:
         time_elapsed = sec_elapsed/60
-        print('Time elapsed (Read Counting) [mins]: ' + '%.3f' % time_elapsed + '\n')
+        print('Time elapsed (Read Counting) [mins]: ' + '%.3f' % time_elapsed)
     else:
         time_elapsed = sec_elapsed/3600
-        print('Time elapsed (Read Counting) [hours]: ' + '%.3f' % time_elapsed + '\n')
+        print('Time elapsed (Read Counting) [hours]: ' + '%.3f' % time_elapsed)
 
 
     # --------------------------------------
@@ -396,7 +393,7 @@ def MapAndCount(sample):
     # clipped reads file    
     if not keepCutReads:        
         os.chdir(TempDataDir)
-        os.system('rm '+ReadsFilename53+' '+ReadsFilename5)
+        os.system('rm '+ReadsFilename0)
     # alignment output        
     if AlnOutput == 'Compress':
         print('Compressing raw alignment output...')
@@ -417,13 +414,13 @@ def MapAndCount(sample):
     sec_elapsed = end-start
     if sec_elapsed < 60: 
         time_elapsed = sec_elapsed
-        print('Time elapsed (Clean-up) [secs]: ' + '%.3f' % time_elapsed +'\n')
+        print('Time elapsed (Clean-up) [secs]: ' + '%.3f' % time_elapsed)
     elif sec_elapsed < 3600:
         time_elapsed = sec_elapsed/60
-        print('Time elapsed (Clean-up) [mins]: ' + '%.3f' % time_elapsed +'\n')
+        print('Time elapsed (Clean-up) [mins]: ' + '%.3f' % time_elapsed)
     else:
         time_elapsed = sec_elapsed/3600
-        print('Time elapsed (Clean-up) [hours]: ' + '%.3f' % time_elapsed +'\n')     
+        print('Time elapsed (Clean-up) [hours]: ' + '%.3f' % time_elapsed)     
 
     # --------------------------------------
     # Final time stamp

@@ -118,7 +118,7 @@ DoneMsg = 'Read count analysis completed.'
 os.system('python -u PrintStatus.py Done "'+DoneMsg+'" 2>&1 | tee -a PinAPL-Py.log')
 
 # Analyze Controls
-StatMsg = 'Analyzing controls ...'
+StatMsg = 'Analyzing control distribution ...'
 os.system('python -u PrintStatus.py SubHeader "'+StatMsg+'" 2>&1 | tee -a PinAPL-Py.log')
 os.system('python -u '+ControlScript+'.py'+' 2>&1 | tee -a PinAPL-Py.log')
 DoneMsg = 'Control analysis completed.'

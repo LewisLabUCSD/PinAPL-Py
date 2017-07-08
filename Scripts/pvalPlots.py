@@ -105,16 +105,16 @@ def HalfVolcanoPlot(metric,pval_list,metric_sig,GeneMetric,pvalDir,ScreenType,sa
     plt.savefig(sample+'_'+GeneMetric+'_Metric.png', dpi=res)   
     
     
-def VolcanoPlot(fc,NBpval2,significant,pvalDir,ScreenType,sample,res,svg,alpha): 
+def VolcanoPlot(fc,NBpval,significant,pvalDir,ScreenType,sample,res,svg,alpha): 
     sampleDir = pvalDir+sample    
     if not os.path.exists(sampleDir):
         os.makedirs(sampleDir)
     os.chdir(sampleDir)  
     L = len(fc)
     logfc = [numpy.log2(fc[k]) for k in range(L) if significant[k]==False]
-    neglogp2 = [-numpy.log10(NBpval2[k]) for k in range(L) if significant[k]==False]
+    neglogp2 = [-numpy.log10(NBpval[k]) for k in range(L) if significant[k]==False]
     logfc_sig = [numpy.log2(fc[k]) for k in range(L) if significant[k]==True]
-    neglogp2_sig = [-numpy.log10(NBpval2[k]) for k in range(L) if significant[k]==True]    
+    neglogp2_sig = [-numpy.log10(NBpval[k]) for k in range(L) if significant[k]==True]    
     plt.figure(figsize=(4,3.5))
     if len(logfc_sig)>100:
         tpcy = 0.35
@@ -127,8 +127,8 @@ def VolcanoPlot(fc,NBpval2,significant,pvalDir,ScreenType,sample,res,svg,alpha):
         xmax = max(max(logfc_sig),max(logfc))
         ymax = max(max(neglogp2_sig),max(neglogp2))
         plt.xlim([0.95*xmin,1.05*xmax]); plt.ylim([0,1.05*ymax])
-    plt.xlabel('log2 Fold Change', fontsize=12)    
-    plt.ylabel('-log10 p-value (two-sided)', fontsize=12) 
+    plt.xlabel('log2 Fold-Change', fontsize=12)    
+    plt.ylabel('-log10 p-value', fontsize=12) 
     plt.tick_params(labelsize=12)
     plt.title('sgRNA Volcano Plot', fontsize=14) 
     if len(logfc_sig)>0:

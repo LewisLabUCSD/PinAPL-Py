@@ -12,21 +12,22 @@ import sys
 
 def PrintStatus_Header():
     print('**************************************************')
-    print('Launching PinAPL-Py v2.7...')
+    print('Launching PinAPL-Py v2.7.1..')
     print('P. Spahn et al., UC San Diego (07/2017)')
     print('**************************************************')
     
 def PrintStatus_SubHeader(msg):
+    print('\n')
     print('**************************************************')
     print(msg)
     print('**************************************************')
 
 def PrintStatus_Done(msg):
     print(msg)
-    print('\n\n')
+    print('\n')
 
 def PrintStatus_ProcessSample(sample):
-    print('\nProcessing sample '+sample+' ... ')
+    print('Processing sample '+sample+' ... ')
 
 def PrintStatus_SkipSample(sample):
     print('Alignment data found for sample '+sample+'. Skipping alignment ... ')
@@ -35,6 +36,7 @@ def PrintStatus_SkipSeqQC():
     print('Sequence quality folder found. Skipping quality check ... ')
 
 def PrintStatus_AllDone():
+    print('\n')
     print('**************************************************')
     print('PinAPL-Py completed.')  
 

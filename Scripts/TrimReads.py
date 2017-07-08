@@ -10,6 +10,8 @@ import sys
 import os
 import yaml
 import time
+import subprocess
+import time
 
 def RunCutadapt():
     start_total = time.time()  
@@ -24,42 +26,43 @@ def RunCutadapt():
     seq_5_end = config['seq_5_end']
     CutErrorTol = config['CutErrorTol']
     R_min = config['R_min']
+    ScriptsDir = config['ScriptsDir']
+    RunInBack = 'RunInBackground.sh'
     
     # Trim 5' adapters
-    print('Trimming 5\' adapters ...') 
     if not os.path.exists(TempDataDir):
         os.makedirs(TempDataDir)
     if not os.path.exists(TrimLogDir):
         os.makedirs(TrimLogDir)        
     os.chdir(DataDir)
     FileNames = [d for d in os.listdir(DataDir)]
-    command5 = str()    
-    for ReadsFilename in FileNames:
-        ReadsFilename5 = 'Trim5_'+ReadsFilename
-        LogFilename = 'cutadapt_'+ReadsFilename+'.txt'
-        command5 = command5 + CutAdaptDir+'cutadapt -g '+seq_5_end\
-                            +' '+ReadsFilename+' -o '+TempDataDir+ReadsFilename5\
-                            +' -e '+str(CutErrorTol)+' -m '+str(R_min)\
-                            +' > '+LogFilename+' & '
-    command5 = command5[:-3]
-    os.system(command5)
-    os.system('mv *.txt '+TrimLogDir)
-    
-    # Trim 3' adapters
-    print('Trimming 3\' adapters ...') 
     os.chdir(TempDataDir)
-    command3 = str()
+    filesNotDone = []
+    # Load processes into the background
     for ReadsFilename in FileNames:
-        ReadsFilename5 = 'Trim5_'+ReadsFilename
-        ReadsFilename53 = 'Trim53_'+ReadsFilename
-        DumpFilename = ReadsFilename+'_dump.log'
-        command3 = command3 + CutAdaptDir+'cutadapt -l 20 '\
-                            +ReadsFilename5+' -o '+ReadsFilename53+' >'+DumpFilename+' & '
-    command3 = command3[:-3]
-    os.system(command3)    
-    os.system('rm *.log')
-    end = time.time()
-    
+        ReadsFilename0 = 'Trim_'+ReadsFilename
+        LogFilename = 'cutadapt_'+ReadsFilename+'.txt'
+        command = CutAdaptDir+'cutadapt -g '+seq_5_end\
+                                +' '+DataDir+ReadsFilename+' -o '+ReadsFilename0\
+                                +' -e '+str(CutErrorTol)+' -m '+str(R_min)+' -l 20'\
+                                +' 2>&1 > '+LogFilename
+        subprocess.call(ScriptsDir+RunInBack+' "'+command+'" '+ReadsFilename+' cutadapt_status.log &',shell=True,\
+            stdin=None, stdout=None, stderr=None, close_fds=True)
+        filesNotDone.append(ReadsFilename+'_cutadapt_status.log')
+        print('Loading '+ReadsFilename)
+    print('Removing adapters ...')
+    # Check for completion
+    while len(filesNotDone) > 0:
+        time.sleep(.1)
+        statusfile = filesNotDone[0]
+        status = open(statusfile,'r').readline().rstrip('\n')
+        if status == 'done':
+            filesNotDone.pop(0)
+            os.system('rm '+statusfile)        
+    print('Adapter removal completed.')
+    print('Writing logfiles...')    
+    os.system('mv *.txt '+TrimLogDir)    
+       
     # Time stamp
     end_total = time.time()
     # Final time stamp

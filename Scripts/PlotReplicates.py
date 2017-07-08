@@ -26,9 +26,7 @@ def Repl_Scatterplot(Repl1,Repl2,GOI='None',Annot='none',NonT='none',Transp='non
     # ------------------------------------------------
     # Print header
     # ------------------------------------------------
-    print('++++++++++++++++++++++++++++++++')
-    print('PinAPL-Py: Replicate Scatterplot')
-    print('++++++++++++++++++++++++++++++++')  
+    print('++++++++++++++++++++++++++++++++++++++++++++++++')
     print('Sample 1: '+Repl1+' | Sample 2: '+Repl2)
     start_total = time.time()  
     
