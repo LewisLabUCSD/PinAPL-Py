@@ -301,10 +301,10 @@ def MapAndCount(sample):
     # Show plot    
     fig = plt.figure(figsize=(6,5))
     ax = fig.gca(projection='3d')
-    ax.bar3d(X,Y,Z_off,dX,dY,Z,color='#00FF00')
-    green_proxy = plt.Rectangle((0, 0), 1, 1, fc='#00FF00')
-    ax.bar3d(x,y,z_off,dx,dy,z,color='#FF3333')
-    red_proxy = plt.Rectangle((0, 0), 1, 1, fc='#FF3333')
+    ax.bar3d(X,Y,Z_off,dX,dY,Z, color=(97/255, 252/255, 80/255))  # bar3d has a bug with hex code
+    green_proxy = plt.Rectangle((0, 0), 1, 1, fc=(97/255, 252/255, 80/255))
+    ax.bar3d(x,y,z_off,dx,dy,z,color=(255/255, 51/255, 51/255))
+    red_proxy = plt.Rectangle((0, 0), 1, 1, fc=(255/255, 51/255, 51/255))
     ax.legend([green_proxy,red_proxy],['Reads Accepted','Reads Discarded'],loc='upper left',prop={'size':10})
     ax.set_title('Alignment Analysis',fontsize=14)
     ax.set_xlabel('Prim. Alignment Score', fontsize=12)
