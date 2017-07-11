@@ -249,7 +249,11 @@ def GeneRankingAnalysis(sample):
             TimeStamp(sec_elapsed,'aRRA Computation')        
             # Permutation
             start = time.time()
-            print('Estimating aRRA null distribution ('+str(Np)+' Permutations)...')
+            print('Estimating aRRA null distribution ('+str(Np)+' permutations)...')
+            if L < Np*r:                
+                print('WARNING: Library too small for '+str(Np)+' permutations!')
+                Np = int(numpy.floor(L/r))                
+                print('Auto-correcting permutation number to '+str(Np)+' ...')
             I_perm = numpy.random.choice(L,size=(Np,r),replace=False)
             metric_null = Parallel(n_jobs=num_cores)(delayed(compute_aRRA_nullx)(I) for I in I_perm)
             end = time.time()
@@ -284,7 +288,7 @@ def GeneRankingAnalysis(sample):
         os.chdir(ListDir)
         SortFlag = False
         # Running null distribution
-        print('Estimating STARS null distribution ('+str(Np)+' Permutations)...')
+        print('Estimating STARS null distribution ('+str(Np)+' permutations)...')
         STARS_input = open('STARS_input.txt','w')
         STARS_input.write('sgID\tcounts\n')
         STARS_chip = open('STARS_chip.txt','w')
