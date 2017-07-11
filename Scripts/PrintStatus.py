@@ -12,7 +12,7 @@ import sys
 
 def PrintStatus_Header():
     print('**************************************************')
-    print('Launching PinAPL-Py v2.7.1..')
+    print('Launching PinAPL-Py v2.7.4..')
     print('P. Spahn et al., UC San Diego (07/2017)')
     print('**************************************************')
     

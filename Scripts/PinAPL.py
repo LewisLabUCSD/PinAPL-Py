@@ -199,4 +199,4 @@ os.chdir(WorkingDir)
 os.system('cp DataSheet.xlsx '+LogFileDir)
 
 # Status message
-print('LOADING RESULTS PAGE. PLEASE STAND BY...')
+print('LOADING RESULTS PAGE. PLEASE REFRESH PERIODICALLY...')
