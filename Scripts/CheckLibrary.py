@@ -42,6 +42,7 @@ def LibrarySanityCheck():
     # Replace non-printable characters (...these cause problems in PlotCount.py)
     # ----------------------------------    
     GeneNames0 = []
+    ID0 = []
     for gene in GeneNames:
         gene = gene.replace('|','_')
         gene = gene.replace('(','_')
@@ -50,10 +51,21 @@ def LibrarySanityCheck():
         gene = gene.replace('"','')
         gene = gene.replace('/','_')
         gene = gene.replace('\\','_')
+        gene = gene.replace(' ','_')        
         GeneNames0.append(gene)
-    if GeneNames != GeneNames0:
+    for sgRNA in ID:
+        sgRNA = sgRNA.replace('|','_')
+        sgRNA = sgRNA.replace('(','_')
+        sgRNA = sgRNA.replace(')','_')
+        sgRNA = sgRNA.replace(';','_')
+        sgRNA = sgRNA.replace('"','')
+        sgRNA = sgRNA.replace('/','_')
+        sgRNA = sgRNA.replace('\\','_')
+        sgRNA = sgRNA.replace(' ','_')        
+        ID0.append(sgRNA)    
+    if GeneNames != GeneNames0 or ID != ID0:
             LibFile0 = pandas.DataFrame(data = {'gene': [gene for gene in GeneNames0],
-                                     'ID': [id for id in ID],
+                                     'ID': [sgRNA for sgRNA in ID0],
                                      'seq': [s for s in seq]},
                             columns = ['gene','ID','seq'])
             LibFile0.to_csv(LibFilename, sep = libsep, index = False)
