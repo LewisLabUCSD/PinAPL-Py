@@ -31,7 +31,7 @@ alpha: 0.001           # critical false-discovery rate for sign. sgRNAs/genes
 P_0: 0.00005           # maximum p-value for sgRNA to be taken into account for aRRA
 Np: 1000               # number of permutations for gene ranking analysis
 TopN: 25               # number of top sgRNAs to take into account for clustering
-thr_STARS: 20          # threshold percentage for STARS analysis
+thr_STARS: 10          # threshold percentage for STARS analysis
 CutErrorTol: 0.1       # cutadapt error tolerance
 R_min: 20             # minimal required read length after cutadapt trimming
 L_bw: 11               # Bowtie2 -L parameter (seed length)
@@ -83,6 +83,7 @@ CutAdaptDir: '/root/.local/bin/'
 STARSDir: '/opt/PinAPL-Py/Scripts/STARS_mod/'
 
 # SCRIPT FILENAMES
+SanityScript: 'CheckLibrary'
 IndexScript: 'BuildLibraryIndex'
 LoaderScript: 'LoadDataSheet'
 ReadDepthScript: 'PlotNumReads'

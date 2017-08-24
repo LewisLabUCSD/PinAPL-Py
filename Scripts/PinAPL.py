@@ -32,6 +32,7 @@ AlignDir = config['AlignDir']
 AlnQCDir = config['AlnQCDir']
 SeqQCDir = config['SeqQCDir']
 LogFileDir = config['LogFileDir']
+SanityScript = config['SanityScript']
 IndexScript = config['IndexScript']
 LoaderScript = config['LoaderScript']
 ReadDepthScript = config['ReadDepthScript']
@@ -54,6 +55,9 @@ os.chdir(ScriptsDir)
 # Print Header
 os.system('python -u PrintStatus.py Header blank 2>&1 | tee PinAPL-Py.log')
 start = time.time()
+
+# Library sanity check
+os.system('python -u '+SanityScript+'.py 2>&1 | tee -a PinAPL-Py.log')
 
 # Generate index if not present
 if not os.path.exists(IndexDir):
@@ -197,6 +201,3 @@ os.system('cp configuration.yaml '+LogFileDir)
 os.system('cp PinAPL-Py.log '+LogFileDir)
 os.chdir(WorkingDir)
 os.system('cp DataSheet.xlsx '+LogFileDir)
-
-# Status message
-print('LOADING RESULTS PAGE. PLEASE REFRESH PERIODICALLY...')
