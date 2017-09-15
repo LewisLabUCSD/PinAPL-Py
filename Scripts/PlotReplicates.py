@@ -143,11 +143,19 @@ def Repl_Scatterplot(Repl1,Repl2,GOI='None',Annot='none',NonT='none',Transp='non
     plt.text(.45,.15,'Corr (Pearson) = '+str(round(CorrCoeffP*1000)/1000),transform=axes.transAxes,\
         fontsize=9, color='blue') 
     plt.text(.45,.1,'Corr (Spearman) = '+str(round(CorrCoeffS*1000)/1000),transform=axes.transAxes,\
-        fontsize=9, color='blue')   
-    xmax = 1.05*(max([max(repl1_rest),max(repl1_nonT)]))
-    ymax = 1.05*(max([max(repl2_rest),max(repl2_nonT)]))    
-    xmin = -0.1*(max([max(repl1_rest),max(repl1_nonT)]))
-    ymin = -0.1*(max([max(repl2_rest),max(repl2_nonT)]))        
+        fontsize=9, color='blue') 
+    if len(repl1_nonT) != 0:
+        xmin = -0.1*(max([max(repl1_rest),max(repl1_nonT)]))
+        xmax = 1.05*(max([max(repl1_rest),max(repl1_nonT)]))
+    else:        
+        xmin = -0.1*max(repl1_rest)
+        xmax = 1.05*max(repl1_rest)
+    if len(repl2_nonT) != 0:
+        ymin = -0.1*(max([max(repl2_rest),max(repl2_nonT)]))
+        ymax = 1.05*(max([max(repl2_rest),max(repl2_nonT)]))    
+    else:
+        ymin = -0.1*max(repl2_rest)
+        ymax = 1.05*max(repl2_rest)    
     plt.xlim([xmin,xmax]); plt.ylim([ymin,ymax])
     plt.tick_params(labelsize=13)
     if annotate:
