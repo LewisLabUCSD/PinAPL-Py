@@ -42,7 +42,6 @@ def Repl_Scatterplot(Repl1,Repl2,GOI='None',Annot='none',NonT='none',Transp='non
     AlnQCDir = config['AlnQCDir']
     PlotDir = config['CorrelDir']
     HiLiteDir2 = config['HiLiteDir2']
-    alpha = config['alpha']
     delta = config['delta']
     NonTPrefix = config['NonTargetPrefix']
     res = config['dpi']

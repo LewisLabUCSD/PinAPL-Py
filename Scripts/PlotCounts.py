@@ -42,7 +42,7 @@ def GOI_Scatterplot(sample,GOI='None',Annot='none',NonT='none',Transp='none'):
     PlotDir = config['ScatterDir']
     HiLiteDir = config['HiLiteDir']
     ScreenType = config['ScreenType']    
-    alpha = config['alpha']
+    alpha = config['alpha_s']
     delta = config['delta']
     NonTPrefix = config['NonTargetPrefix']
     res = config['dpi']
@@ -117,7 +117,7 @@ def GOI_Scatterplot(sample,GOI='None',Annot='none',NonT='none',Transp='none'):
     os.chdir(PlotDir)   
     fig,ax = plt.subplots(figsize=(4,4.25))
     plt.scatter(control_rest,sample_rest,s=dotsize,facecolor='black',lw=0,alpha=TransparencyLevel)
-    plt.scatter(control_sig,sample_sig,s=dotsize,facecolor='green',lw=0,alpha=tpcy,label='FDR<'+str(alpha))
+    plt.scatter(control_sig,sample_sig,s=dotsize,facecolor='green',lw=0,alpha=tpcy,label='p < '+str(alpha))
     if len(K_nonT)>0 and ShowNonTargets:
         plt.scatter(control_nonT,sample_nonT,s=dotsize,facecolor='orange',lw=0,alpha=0.35,\
             label='Non Targeting')
@@ -167,7 +167,7 @@ def GOI_Scatterplot(sample,GOI='None',Annot='none',NonT='none',Transp='none'):
         print('sgID\t\tCounts\tControl\tSignificant')    
         print('-----------------------------------------------')       
         if not K_goi:
-            print('ERROR: Gene name not found!')
+            print('### ERROR: Gene name not found! ###')
         else:            
             for k in K_goi:        
                 println = str(sgIDs[k])+'\t'+str(int(sample_counts[k]))+'\t'+ \

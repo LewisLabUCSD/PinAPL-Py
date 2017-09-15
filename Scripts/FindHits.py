@@ -46,7 +46,7 @@ def PrepareHitList(sample):
     ListDir = config['HitDir']
     CtrlCounts_Filename = 'Control_GuideCounts_0.tsv'
     ScreenType = config['ScreenType']
-    alpha = config['alpha']    
+    alpha = config['alpha_s']
     padj = config['padj']
     SheetFormat = config['HitListFormat']
     delta = config['delta']
@@ -128,7 +128,7 @@ def PrepareHitList(sample):
     # -----------------------------------------------------------                  
     else:                           # error in scree type
     # -----------------------------------------------------------   
-        print('ERROR: Check spelling of ScreenType in configuration file!')
+        print('### ERROR: Check spelling of ScreenType in configuration file! ###')
 
     # -----------------------------------------------
     # p-value Correction and Plots
@@ -162,10 +162,10 @@ def PrepareHitList(sample):
                                      'control stdev': [numpy.sqrt(sigma2[k]) for k in range(L)],
                                      'fold change': [fc[k] for k in range(L)],   
                                      'p-value': [NBpval[k] for k in range(L)],
-                                     'FDR': [NBpval_0[k] for k in range(L)],                                                 
+                                     'p-value (adj.)': [NBpval_0[k] for k in range(L)],                                                 
                                      'significant': [str(significant[k]) for k in range(L)]},
                             columns = ['sgRNA','gene','counts','control mean',\
-                            'control stdev','fold change','p-value','FDR','significant'])
+                            'control stdev','fold change','p-value','p-value (adj.)','significant'])
     if ScreenType == 'enrichment': 
         Results_df_0 = Results_df.sort_values(['significant','p-value','fold change','sgRNA'],ascending=[0,1,0,1])
     elif ScreenType == 'depletion': 

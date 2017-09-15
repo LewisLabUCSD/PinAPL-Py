@@ -214,7 +214,7 @@ def Normalization():
                 header=False,index=False)                        
             os.chdir(AlnQCDir)
     else:
-        print('ERROR: Check spelling of Normalization parameter in configuration file!')
+        print('### ERROR: Check spelling of Normalization parameter in configuration file! ###')
     
     # --------------------------------------
     # Time stamp

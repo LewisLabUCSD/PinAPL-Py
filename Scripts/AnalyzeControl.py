@@ -58,7 +58,7 @@ def EstimateControlCounts():
                                     'gene': genes},
                             columns = ['sgID','gene'])        
     if len(ControlSamples) == 0:
-        print('ERROR: No control sample directories found!')
+        print('### ERROR: No control sample directories found! ###')
     else:
         os.chdir(AlnQCDir)
         for controlsample in ControlSamples:

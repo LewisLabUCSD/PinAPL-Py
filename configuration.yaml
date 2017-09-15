@@ -6,34 +6,35 @@
 # ***********************************************************************
 
 # PROJECT PARAMETERS
-ScreenType: 'enrichment'               # type of screen ['enrichment'/'depletion']
+ScreenType: 'depletion'               # type of screen ['enrichment'/'depletion']
 
 # LIBRARY PARAMETERS
-LibFilename: 'GeCKOv21_Human.tsv'      # filename of library spreadsheet  
+LibFilename: 'GeCKOv2_Mouse.csv'      # filename of library spreadsheet  
 seq_5_end: 'TCTTGTGGAAAGGACGAAACACCN'  # sequence 5' of sgRNA in read
 NonTargetPrefix: 'NonTargeting'        # prefix for non-targeting sgRNAs in library
 NumGuidesPerGene: 6                    # number of sgRNAs per gene
 
 # ANALYSIS OPTIONS
-Normalization: 'cpm'         # normalization of read counts ['cpm'/'size'/'total']
-RoundCount: False            # round counts after normalization [True/False]
+sgRNALength: 20              # sgRNA length [bp]
+Normalization: 'total'         # normalization of read counts ['cpm'/'size'/'total']
+RoundCount: True            # round counts after normalization [True/False]
 GeneMetric: 'aRRA'           # metric for gene ranking ['aRRA'/'STARS']
 AlnOutput: 'Delete'          # keep raw alignment output? ['Keep'/'Compress'/'Delete']
 keepCutReads: False          # keep files containing trimmed reads? [True/False]
 ClusterBy: 'variance'        # clustering criterion ['variance'/'counts']
-padj: 'fdr_bh'               # method for p-value adjustment ['fdr_bh'/'fdr_tsbh']
+padj: 'fdr_bh'               # method for p-value adjustment ['fdr_bh'/'fdr_tsbh'/'sidak'/'bonferroni']
 
 # TECHNICAL PARAMETERS
 AS_min: 40             # matching threshold 
 Theta: 2               # ambiguity threshold 
 Cutoff: 0              # read count threshold 
-alpha: 0.001           # critical false-discovery rate for sign. sgRNAs/genes
+alpha_s: 0.00001         # critical false-discovery rate for sign. sgRNAs
+alpha_g: 0.01          # critical false-discovery rate for sign. genes
 P_0: 0.00005           # maximum p-value for sgRNA to be taken into account for aRRA
 Np: 1000               # number of permutations for gene ranking analysis
 TopN: 25               # number of top sgRNAs to take into account for clustering
-thr_STARS: 10          # threshold percentage for STARS analysis
+thr_STARS: 20          # threshold percentage for STARS analysis
 CutErrorTol: 0.1       # cutadapt error tolerance
-R_min: 20             # minimal required read length after cutadapt trimming
 L_bw: 11               # Bowtie2 -L parameter (seed length)
 N_bw: 1                # Bowtie2 -N parameter (seed mismatch)
 i_bw: 'S,1,0.75'       # Bowtie2 -i parameter (interval function)
@@ -83,7 +84,7 @@ CutAdaptDir: '/root/.local/bin/'
 STARSDir: '/opt/PinAPL-Py/Scripts/STARS_mod/'
 
 # SCRIPT FILENAMES
-SanityScript: 'CheckLibrary'
+SanityScript: 'CheckCharacters'
 IndexScript: 'BuildLibraryIndex'
 LoaderScript: 'LoadDataSheet'
 ReadDepthScript: 'PlotNumReads'

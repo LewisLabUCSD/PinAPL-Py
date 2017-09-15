@@ -14,7 +14,7 @@ import multiprocessing
 
 def BuildIndex(LibFastA,IndexDir,bw2Dir):
     os.chdir(IndexDir)
-    bw2_cmdline = bw2Dir+'bowtie2-build -f library.fasta Library'
+    bw2_cmdline = bw2Dir+'bowtie2-build -q -f library.fasta Library'
     os.system(bw2_cmdline)
 
 def RunBowtie2(ReadsFilename0,TempDataDir,AlnDir,bw2Dir,IndexDir,L_bw,N_bw,i_bw):   

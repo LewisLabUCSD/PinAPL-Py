@@ -83,9 +83,6 @@ def MapAndCount(sample):
     AlnStemDir = config['AlignDir']
     AlnDir = AlnStemDir+sample+'/'
     OutputDir = config['AlnQCDir']+sample   
-    seq_5_end = config['seq_5_end']
-    CutErrorTol = config['CutErrorTol']
-    R_min = config['R_min']
     minN = config['Cutoff']
     LibFilename = config['LibFilename']
     LibFormat = LibFilename[-3:]
@@ -160,6 +157,8 @@ def MapAndCount(sample):
     # ------------------------------------------ 
     start = time.time()
     print('Analyzing alignment ...') 
+    print('Applying matching threshold ...')
+    print('Applying ambiguity threshold ...')    
     # CLASSIFY ALIGNMENTS 
     os.chdir(AlnDir)
     bw2outputFilename = ReadsFilename0 + '_bw2output.sam'
@@ -211,16 +210,19 @@ def MapAndCount(sample):
             NFail += 1
             AlnStatus.append('Fail')
     bw2sam.close();          
-
-    # ------------------------------------------
-    # Text output and plots
-    # ------------------------------------------ 
-    print('Writing alignment logfile ...')
     NReads = NTol + NAmb + NUnique + NFail
     FracUnique = round(NUnique/NReads*1000)/10    
     FracTol = round(NTol/NReads*1000)/10
     FracAmb = round(NAmb/NReads*1000)/10
-    FracFail = round(NFail/NReads*1000)/10    
+    FracFail = round(NFail/NReads*1000)/10         
+    print('*** Successfully mapped reads: '\
+        +str(NUnique+NTol)+' ('+str(FracUnique+FracTol)+'%) ***')
+    
+    
+    # ------------------------------------------
+    # Text output and plots
+    # ------------------------------------------ 
+    print('Writing alignment logfile ...')  
     if aln_time < 60:
         time_elapsed = aln_time
         time_unit = ' [secs]'
@@ -356,9 +358,6 @@ def MapAndCount(sample):
     for k in range(L):
         GuideCounts.write(str(sgIDs[k]) + '\t'+ str(geneIDs[k]) + '\t' + str(ReadsPerGuide[k]) + '\n')
     GuideCounts.close()
-    # No-mapping warning
-    if sum(ReadsPerGuide) == 0:
-        print('!! ERROR: Zero total read counts! Check library file and index !!')
     # Read counts per gene in library       
     print('Counting reads per gene ...')   
     global GeneList
@@ -373,6 +372,9 @@ def MapAndCount(sample):
     GeneCounts.close()        
     end = time.time()
     print('Read counting completed.')
+    # No-mapping warning
+    if sum(ReadsPerGuide) == 0:
+        print('### ERROR: Zero read counts! Check library and alignment ###')    
     # Time stamp
     sec_elapsed = end-start
     if sec_elapsed < 60:

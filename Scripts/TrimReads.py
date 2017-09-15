@@ -25,7 +25,8 @@ def RunCutadapt():
     TrimLogDir = config['TrimLogDir']
     seq_5_end = config['seq_5_end']
     CutErrorTol = config['CutErrorTol']
-    R_min = config['R_min']
+    sgLength = config['sgRNALength']
+    R_min = sgLength
     ScriptsDir = config['ScriptsDir']
     RunInBack = 'RunInBackground.sh'
     
@@ -44,13 +45,14 @@ def RunCutadapt():
         LogFilename = 'cutadapt_'+ReadsFilename+'.txt'
         command = CutAdaptDir+'cutadapt -g '+seq_5_end\
                                 +' '+DataDir+ReadsFilename+' -o '+ReadsFilename0\
-                                +' -e '+str(CutErrorTol)+' -m '+str(R_min)+' -l 20'\
+                                +' -e '+str(CutErrorTol)+' -m '+str(R_min)+' -l '+str(sgLength)\
                                 +' 2>&1 > '+LogFilename
         subprocess.call(ScriptsDir+RunInBack+' "'+command+'" '+ReadsFilename+' cutadapt_status.log &',shell=True,\
             stdin=None, stdout=None, stderr=None, close_fds=True)
         filesNotDone.append(ReadsFilename+'_cutadapt_status.log')
         print('Loading '+ReadsFilename)
     print('Removing adapters ...')
+    print('Extracting '+str(sgLength)+' bp sgRNA sequences ...')
     # Check for completion
     while len(filesNotDone) > 0:
         time.sleep(.1)

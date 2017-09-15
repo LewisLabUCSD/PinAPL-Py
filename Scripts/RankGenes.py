@@ -133,7 +133,7 @@ def GeneRankingAnalysis(sample):
     ListDir = config['HitDir']
     EffDir = config['EffDir']
     GeneDir = config['GeneDir']
-    alpha = config['alpha']            
+    alpha = config['alpha_g']            
     padj = config['padj']
     screentype = config['ScreenType']    
     num_cores = multiprocessing.cpu_count()
@@ -267,12 +267,12 @@ def GeneRankingAnalysis(sample):
                 GOI = geneList[g]
                 pval = ecdf(metric[g])
                 metric_pval.append(pval)
-            # Determine critical p value (FDR correction)
+            # Determine critical p value (p-value correction)
             multTest = multipletests(metric_pval,alpha,padj)
             metric_sig = multTest[0]
             metric_pval0 = multTest[1]
         else: # no control replicates
-            print('ERROR: Cannot compute aRRA scores without significant sgRNAs!')
+            print('### ERROR: Cannot compute aRRA scores without significant sgRNAs! ###')
             SortFlag = True
             metric = [-1 for k in range(G)]
             metric_pval = [-1 for k in range(G)]
@@ -363,13 +363,13 @@ def GeneRankingAnalysis(sample):
     print('Writing results dataframe ...')
     Results_df = pandas.DataFrame(data = {'gene': [geneList[g] for g in range(G)],
                                     GeneMetric: [metric[g] for g in range(G)],
-                                     GeneMetric+' p_value': [metric_pval[g] for g in range(G)],
-                                    GeneMetric+' FDR': [metric_pval0[g] for g in range(G)],
+                                     'p_value': [metric_pval[g] for g in range(G)],
+                                    'p_value (adj.)': [metric_pval0[g] for g in range(G)],
                                      'significant': [str(metric_sig[g]) for g in range(G)],
                                      '# sgRNAs': [nGuides[g] for g in range(G)],                
                                      '# signif. sgRNAs': [sigGuides[g] for g in range(G)],
                                     'avg. logFC': [AvgLogFCs[g] for g in range(G)]},
-                            columns = ['gene',GeneMetric,GeneMetric+' p_value',GeneMetric+' FDR',\
+                            columns = ['gene',GeneMetric,'p_value','p_value (adj.)',\
                             'significant','# sgRNAs','# signif. sgRNAs','avg. logFC'])
     Results_df_0 = Results_df.sort_values(['significant',GeneMetric],ascending=[False,SortFlag])
     GeneListFilename = filename[0:-14]+'_'+GeneMetric+'_'+'P'+str(Np)+'_GeneList.tsv'

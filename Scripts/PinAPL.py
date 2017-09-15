@@ -56,8 +56,12 @@ os.chdir(ScriptsDir)
 os.system('python -u PrintStatus.py Header blank 2>&1 | tee PinAPL-Py.log')
 start = time.time()
 
-# Library sanity check
+# Character sanity check
+StatMsg = 'Running character sanity check ...'
+os.system('python -u PrintStatus.py SubHeader "'+StatMsg+'" 2>&1 | tee -a PinAPL-Py.log')
 os.system('python -u '+SanityScript+'.py 2>&1 | tee -a PinAPL-Py.log')
+DoneMsg = 'Character sanity check completed.'
+os.system('python -u PrintStatus.py Done "'+DoneMsg+'" 2>&1 | tee -a PinAPL-Py.log')
 
 # Generate index if not present
 if not os.path.exists(IndexDir):

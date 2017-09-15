@@ -121,7 +121,7 @@ def VolcanoPlot(fc,NBpval,significant,pvalDir,ScreenType,sample,res,svg,alpha):
     else:
         tpcy = 1
     plt.scatter(logfc,neglogp2,s=8,facecolor='grey',lw=0,alpha=0.25)
-    plt.scatter(logfc_sig,neglogp2_sig,s=8,facecolor='green',lw=0,alpha=tpcy,label='FDR<'+str(alpha))    
+    plt.scatter(logfc_sig,neglogp2_sig,s=8,facecolor='green',lw=0,alpha=tpcy,label='p < '+str(alpha))    
     if len(logfc_sig)>0 and len(neglogp2_sig)>0:
         xmin = min(min(logfc_sig),min(logfc))        
         xmax = max(max(logfc_sig),max(logfc))
@@ -161,7 +161,7 @@ def QQPlot(NBpval,significant,pvalDir,sample,res,svg,alpha):
         tpcy = 1    
     plt.figure(figsize=(4,3.5))
     plt.scatter(neglogpExp[0:S],neglogp[0:S],s=8,facecolor='grey',lw=0,alpha=0.25)
-    plt.scatter(neglogpExp[S:],neglogp[S:],s=8,facecolor='green',lw=0,alpha=tpcy,label='FDR<'+str(alpha))
+    plt.scatter(neglogpExp[S:],neglogp[S:],s=8,facecolor='green',lw=0,alpha=tpcy,label='p < '+str(alpha))
     xmax = 1.05*max(neglogpExp)
     ymax = 1.05*max(neglogp)
     plt.xlim([0,xmax]); plt.ylim([0,ymax])
@@ -198,7 +198,7 @@ def zScorePlot(fc,significant,pvalDir,ScreenType,sample,res,svg,alpha):
         zScores.sort(reverse=True);
     fig, ax = plt.subplots(figsize=(5,3.5))
     plt.scatter(range(1,S+1),zScores[0:S],s=8,lw=0,color='#d3d3d3')
-    plt.scatter(range(S+1,L+1),zScores[S:],s=8,lw=0,color='green',label='FDR<'+str(alpha))
+    plt.scatter(range(S+1,L+1),zScores[S:],s=8,lw=0,color='green',label='p < '+str(alpha))
     plt.plot((0,L), (0,0), ls="--", color=(51/255,153/255,1))
     ymax = 1.05*max(zScores); ymin = 1.05*min(zScores)    
     plt.ylim([ymin,ymax]) 
