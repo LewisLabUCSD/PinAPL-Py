@@ -22,7 +22,7 @@ import sys
 import time
 from matplotlib.ticker import FormatStrFormatter
 
-def GOI_Scatterplot(sample,GOI='None',Annot='none',NonT='none',Transp='none'):
+def GOI_Scatterplot(sample,GOI='none',Annot='none',NonT='none',Transp='none'):
     # ------------------------------------------------
     # Print header
     # ------------------------------------------------
@@ -121,7 +121,7 @@ def GOI_Scatterplot(sample,GOI='None',Annot='none',NonT='none',Transp='none'):
     if len(K_nonT)>0 and ShowNonTargets:
         plt.scatter(control_nonT,sample_nonT,s=dotsize,facecolor='orange',lw=0,alpha=0.35,\
             label='Non Targeting')
-    if GOI != 'None':
+    if GOI != 'none':
         plt.scatter(control_goi,sample_goi,s=2*dotsize,facecolor='red',lw=0,alpha=1.00,label=GOI)
     if len(K_sig)>0:
         xmax = 1.05*max([max(control_rest),max(control_sig)])
@@ -149,20 +149,29 @@ def GOI_Scatterplot(sample,GOI='None',Annot='none',NonT='none',Transp='none'):
         for label, x, y in zip(goi_sgIDs,control_goi,sample_goi):
             plt.annotate(label,xy=(x,y),color='red',fontsize=5,fontweight='bold')  
     plt.tight_layout()
-    if GOI != 'None':
+    # Define file name
+    figurename = 'counts_'+sample+'.png'
+    if GOI != 'none':    
+        figurename = figurename[:-4]+'_'+GOI+'.png'
+    if Annot not in ['none','False']:
+        figurename = figurename[:-4]+'_IDs.png'        
+    if NonT not in ['none','False']:
+        figurename = figurename[:-4]+'_nonT.png'        
+    # Save figure
+    if GOI != 'none':        
         if not os.path.exists(HiLiteDir):
         	os.makedirs(HiLiteDir)         
-        os.chdir(HiLiteDir)
-        plt.savefig(sample+'_'+GOI+'_counts.png', dpi=res)
-        os.chdir(PlotDir)
+        os.chdir(HiLiteDir)        
+        plt.savefig(figurename, dpi=res)
+        os.chdir(PlotDir)        
     else:
-        plt.savefig(sample+'_counts.png', dpi=res)
+        plt.savefig(figurename, dpi=res)
     plt.close()
 
     # ------------------------------------------------
     # Printing 
     # ------------------------------------------------
-    if GOI != 'None':
+    if GOI != 'none':
         print('-----------------------------------------------')     
         print('sgID\t\tCounts\tControl\tSignificant')    
         print('-----------------------------------------------')       

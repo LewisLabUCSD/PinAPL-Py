@@ -22,7 +22,7 @@ import sys
 import time
 import scipy.stats
 
-def Repl_Scatterplot(Repl1,Repl2,GOI='None',Annot='none',NonT='none',Transp='none'):
+def Repl_Scatterplot(Repl1,Repl2,GOI='none',Annot='none',NonT='none',Transp='none'):
     # ------------------------------------------------
     # Print header
     # ------------------------------------------------
@@ -128,7 +128,7 @@ def Repl_Scatterplot(Repl1,Repl2,GOI='None',Annot='none',NonT='none',Transp='non
         plt.scatter(repl1_nonT,repl2_nonT,s=dotsize,facecolor='orange',lw=0,alpha=0.35,\
             label='Non Targeting')
         nonT_highlight = True
-    if GOI != 'None':
+    if GOI != 'none':
         plt.scatter(repl1_goi,repl2_goi,s=2*dotsize,facecolor='red',lw=0,alpha=1.00,label=GOI)
         goi_highlight = True
     if goi_highlight or nonT_highlight:
@@ -162,14 +162,23 @@ def Repl_Scatterplot(Repl1,Repl2,GOI='None',Annot='none',NonT='none',Transp='non
         for label, x, y in zip(goi_sgIDs,repl1_goi,repl2_goi):
             plt.annotate(label,xy=(x,y),color='red',fontsize=5,fontweight='bold')     
     plt.tight_layout()  
-    if GOI != 'None':
+    # Define file name
+    figurename = 'counts_'+Repl1+'_'+Repl2+'.png'    
+    if GOI != 'none':    
+        figurename = figurename[:-4]+'_'+GOI+'.png'
+    if Annot not in ['none','False']:
+        figurename = figurename[:-4]+'_IDs.png'        
+    if NonT not in ['none','False']:
+        figurename = figurename[:-4]+'_nonT.png'  
+    # Save figure        
+    if GOI != 'none':
         if not os.path.exists(HiLiteDir2):
         	os.makedirs(HiLiteDir2)         
         os.chdir(HiLiteDir2)
-        plt.savefig(Repl1+'_'+Repl2+'_'+GOI+'_correlation.png', dpi=res)
+        plt.savefig(figurename, dpi=res)
         os.chdir(PlotDir) 
     else:
-        plt.savefig(Repl1+'_'+Repl2+'_correlation.png', dpi=res)    
+        plt.savefig(figurename, dpi=res)    
     plt.close()
 
     # --------------------------------------
