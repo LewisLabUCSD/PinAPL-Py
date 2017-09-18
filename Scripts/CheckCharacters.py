@@ -41,8 +41,17 @@ def RunSanityCheck():
     seq = list(LibFile['seq']) 
     GeneNames0 = []
     ID0 = []    
+    
+    # --------------------------------------------------------------------
+    # Define bad characters (library)
+    # --------------------------------------------------------------------     
     BadCharacters = [' ','>','<',';',':',',','|','/','\\','(',')','[',']',\
         '$','%','*','?','{','}','=','+','@']
+        
+    # --------------------------------------------------------------------
+    # Check library
+    # --------------------------------------------------------------------         
+    BadLibCharFound = False
     for gene in GeneNames:
         for bad_char in BadCharacters:
             gene = gene.replace(bad_char,'_')
@@ -52,6 +61,7 @@ def RunSanityCheck():
             sgRNA = sgRNA.replace(bad_char,'_')       
         ID0.append(sgRNA)    
     if GeneNames != GeneNames0 or ID != ID0:
+            BadLibCharFound = True
             LibFile0 = pandas.DataFrame(data = {'gene': [gene for gene in GeneNames0],
                                      'ID': [sgRNA for sgRNA in ID0],
                                      'seq': [s for s in seq]},
@@ -67,42 +77,52 @@ def RunSanityCheck():
     Filenames = list(DataSheet['FILENAME'])
     TreatmentList = list(DataSheet['TREATMENT'])
     F = len(Filenames)
-    BadCharFound = False    
-    
+
     # --------------------------------------------------------------------
-    # Replace non-printable characters from filenames
-    # --------------------------------------------------------------------      
-    os.chdir(DataDir)    
+    # Define bad characters (filenames & samples)
+    # --------------------------------------------------------------------         
     BadCharacters = [' ','>','<',';',':',',','|','/','\\','(',')','[',']',\
         '$','%','*','?','{','}','=','+','@']
+    
+    # --------------------------------------------------------------------
+    # Replace non-printable characters from filenames 
+    # --------------------------------------------------------------------      
+    os.chdir(DataDir)    
+    BadFileCharFound = False        
     for j in range(F):
         Filename = Filenames[j]
         Filename0 = Filename
         for bad_char in BadCharacters:
             Filename0 = Filename0.replace(bad_char,'_')
         if Filename0 != Filename:
-            BadCharFound = True
+            BadFileCharFound = True
             os.system('mv '+"'"+Filename+"'"+' '+Filename0)
-            DataSheet['FILENAME'][j] = Filename0            
+            DataSheet['FILENAME'][j] = Filename0  
+            print("WARNING: Special characters in filenames names replaced by '_'")
 
     # --------------------------------------------------------------------
-    # Replace non-printable characters from filenames
-    # --------------------------------------------------------------------             
+    # Replace non-printable characters from sample names 
+    # --------------------------------------------------------------------   
     TreatmentList0 = TreatmentList
+    BadSampleCharFound = False 
     for bad_char in BadCharacters:
         TreatmentList0 = [str(treatment).replace(bad_char,'_') for treatment in TreatmentList0]
     if TreatmentList0 != TreatmentList:
-        BadCharFound = True
+        BadSampleCharFound = True
         DataSheet['TREATMENT'] = TreatmentList0        
+        print("WARNING: Special characters in sample names replaced by '_'")
         
     # --------------------------------------------------------------------
     # Update Data Sheet
     # --------------------------------------------------------------------            
-    if BadCharFound:
+    if BadFileCharFound or BadSampleCharFound:
         os.chdir(WorkingDir)
-        DataSheet.to_excel('DataSheet.xlsx',columns=['FILENAME','TREATMENT'])
-        print("WARNING: Special characters in sample names replaced by '_'")
-    else:
+        DataSheet.to_excel('DataSheet.xlsx',columns=['FILENAME','TREATMENT'])        
+
+    # --------------------------------------------------------------------
+    # No special characters found
+    # -------------------------------------------------------------------- 
+    if not BadLibCharFound and not BadFileCharFound and not BadSampleCharFound:
         print('No special characters found.')
     
     

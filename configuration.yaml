@@ -6,10 +6,10 @@
 # ***********************************************************************
 
 # PROJECT PARAMETERS
-ScreenType: 'depletion'               # type of screen ['enrichment'/'depletion']
+ScreenType: 'enrichment'               # type of screen ['enrichment'/'depletion']
 
 # LIBRARY PARAMETERS
-LibFilename: 'GeCKOv2_Mouse.csv'      # filename of library spreadsheet  
+LibFilename: 'GeCKOv21_Human.tsv'      # filename of library spreadsheet  
 seq_5_end: 'TCTTGTGGAAAGGACGAAACACCN'  # sequence 5' of sgRNA in read
 NonTargetPrefix: 'NonTargeting'        # prefix for non-targeting sgRNAs in library
 NumGuidesPerGene: 6                    # number of sgRNAs per gene

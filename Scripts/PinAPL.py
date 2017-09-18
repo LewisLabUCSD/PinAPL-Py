@@ -205,3 +205,6 @@ os.system('cp configuration.yaml '+LogFileDir)
 os.system('cp PinAPL-Py.log '+LogFileDir)
 os.chdir(WorkingDir)
 os.system('cp DataSheet.xlsx '+LogFileDir)
+
+# Status message
+print('LOADING RESULTS PAGE. PLEASE REFRESH PERIODICALLY...')
