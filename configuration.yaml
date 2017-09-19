@@ -16,7 +16,7 @@ NumGuidesPerGene: 6                    # number of sgRNAs per gene
 
 # ANALYSIS OPTIONS
 sgRNALength: 20              # sgRNA length [bp]
-Normalization: 'total'         # normalization of read counts ['cpm'/'size'/'total']
+Normalization: 'cpm'         # normalization of read counts ['cpm'/'size'/'total']
 RoundCount: True            # round counts after normalization [True/False]
 GeneMetric: 'aRRA'           # metric for gene ranking ['aRRA'/'STARS']
 AlnOutput: 'Delete'          # keep raw alignment output? ['Keep'/'Compress'/'Delete']
@@ -38,12 +38,13 @@ CutErrorTol: 0.1       # cutadapt error tolerance
 L_bw: 11               # Bowtie2 -L parameter (seed length)
 N_bw: 1                # Bowtie2 -N parameter (seed mismatch)
 i_bw: 'S,1,0.75'       # Bowtie2 -i parameter (interval function)
+thr_overdisp: 0.5       # Overdispersion threshold to choose negative binomial model
 
 # VISUALIZATION PARAMETERS
 TransparencyLevel: 0.1    # transparency (alpha) in scatterplots
 dotsize: 8                # size of dots in scatterplot
 scatter_annotate: False   # annotate scatterplot when highlighting a gene? [True/False]
-ShowNonTargets: False     # show non-targeting controls in scatterplots [True/False]
+ShowNonTargets: True     # show non-targeting controls in scatterplots [True/False]
 dpi: 300                  # resolution of PNG plots
 delta: 1                  # count shift to avoid zero counts in logFC
 logbase: 10               # base for log transformation of counts in scatterplots

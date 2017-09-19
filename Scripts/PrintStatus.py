@@ -12,7 +12,7 @@ import sys
 
 def PrintStatus_Header():
     print('**************************************************')
-    print('Launching PinAPL-Py v2.7.6..')
+    print('Launching PinAPL-Py v2.7.7..')
     print('P. Spahn et al., UC San Diego (09/2017)')
     print('**************************************************')
     
@@ -28,6 +28,9 @@ def PrintStatus_Done(msg):
 
 def PrintStatus_ProcessSample(sample):
     print('Processing sample '+sample+' ... ')
+
+def PrintStatus_SkipTrim():
+    print('Alignment data found. Skipping read trimming ... ')
 
 def PrintStatus_SkipSample(sample):
     print('Alignment data found for sample '+sample+'. Skipping alignment ... ')
@@ -56,6 +59,8 @@ if __name__ == "__main__":
         PrintStatus_Done(input2)
     elif input1 == 'ProcessSample':
         PrintStatus_ProcessSample(input2)
+    elif input1 == 'SkipTrim':
+        PrintStatus_SkipTrim()           
     elif input1 == 'SkipSample':
         PrintStatus_SkipSample(input2)   
     elif input1 == 'SkipSeqQC':

@@ -24,7 +24,7 @@ def kilos(x, pos):
 def millions(x, pos):
     return '%1.1fM' % (x*1e-6)
 
-def pvalHist(NBpval,NBpval_0,pvalDir,sample,res,svg):
+def pvalHist(pval,pval0,pvalDir,sample,res,svg):
     sampleDir = pvalDir+sample    
     if not os.path.exists(sampleDir):
         os.makedirs(sampleDir)
@@ -33,8 +33,8 @@ def pvalHist(NBpval,NBpval_0,pvalDir,sample,res,svg):
     n = (max_edge-min_edge)/bin_size; Nplus1 = n + 1
     bin_list = numpy.linspace(min_edge, max_edge, Nplus1)    
     fig, ax = plt.subplots(figsize=(4.2,3.5))
-    plt.hist(NBpval,bin_list,color='#c8d1ca',label='Unadjusted')
-    plt.hist(NBpval_0,bin_list,color='#0be52c',rwidth=0.8,alpha=0.75,label='Adjusted')
+    plt.hist(pval,bin_list,color='#c8d1ca',label='Unadjusted')
+    plt.hist(pval0,bin_list,color='#0be52c',rwidth=0.8,alpha=0.75,label='Adjusted')
     plt.xticks([0,.2,.4,.6,.8,1])
     plt.xlabel('p-value', fontsize=12)    
     plt.ylabel('Frequency', fontsize=12) 
@@ -105,16 +105,17 @@ def HalfVolcanoPlot(metric,pval_list,metric_sig,GeneMetric,pvalDir,ScreenType,sa
     plt.savefig(sample+'_'+GeneMetric+'_Metric.png', dpi=res)   
     
     
-def VolcanoPlot(fc,NBpval,significant,pvalDir,ScreenType,sample,res,svg,alpha): 
-    sampleDir = pvalDir+sample    
+def VolcanoPlot(fc,pval,significant,pvalDir,ScreenType,sample,res,svg,alpha): 
+    sampleDir = pvalDir+sample
+    eps = 1e-16
     if not os.path.exists(sampleDir):
         os.makedirs(sampleDir)
     os.chdir(sampleDir)  
     L = len(fc)
     logfc = [numpy.log2(fc[k]) for k in range(L) if significant[k]==False]
-    neglogp2 = [-numpy.log10(NBpval[k]) for k in range(L) if significant[k]==False]
+    neglogp2 = [-numpy.log10(pval[k]+eps) for k in range(L) if significant[k]==False]
     logfc_sig = [numpy.log2(fc[k]) for k in range(L) if significant[k]==True]
-    neglogp2_sig = [-numpy.log10(NBpval[k]) for k in range(L) if significant[k]==True]    
+    neglogp2_sig = [-numpy.log10(pval[k]+eps) for k in range(L) if significant[k]==True]    
     plt.figure(figsize=(4,3.5))
     if len(logfc_sig)>100:
         tpcy = 0.35
@@ -138,13 +139,14 @@ def VolcanoPlot(fc,NBpval,significant,pvalDir,ScreenType,sample,res,svg,alpha):
     plt.savefig(sample+'_'+'sgRNA_volcano.png', dpi=res)
 
 
-def QQPlot(NBpval,significant,pvalDir,sample,res,svg,alpha): 
-    sampleDir = pvalDir+sample    
+def QQPlot(pval,significant,pvalDir,sample,res,svg,alpha): 
+    sampleDir = pvalDir+sample  
+    eps = 1e-16
     if not os.path.exists(sampleDir):
         os.makedirs(sampleDir)
     os.chdir(sampleDir)  
-    L = len(NBpval)
-    neglogp = [-numpy.log10(NBpval[k]) for k in range(L)]
+    L = len(pval)
+    neglogp = [-numpy.log10(pval[k]+eps) for k in range(L)]
     neglogp.sort()    
     pExp = numpy.linspace(1,1/L,L)
     neglogpExp = [-numpy.log10(pExp[k]) for k in range(L)]

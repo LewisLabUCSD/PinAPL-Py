@@ -60,10 +60,12 @@ def PrepareHitList(sample):
     print('Loading read counts ...')     
     os.chdir(CtrlDir)
     Ctrl_File = pandas.read_table(CtrlCounts_Filename, sep='\t')
+    Model = Ctrl_File['Model'][0]
     sgIDs = list(Ctrl_File['sgID'])
     genes = list(Ctrl_File['gene'])
     mu = list(Ctrl_File['Mean'])
     L = len(sgIDs)
+    SampleVar = list(Ctrl_File['Sample Variance'])
     sigma2 = list(Ctrl_File['Model Variance'])
     n = list(Ctrl_File['n'])
     p = list(Ctrl_File['p'])    
@@ -74,57 +76,69 @@ def PrepareHitList(sample):
     x = list(SampleFile['counts'])
      
     # -----------------------------------------------
-    # Compute fold change and p-values
+    # Compute fold change 
     # -----------------------------------------------    
-    if max(sigma2) == 0:        # check for control replicates
+    print('Computing fold-changes ...')
+    fc = list()
+    for k in range(L):
+        if x[k]==0 or mu[k]==0:
+            fc.append((x[k]+delta)/(mu[k]+delta))
+        else:
+            fc.append(x[k]/mu[k])     
+     
+    # -----------------------------------------------
+    # Compute p-values 
+    # -----------------------------------------------              
+    if Model == 'none':        
     # -----------------------------------------------------------
-        print('WARNING: No control replicates! No p-values computed...')
-        print('Computing fold changes ...')
-        fc = list()
-        for k in range(L):
-            if x[k]==0 or mu[k]==0:
-                fc.append((x[k]+delta)/(mu[k]+delta))
-            else:
-                fc.append(x[k]/mu[k])        
-        NBpval = [1 for k in range(L)]
-        NBpval_0 = [1 for k in range(L)]
+        print('WARNING: Zero variance or no control replicates! Cannot compute p-values ...')   
+        pval = [1 for k in range(L)]
+        pval0 = [1 for k in range(L)]
         significant = [False for k in range(L)]     
     # -----------------------------------------------------------
     elif ScreenType == 'enrichment':       # enrichment screen
     # -----------------------------------------------------------
-        fc = list(); NBpval = list(); NBpval2 = list()
-        print('Computing fold-changes and p-values...')
-        for k in range(L):
-            # fold-change            
-            if x[k]==0 or mu[k]==0:
-                fc.append((x[k]+delta)/(mu[k]+delta))
-            else:
-                fc.append(x[k]/mu[k])
-            # one-sided p-value
-            if mu[k]==0 and x[k]==0:
-                  NBpval.append(1)
-            elif x[k]<=mu[k]:
-                  NBpval.append(1)
-            else: 
-                  NBpval.append(1 - scipy.stats.nbinom.cdf(x[k],n[k],p[k]))    
+        pval = list(); 
+        print('Computing p-values ...')
+        # one-sided p-value
+        if Model == 'Neg. Binomial':
+            for k in range(L):
+                if mu[k]==0 and x[k]==0:
+                      pval.append(1)
+                elif x[k]<=mu[k]:
+                      pval.append(1)
+                else: 
+                      pval.append(1 - scipy.stats.nbinom.cdf(x[k],n[k],p[k]))
+        elif Model == 'Poisson':
+            for k in range(L):
+                if mu[k]==0 and x[k]==0:
+                      pval.append(1)
+                elif x[k]<=mu[k]:
+                      pval.append(1)
+                else: 
+                      pval.append(1 - scipy.stats.poisson.cdf(x[k],sigma2[k]))
     # -----------------------------------------------------------                 
     elif ScreenType == 'depletion':       # depletion screen        
     # -----------------------------------------------------------
-        fc = list(); NBpval = list(); NBpval2 = list()
-        print('Computing fold-changes and p-values...')
-        for k in range(L):
-            # fold-change
-            if x[k]==0 or mu[k]==0:
-               fc.append((x[k]+delta)/(mu[k]+delta))
-            else:
-                fc.append(x[k]/mu[k])
-            # one-sided p-value
-            if mu[k]==0 and x[k]==0:
-                NBpval.append(1)
-            elif x[k]>=mu[k]:
-                NBpval.append(1)
-            else:
-                NBpval.append(scipy.stats.nbinom.cdf(x[k],n[k],p[k]))                    
+        pval = list();
+        print('Computing p-values...')
+        # one-sided p-value
+        if Model == 'Neg. Binomial':
+            for k in range(L):         
+                if mu[k]==0 and x[k]==0:
+                    pval.append(1)
+                elif x[k]>=mu[k]:
+                    pval.append(1)
+                else:
+                    pval.append(scipy.stats.nbinom.cdf(x[k],n[k],p[k]))
+        elif Model == 'Poisson':
+            for k in range(L):
+                if mu[k]==0 and x[k]==0:
+                      pval.append(1)
+                elif x[k]<=mu[k]:
+                      pval.append(1)
+                else: 
+                      pval.append(scipy.stats.poisson.cdf(x[k],sigma2[k]))        
     # -----------------------------------------------------------                  
     else:                           # error in scree type
     # -----------------------------------------------------------   
@@ -133,17 +147,17 @@ def PrepareHitList(sample):
     # -----------------------------------------------
     # p-value Correction and Plots
     # -----------------------------------------------  
-    if max(sigma2) > 0:
+    if max(SampleVar) > 0:
         # p-value correction for multiple tests
         print('p-value correction ...')
-        multTest = multipletests(NBpval,alpha,padj)
+        multTest = multipletests(pval,alpha,padj)
         significant = multTest[0]
-        NBpval_0 = multTest[1]
+        pval0 = multTest[1]
         # Plots
         print('Plotting p-values ...')
-        pvalHist(NBpval,NBpval_0,pvalDir,sample,res,svg)
-        VolcanoPlot(fc,NBpval,significant,pvalDir,ScreenType,sample,res,svg,alpha)
-        QQPlot(NBpval,significant,pvalDir,sample,res,svg,alpha)
+        pvalHist(pval,pval0,pvalDir,sample,res,svg)
+        VolcanoPlot(fc,pval,significant,pvalDir,ScreenType,sample,res,svg,alpha)
+        QQPlot(pval,significant,pvalDir,sample,res,svg,alpha)
         zScorePlot(fc,significant,pvalDir,ScreenType,sample,res,svg,alpha)
 
                
@@ -161,8 +175,8 @@ def PrepareHitList(sample):
                                      'control mean': [mu[k] for k in range(L)],
                                      'control stdev': [numpy.sqrt(sigma2[k]) for k in range(L)],
                                      'fold change': [fc[k] for k in range(L)],   
-                                     'p-value': [NBpval[k] for k in range(L)],
-                                     'p-value (adj.)': [NBpval_0[k] for k in range(L)],                                                 
+                                     'p-value': [pval[k] for k in range(L)],
+                                     'p-value (adj.)': [pval0[k] for k in range(L)],                                                 
                                      'significant': [str(significant[k]) for k in range(L)]},
                             columns = ['sgRNA','gene','counts','control mean',\
                             'control stdev','fold change','p-value','p-value (adj.)','significant'])

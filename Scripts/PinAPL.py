@@ -92,7 +92,10 @@ os.system('python -u PrintStatus.py Done "'+DoneMsg+'" 2>&1 | tee -a PinAPL-Py.l
 # Trim Adapters
 StatMsg = 'Trimming reads ...'
 os.system('python -u PrintStatus.py SubHeader "'+StatMsg+'" 2>&1 | tee -a PinAPL-Py.log')
-os.system('python -u '+TrimScript+'.py 2>&1 | tee -a PinAPL-Py.log')
+if os.path.exists(AlignDir):
+    os.system('python -u PrintStatus.py SkipTrim blank 2>&1 | tee -a PinAPL-Py.log')
+else:
+    os.system('python -u '+TrimScript+'.py 2>&1 | tee -a PinAPL-Py.log')
 DoneMsg = 'Read trimming completed.'
 os.system('python -u PrintStatus.py Done "'+DoneMsg+'" 2>&1 | tee -a PinAPL-Py.log')
   
