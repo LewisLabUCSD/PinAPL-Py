@@ -18,7 +18,7 @@ NumGuidesPerGene: 6                    # number of sgRNAs per gene
 sgRNALength: 20              # sgRNA length [bp]
 Normalization: 'cpm'         # normalization of read counts ['cpm'/'size'/'total']
 RoundCount: True            # round counts after normalization [True/False]
-GeneMetric: 'aRRA'           # metric for gene ranking ['aRRA'/'STARS']
+GeneMetric: 'STARS'           # metric for gene ranking ['aRRA'/'STARS'/'AVGLFC']
 AlnOutput: 'Delete'          # keep raw alignment output? ['Keep'/'Compress'/'Delete']
 keepCutReads: False          # keep files containing trimmed reads? [True/False]
 ClusterBy: 'variance'        # clustering criterion ['variance'/'counts']
@@ -28,17 +28,19 @@ padj: 'fdr_bh'               # method for p-value adjustment ['fdr_bh'/'fdr_tsbh
 AS_min: 40             # matching threshold 
 Theta: 2               # ambiguity threshold 
 Cutoff: 0              # read count threshold 
-alpha_s: 0.00001         # critical false-discovery rate for sign. sgRNAs
+alpha_s: 0.01         # critical false-discovery rate for sign. sgRNAs
 alpha_g: 0.01          # critical false-discovery rate for sign. genes
-P_0: 0.00005           # maximum p-value for sgRNA to be taken into account for aRRA
-Np: 1000               # number of permutations for gene ranking analysis
+P_0: 0.01           # maximum p-value for sgRNA to be taken into account for aRRA
+p_overdisp: 0.05       # Significance threshold for overdispersion test
+Np: 5             # number of permutations for gene ranking analysis
+repl_avg: median        # average counts between replicates ['mean'/'median']
 TopN: 25               # number of top sgRNAs to take into account for clustering
 thr_STARS: 20          # threshold percentage for STARS analysis
 CutErrorTol: 0.1       # cutadapt error tolerance
 L_bw: 11               # Bowtie2 -L parameter (seed length)
 N_bw: 1                # Bowtie2 -N parameter (seed mismatch)
 i_bw: 'S,1,0.75'       # Bowtie2 -i parameter (interval function)
-thr_overdisp: 0.5       # Overdispersion threshold to choose negative binomial model
+
 
 # VISUALIZATION PARAMETERS
 TransparencyLevel: 0.1    # transparency (alpha) in scatterplots
@@ -93,10 +95,12 @@ SeqQCScript: 'CheckSequenceQuality'
 TrimScript: 'TrimReads'
 AlignScript: 'AlignReads'
 NormalizeScript: 'NormalizeReadCounts'
+AverageCountsScript: 'AverageCounts'
 StatsScript: 'AnalyzeReadCounts'
 ControlScript: 'AnalyzeControl'
 sgRNARankScript: 'FindHits'
 GeneRankScript: 'RankGenes'
+CombineScript: 'CombineGeneRanks'
 ScatterScript: 'PlotCounts'
 ReplicateScript: 'PlotReplicates'
 ClusterScript: 'PlotHeatmap'

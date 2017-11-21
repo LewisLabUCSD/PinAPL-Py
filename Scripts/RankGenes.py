@@ -76,31 +76,33 @@ def compute_aRRA_nullx(I):
     else:
         rho_null = 1
     return rho_null 
-
     
 def AverageLogFC(g):
-    gene = geneList[g]        
-    geneIndex = [i for i,x in enumerate(genes) if x==pl-pygene]
-    nG = len(geneIndex)
-    logfcs = [numpy.log2(fc[i]) for i in geneIndex]
-    avglfc = numpy.mean(logfcs)
-    return nG,avglfc
-
-def AverageLogFCx(g):
     gene = geneList[g]       
     lfc_list = list()
-    I = genes_X.index(gene)
-    i = I
+    i0 = genes_X.index(gene)
+    i = i0
     terminate = False
     while genes_X[i] == gene and terminate == False:
-        lfc_list.append(lfc_X[i])
+        lfc_list.append(lfc[i])
         if i <= L-2:
             i+=1
         else:
             terminate = True    
     nG = len(lfc_list)
-    avglfc = numpy.mean(lfc_list)
+    if repl_avg == 'mean':
+        avglfc = numpy.mean(lfc_list)
+    elif repl_avg == 'median':
+        avglfc = numpy.median(lfc_list)        
     return nG,avglfc
+
+def AvgLogFC_null(I):
+    logFC_I = [lfc[i] for i in I]
+    if repl_avg == 'mean':
+        avglfc_I = numpy.mean(logFC_I)
+    elif repl_avg == 'median':
+        avglfc_I = numpy.median(logFC_I)     
+    return avglfc_I
 
 
 def TimeStamp(sec_elapsed,ProcessName):
@@ -145,13 +147,14 @@ def GeneRankingAnalysis(sample):
     svg = config['svg']
     r = config['NumGuidesPerGene']
     global P_0; P_0 = config['P_0']
+    global repl_avg; repl_avg = config['repl_avg']
     
     # ------------------------------------------------
     # Read sgRNA enrichment/depletion table
     # ------------------------------------------------
     os.chdir(ListDir)
-    print('Loading sgRNA '+screentype+' table ...')    
-    filename = glob.glob(sample+'_*sgRNAList.tsv')[0]
+    print('Loading sgRNA '+screentype+' table ...')
+    filename = glob.glob(sample+'_*sgRNAList.txt')[0]
     HitList = pandas.read_table(filename, sep='\t')
     if screentype == 'enrichment':
         HitList = HitList.sort_values(['significant','p-value','fold change','sgRNA'],ascending=[0,1,0,1])
@@ -161,7 +164,7 @@ def GeneRankingAnalysis(sample):
     global genes; genes = list(HitList['gene'])
     global geneList; geneList = list(set(genes))
     fc = list(HitList['fold change'])
-    global NB_pval; NB_pval = list(HitList['p-value'])
+    global NB_pval; NB_pval = list(HitList['p-value (adj.)'])
     global L; L = len(sgIDs)
     global G; G = len(geneList)
     NB_sig = list(HitList['significant'].values)
@@ -223,7 +226,22 @@ def GeneRankingAnalysis(sample):
     elif screentype == 'depletion':
         fc_DF = fc_DF.rank(ascending = True)
     global ranks; ranks = list(fc_DF['fc'])    
-        
+
+    # -------------------------------------------------  
+    # Compute average fold change across sgRNAs
+    # ------------------------------------------------- 
+    print('Computing average fold change across sgRNAs ...')
+    lfc_DF = pandas.DataFrame(data = {'gene': [genes[i] for i in range(L)],
+                                    'lfc': [numpy.log2(fc[i]) for i in range(L)]},
+                              columns = ['gene','lfc'])
+    lfc_DF = lfc_DF.sort_values(['gene'])
+    global genes_X; genes_X = list(lfc_DF['gene'])
+    global lfc; lfc = list(lfc_DF['lfc'])
+    parjob = Parallel(n_jobs=num_cores)(delayed(AverageLogFC)(g) for g in range(G))      
+    nGuides = [parjob[g][0] for g in range(G)]
+    AvgLogFCs = [parjob[g][1] for g in range(G)]   
+
+       
     # -------------------------------------------        
     # Carry out gene ranking analysis
     # -------------------------------------------    
@@ -264,7 +282,6 @@ def GeneRankingAnalysis(sample):
             ecdf = ECDF(metric_null)
             metric_pval = list()
             for g in range(G):    
-                GOI = geneList[g]
                 pval = ecdf(metric[g])
                 metric_pval.append(pval)
             # Determine critical p value (p-value correction)
@@ -272,7 +289,7 @@ def GeneRankingAnalysis(sample):
             metric_sig = multTest[0]
             metric_pval0 = multTest[1]
         else: # no control replicates
-            print('### ERROR: Cannot compute aRRA scores without significant sgRNAs! ###')
+            print('### ERROR: Cannot compute aRRA scores without control replicates! ###')
             SortFlag = True
             metric = [-1 for k in range(G)]
             metric_pval = [-1 for k in range(G)]
@@ -331,7 +348,28 @@ def GeneRankingAnalysis(sample):
         os.system('rm STARS_input.txt STARS_chip.txt')
         os.system('rm Null_STARSOutput8_'+str(thr)+'.txt')
         os.system('rm '+STARS_output)
-
+    elif GeneMetric == 'AVGLFC':
+        # -------------------------------------------------        
+        # Run non-parametric permutation analysis 
+        # -------------------------------------------------   
+        SortFlag = False
+        metric = AvgLogFCs
+        # Compute permutations
+        I_perm = numpy.random.choice(L,size=(Np,r),replace=False)
+        metric_null = Parallel(n_jobs=num_cores)(delayed(AvgLogFC_null)(I) for I in I_perm)
+        ecdf = ECDF(metric_null)
+        metric_pval = list()
+        for g in range(G):
+            if nGuides[g] == r:
+                pval = 1 - ecdf(metric[g])
+                metric_pval.append(pval)        
+            else:
+                pval = 1
+                metric_pval.append(pval)                        
+        # Determine critical p value (p-value correction)
+        multTest = multipletests(metric_pval,alpha,padj)
+        metric_sig = multTest[0]
+        metric_pval0 = multTest[1]
 
     # -------------------------------------------------  
     # p-value plots
@@ -340,19 +378,6 @@ def GeneRankingAnalysis(sample):
         print('Plotting p-values ...')
         pvalHist_metric(metric_pval,metric_pval0,GeneMetric,pvalDir,sample,res,svg)           
 
-    # -------------------------------------------------  
-    # Compute average fold change across sgRNAs
-    # -------------------------------------------------  
-    print('Computing average fold change across sgRNAs ...')
-    avglfc_DF = pandas.DataFrame(data = {'gene': [genes[i] for i in range(L)],
-                                    'lfc': [numpy.log2(fc[i]) for i in range(L)]},
-                              columns = ['gene','lfc'])
-    avglfc_DF = avglfc_DF.sort_values(['gene'])
-    global genes_X; genes_X = list(avglfc_DF['gene'])
-    global lfc_X; lfc_X = list(avglfc_DF['lfc'])
-    parjob = Parallel(n_jobs=num_cores)(delayed(AverageLogFCx)(g) for g in range(G))      
-    nGuides = [parjob[g][0] for g in range(G)]
-    AvgLogFCs = [parjob[g][1] for g in range(G)]
            
     # -------------------------------------------------  
     # Output list
@@ -371,8 +396,10 @@ def GeneRankingAnalysis(sample):
                                     'avg. logFC': [AvgLogFCs[g] for g in range(G)]},
                             columns = ['gene',GeneMetric,'p_value','p_value (adj.)',\
                             'significant','# sgRNAs','# signif. sgRNAs','avg. logFC'])
+    if GeneMetric == 'AVGLFC':
+        del Results_df['avg. logFC']
     Results_df_0 = Results_df.sort_values(['significant',GeneMetric],ascending=[False,SortFlag])
-    GeneListFilename = filename[0:-14]+'_'+GeneMetric+'_'+'P'+str(Np)+'_GeneList.tsv'
+    GeneListFilename = filename[0:-14]+'_'+GeneMetric+'_'+'P'+str(Np)+'_GeneList.txt'
     Results_df_0.to_csv(GeneListFilename, sep = '\t', index = False)      
     if SheetFormat == 'xlsx':
         print('Converting to xlsx ...')

@@ -50,13 +50,13 @@ def TopN_Clustering():
     # ------------------------------------------------
     print('Loading read counts ...')
     os.chdir(AlnQCDir)
-    SampleNames = [d for d in os.listdir(AlnQCDir) if os.path.isdir(d)]
+    SampleNames = [d for d in os.listdir(AlnQCDir) if os.path.isdir(d) and '_avg' not in d]
     AllCounts = pd.DataFrame()    
     colnames = ['sgRNA','gene','counts']
     os.chdir(AlnQCDir)
     for sample in SampleNames:
         os.chdir(sample)
-        filename = glob.glob('*GuideCounts_0.tsv')[0]        
+        filename = glob.glob('*GuideCounts_0.txt')[0]        
         CountsFile = pd.read_table(filename, sep='\t',names=colnames)
         sgIDs = list(CountsFile['sgRNA'].values)        
         genes = list(CountsFile['gene'].values)                
@@ -83,7 +83,7 @@ def TopN_Clustering():
         Q = Q[0:(N-1)]
         # Write dataframe
         print('Writing dataframe ...')
-        OutputSheetname = 'Top'+str(N)+'_Var.tsv'
+        OutputSheetname = 'Top'+str(N)+'_Var.txt'
         if not os.path.exists(ClusterDir):
            os.makedirs(ClusterDir)
         os.chdir(ClusterDir)
@@ -126,7 +126,7 @@ def TopN_Clustering():
             TopGuides_df[sample] = TopCounts
         # Write dataframe  
         TopGuides_df[' '] = ' '
-        OutputSheetname = 'Top'+str(N)+'_Counts.tsv'
+        OutputSheetname = 'Top'+str(N)+'_Counts.txt'
         if not os.path.exists(ClusterDir):
             os.makedirs(ClusterDir)  
         os.chdir(ClusterDir)

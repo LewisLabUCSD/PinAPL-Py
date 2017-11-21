@@ -44,7 +44,7 @@ def PrepareHitList(sample):
     InputDir = config['AlnQCDir']+sample
     CtrlDir = AnalysisDir + 'Control/'
     ListDir = config['HitDir']
-    CtrlCounts_Filename = 'Control_GuideCounts_0.tsv'
+    CtrlCounts_Filename = 'Control_GuideCounts_0.txt'
     ScreenType = config['ScreenType']
     alpha = config['alpha_s']
     padj = config['padj']
@@ -71,7 +71,7 @@ def PrepareHitList(sample):
     p = list(Ctrl_File['p'])    
     os.chdir(InputDir)
     colnames = ['sgID','gene','counts']
-    filename = glob.glob('*GuideCounts_0.tsv')[0]
+    filename = glob.glob('*GuideCounts_0.txt')[0]
     SampleFile = pandas.read_table(filename, sep='\t',names=colnames)
     x = list(SampleFile['counts'])
      
@@ -184,7 +184,7 @@ def PrepareHitList(sample):
         Results_df_0 = Results_df.sort_values(['significant','p-value','fold change','sgRNA'],ascending=[0,1,0,1])
     elif ScreenType == 'depletion': 
         Results_df_0 = Results_df.sort_values(['significant','p-value','fold change','sgRNA'],ascending=[0,1,1,1])
-    ListFilename = sample+'_'+str(alpha)+'_'+padj+'_sgRNAList.tsv'
+    ListFilename = sample+'_'+str(alpha)+'_'+padj+'_sgRNAList.txt'
     Results_df_0.to_csv(ListFilename, sep = '\t', index = False)
     if SheetFormat == 'xlsx':
         print('Converting to xlsx ...')
@@ -202,13 +202,13 @@ def PrepareHitList(sample):
     sec_elapsed = end_total - start_total
     if sec_elapsed < 60:
         time_elapsed = sec_elapsed
-        print('Time elapsed (Total) [secs]: ' + '%.3f' % time_elapsed +'\n')
+        print('Time elapsed [secs]: ' + '%.3f' % time_elapsed +'\n')
     elif sec_elapsed < 3600:
         time_elapsed = sec_elapsed/60
-        print('Time elapsed (Total) [mins]: ' + '%.3f' % time_elapsed +'\n')
+        print('Time elapsed [mins]: ' + '%.3f' % time_elapsed +'\n')
     else:
         time_elapsed = sec_elapsed/3600
-        print('Time elapsed (Total) [hours]: ' + '%.3f' % time_elapsed +'\n')
+        print('Time elapsed [hours]: ' + '%.3f' % time_elapsed +'\n')
 
     
 if __name__ == "__main__":

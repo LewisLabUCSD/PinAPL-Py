@@ -72,11 +72,11 @@ def Repl_Scatterplot(Repl1,Repl2,GOI='none',Annot='none',NonT='none',Transp='non
     print('Reading counts ...')    
     colnames = ['sgRNA','gene','counts']
     os.chdir(AlnQCDir+Repl1)
-    filename1 = glob.glob('*_GuideCounts_0.tsv')[0]
+    filename1 = glob.glob('*_GuideCounts_0.txt')[0]
     ListFile1 = pd.read_table(filename1, sep='\t',low_memory=False,names=colnames)    
     ListFile1 = ListFile1.sort_values('sgRNA')    
     os.chdir(AlnQCDir+Repl2)    
-    filename2 = glob.glob('*_GuideCounts_0.tsv')[0]
+    filename2 = glob.glob('*_GuideCounts_0.txt')[0]
     ListFile2 = pd.read_table(filename2, sep='\t',low_memory=False,names=colnames)
     ListFile2 = ListFile2.sort_values('sgRNA')    
     sgIDs = list(ListFile1['sgRNA'].values)

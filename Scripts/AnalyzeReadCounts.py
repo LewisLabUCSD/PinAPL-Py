@@ -60,12 +60,12 @@ def AnalyzeCounts(sample):
     # --------------------------------------
     os.chdir(InputDir)
     colnames = ['ID','gene','counts']
-    GuideFileName = glob.glob('*_GuideCounts_0.tsv')[0]
+    GuideFileName = glob.glob('*_GuideCounts_0.txt')[0]
     GuideFile = pd.read_table(GuideFileName, sep='\t', names=colnames)
     ReadsPerGuide = list(GuideFile['counts'].values)
     L = len(ReadsPerGuide)   
     colnames = ['gene','counts']    
-    GeneFileName = glob.glob('*_GeneCounts_0.tsv')[0]
+    GeneFileName = glob.glob('*_GeneCounts_0.txt')[0]
     GeneFile = pd.read_table(GeneFileName, sep='\t', names=colnames)
     ReadsPerGene = list(GeneFile['counts'].values)
     sgID = list(GuideFile['ID'].values)    
@@ -242,13 +242,13 @@ def AnalyzeCounts(sample):
     sec_elapsed = end_total - start_total
     if sec_elapsed < 60:
         time_elapsed = sec_elapsed
-        print('Time elapsed (Total) [secs]: ' + '%.3f' % time_elapsed +'\n')
+        print('Time elapsed [secs]: ' + '%.3f' % time_elapsed +'\n')
     elif sec_elapsed < 3600:
         time_elapsed = sec_elapsed/60
-        print('Time elapsed (Total) [mins]: ' + '%.3f' % time_elapsed +'\n')
+        print('Time elapsed [mins]: ' + '%.3f' % time_elapsed +'\n')
     else:
         time_elapsed = sec_elapsed/3600
-        print('Time elapsed (Total) [hours]: ' + '%.3f' % time_elapsed +'\n')            
+        print('Time elapsed [hours]: ' + '%.3f' % time_elapsed +'\n')            
 
 
 if __name__ == "__main__":

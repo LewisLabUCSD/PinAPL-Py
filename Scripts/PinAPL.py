@@ -14,8 +14,6 @@ import os
 import yaml
 import itertools
 import time
-import re
-import pandas
 from PrintStatus import *
 from ReadDataSheet import *
 
@@ -43,10 +41,16 @@ NormalizeScript = config['NormalizeScript']
 StatsScript = config['StatsScript']
 ControlScript = config['ControlScript']
 sgRNARankScript = config['sgRNARankScript']
+AverageCountsScript = config['AverageCountsScript']
 GeneRankScript = config['GeneRankScript']
+CombineScript = config['CombineScript']
 ScatterScript = config['ScatterScript']
 ReplicateScript = config['ReplicateScript']
 ClusterScript = config['ClusterScript']
+
+# Check for error file
+if os.path.exists('ErrorFound.txt'):
+    os.remove('ErrorFound.txt')
 
 # Make config file accessible
 os.system('cp configuration.yaml '+ScriptsDir)
@@ -119,6 +123,19 @@ os.system('python -u '+NormalizeScript+'.py'+' 2>&1 | tee -a PinAPL-Py.log' )
 DoneMsg = 'Normalization completed.'
 os.system('python -u PrintStatus.py Done "'+DoneMsg+'" 2>&1 | tee -a PinAPL-Py.log')
 
+# Average counts over replicates
+StatMsg = 'Averaging read counts ...'
+os.system('python -u PrintStatus.py SubHeader "'+StatMsg+'" 2>&1 | tee -a PinAPL-Py.log')
+for treatment in Treatments:
+    os.system('python -u '+AverageCountsScript+'.py '+treatment+' 2>&1 | tee -a PinAPL-Py.log' )
+DoneMsg = 'Read count averaging completed.'
+os.system('python -u PrintStatus.py Done "'+DoneMsg+'" 2>&1 | tee -a PinAPL-Py.log')
+
+# Update sample names 
+os.chdir(AlnQCDir)
+SampleNames = [d for d in os.listdir(AlnQCDir)]
+os.chdir(ScriptsDir)
+
 # Analyze Counts
 StatMsg = 'Analyzing read counts ...'
 os.system('python -u PrintStatus.py SubHeader "'+StatMsg+'" 2>&1 | tee -a PinAPL-Py.log')
@@ -135,7 +152,7 @@ os.system('python -u '+ControlScript+'.py'+' 2>&1 | tee -a PinAPL-Py.log')
 DoneMsg = 'Control analysis completed.'
 os.system('python -u PrintStatus.py Done "'+DoneMsg+'" 2>&1 | tee -a PinAPL-Py.log')
 
-# Find sgRNA hits
+# Find sgRNA Hits per Sample
 StatMsg = 'sgRNA '+ScreenType+' analysis ...'
 os.system('python -u PrintStatus.py SubHeader "'+StatMsg+'" 2>&1 | tee -a PinAPL-Py.log')
 for sample in SampleNames: 
@@ -174,14 +191,19 @@ os.system('python -u '+ClusterScript+'.py'+' 2>&1 | tee -a PinAPL-Py.log' )
 DoneMsg = 'Clustering analysis completed.'
 os.system('python -u PrintStatus.py Done "'+DoneMsg+'" 2>&1 | tee -a PinAPL-Py.log')
 
-# Rank genes
+# Rank genes 
 StatMsg = 'Gene ranking analysis ...'
 os.system('python -u PrintStatus.py SubHeader "'+StatMsg+'" 2>&1 | tee -a PinAPL-Py.log')
 for sample in SampleNames:
-    if 'Control' not in sample:
+    if 'Control' not in sample and '_avg' not in sample:
         os.system('python -u PrintStatus.py ProcessSample '+sample+' 2>&1 | tee -a PinAPL-Py.log')
         os.system('python -u '+GeneRankScript+'.py '+sample+' 2>&1 | tee -a PinAPL-Py.log')
-DoneMsg = 'Gene ranking analysis completed.'
+# Combine gene ranks across replicates
+os.system('python -u PrintStatus.py CombineReplicates '+sample+' 2>&1 | tee -a PinAPL-Py.log') 
+for treatment in Treatments:  
+    if 'Control' not in treatment:            
+        os.system('python -u '+CombineScript+'.py '+treatment+' 2>&1 | tee -a PinAPL-Py.log')        
+DoneMsg = '\nGene ranking analysis completed.'
 os.system('python -u PrintStatus.py Done "'+DoneMsg+'" 2>&1 | tee -a PinAPL-Py.log')
 
 # Final Time Stamp
@@ -201,13 +223,25 @@ else:
     StatMsg = 'Time elapsed [hours]: ' + '%.3f' % time_elapsed +'\n'
     os.system('python -u PrintStatus.py TimeStamp "'+StatMsg+'" 2>&1 | tee -a PinAPL-Py.log')
     
-# Move Log Files 
+# Copy Log Files 
 if not os.path.exists(LogFileDir):
 	os.makedirs(LogFileDir) 
 os.system('cp configuration.yaml '+LogFileDir)
-os.system('cp PinAPL-Py.log '+LogFileDir)
+os.system('mv PinAPL-Py.log '+LogFileDir)
 os.chdir(WorkingDir)
 os.system('cp DataSheet.xlsx '+LogFileDir)
 
-# Status message
-print('LOADING RESULTS PAGE. PLEASE REFRESH PERIODICALLY...')
+# Check for errors in log file
+os.chdir(LogFileDir)
+LogFile = open('PinAPL-Py.log','r')
+LogFileText = LogFile.read()
+if 'Traceback' in LogFileText:
+    print('### ERROR(S) DETECTED IN PROGRAM LOG! ###')
+    print('### Please check the log file (PinAPL-Py.log) ###')
+    print('### You can use the "Submit a Bug" button on the website to contact the developers team! ###')    
+    ErrorFile = open('ErrorFound.txt','w')
+    ErrorFile.write('Python runtime error detected. Please check program log')
+    ErrorFile.close()    
+else:
+    print('*** RUN FINISHED SUCCESSFULLY ***')
+    print('LOADING RESULTS PAGE. PLEASE REFRESH PERIODICALLY...')

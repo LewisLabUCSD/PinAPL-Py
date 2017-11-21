@@ -12,8 +12,8 @@ import sys
 
 def PrintStatus_Header():
     print('**************************************************')
-    print('Launching PinAPL-Py v2.7.7..')
-    print('P. Spahn et al., UC San Diego (09/2017)')
+    print('Launching PinAPL-Py v2.8..')
+    print('P. Spahn et al., UC San Diego (11/2017)')
     print('**************************************************')
     
 def PrintStatus_SubHeader(msg):
@@ -28,6 +28,9 @@ def PrintStatus_Done(msg):
 
 def PrintStatus_ProcessSample(sample):
     print('Processing sample '+sample+' ... ')
+
+def PrintStatus_CombineReplicates():
+    print('Combining gene ranks across replicates ... ')
 
 def PrintStatus_SkipTrim():
     print('Alignment data found. Skipping read trimming ... ')
@@ -59,6 +62,8 @@ if __name__ == "__main__":
         PrintStatus_Done(input2)
     elif input1 == 'ProcessSample':
         PrintStatus_ProcessSample(input2)
+    elif input1 == 'CombineReplicates':
+        PrintStatus_CombineReplicates()                   
     elif input1 == 'SkipTrim':
         PrintStatus_SkipTrim()           
     elif input1 == 'SkipSample':

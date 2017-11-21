@@ -100,9 +100,9 @@ def MapAndCount(sample):
     svg = config['svg']
     AlnOutput = config['AlnOutput']
     keepCutReads = config['keepCutReads']
-    AlnFileSuffix = '_bw2Aln.tsv'
-    GuideCount_Suffix = '_GuideCounts.tsv'
-    GeneCount_Suffix = '_GeneCounts.tsv'
+    AlnFileSuffix = '_bw2Aln.txt'
+    GuideCount_Suffix = '_GuideCounts.txt'
+    GeneCount_Suffix = '_GeneCounts.txt'
     cutadaptLog = sample+'_cutadapt_log.txt'
     logfilename = sample+'_AlignmentResults.txt'
     

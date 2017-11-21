@@ -38,7 +38,7 @@ def Normalization():
     delta = config['delta']
     norm = config['Normalization']
     RoundCount = config['RoundCount']
-    NormSuffix = '_0.tsv'
+    NormSuffix = '_0.txt'
     N0 = 1000000
     eps = 0.001 
     
@@ -55,7 +55,7 @@ def Normalization():
             print('Processing '+sample+' ...') 
             os.chdir(sample)
             # sgRNA counts            
-            GuideCountsFilename = glob.glob('*GuideCounts.tsv')[0]
+            GuideCountsFilename = glob.glob('*GuideCounts.txt')[0]
             GuideCounts = pandas.read_table(GuideCountsFilename,sep='\t',names=colnames_u)
             sgIDs = list(GuideCounts['sgRNA'].values)        
             geneIDs = list(GuideCounts['gene'].values)                            
@@ -73,7 +73,7 @@ def Normalization():
                     str(ReadsPerGuide_0) + '\n')
             GuideCounts0.close()
             # gene counts
-            GeneCountsFilename = glob.glob('*GeneCounts.tsv')[0]
+            GeneCountsFilename = glob.glob('*GeneCounts.txt')[0]
             GeneCounts = pandas.read_table(GeneCountsFilename,sep='\t',names=colnames_g)            
             geneIDs = list(GeneCounts['gene'].values)                            
             ReadsPerGene = list(GeneCounts['counts'].values)    
@@ -95,7 +95,7 @@ def Normalization():
         TotalCounts = list()
         for sample in SampleNames:
             os.chdir(sample)
-            filename = glob.glob('*GuideCounts.tsv')[0]
+            filename = glob.glob('*GuideCounts.txt')[0]
             SampleFile = pandas.read_table(filename, sep='\t',names=colnames_u)
             x = list(SampleFile['counts'].values)
             TotalCounts.append(numpy.sum(x))
@@ -106,7 +106,7 @@ def Normalization():
             print('Processing '+sample+' ...') 
             os.chdir(sample)
             # sgRNA counts            
-            GuideCountsFilename = glob.glob('*GuideCounts.tsv')[0]
+            GuideCountsFilename = glob.glob('*GuideCounts.txt')[0]
             GuideCounts = pandas.read_table(GuideCountsFilename,sep='\t',names=colnames_u)
             sgIDs = list(GuideCounts['sgRNA'].values)        
             geneIDs = list(GuideCounts['gene'].values)                            
@@ -124,7 +124,7 @@ def Normalization():
                     str(ReadsPerGuide_0) + '\n')
             GuideCounts0.close()
             # gene counts
-            GeneCountsFilename = glob.glob('*GeneCounts.tsv')[0]
+            GeneCountsFilename = glob.glob('*GeneCounts.txt')[0]
             GeneCounts = pandas.read_table(GeneCountsFilename,sep='\t',names=colnames_g)            
             geneIDs = list(GeneCounts['gene'].values)                            
             ReadsPerGene = list(GeneCounts['counts'].values)    
@@ -145,7 +145,7 @@ def Normalization():
         print('Normalizing by size-factors ...')       
         # Establish data frame
         os.chdir(SampleNames[0])
-        filename = glob.glob('*GuideCounts.tsv')[0]
+        filename = glob.glob('*GuideCounts.txt')[0]
         SampleFile = pandas.read_table(filename, sep='\t',names=colnames_u)
         sgIDs = list(SampleFile['sgRNA'].values)
         genes = list(SampleFile['gene'].values)
@@ -161,7 +161,7 @@ def Normalization():
         os.chdir(AlnQCDir)
         for sample in SampleNames:
             os.chdir(sample)
-            filename = glob.glob('*GuideCounts.tsv')[0]
+            filename = glob.glob('*GuideCounts.txt')[0]
             SampleFile = pandas.read_table(filename, sep='\t',names=colnames_u)
             x = list(SampleFile['counts'].values)
             RawCounts[sample] = x
@@ -182,7 +182,7 @@ def Normalization():
             SizeFactors[sample+' size-factor'] = numpy.median(SizeFactors[sample+' sgRNA size-factors'])
         # Write size-factor dataframe
         os.chdir(DepthDir)
-        SizeFactors.to_csv('Size-factors.tsv',sep='\t',index=False)
+        SizeFactors.to_csv('Size-factors.txt',sep='\t',index=False)
         # Write normalized counts dataframe
         print('Writing normalized read counts ...')
         os.chdir(AlnQCDir)        
@@ -202,7 +202,7 @@ def Normalization():
                     for k in range(L)]                
             Counts0.to_csv(sample+'_GuideCounts'+NormSuffix,sep='\t',columns=['sgRNA','gene',sample],\
                 header=False,index=False)            
-            GeneCounts = pandas.read_table(glob.glob('*GeneCounts.tsv')[0],sep='\t',names=colnames_g) 
+            GeneCounts = pandas.read_table(glob.glob('*GeneCounts.txt')[0],sep='\t',names=colnames_g) 
             ReadsPerGene = list(GeneCounts['counts'].values)
             if RoundCount:
                 GeneCounts0[sample] = [int(numpy.round(ReadsPerGene[j]/SizeFactors[sample+' size-factor'][0])) \

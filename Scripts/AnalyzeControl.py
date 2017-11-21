@@ -20,6 +20,8 @@ import glob
 import sys
 import time
 import yaml
+import scipy
+from scipy import stats
 
 def EstimateControlCounts(): 
     # ------------------------------------------------
@@ -40,18 +42,18 @@ def EstimateControlCounts():
     AlnQCDir = config['AlnQCDir']
     ControlDir = config['ControlDir']
     res = config['dpi']
-    thr_overdisp = config['thr_overdisp']
-    CtrlCounts_Filename = 'Control_GuideCounts_0.tsv'
+    p_overdisp = config['p_overdisp']
+    CtrlCounts_Filename = 'Control_GuideCounts_0.txt'
    
     # --------------------------------    
     # Generate table of control counts
     # --------------------------------    
     print('Reading control counts ...')    
     os.chdir(AlnQCDir)
-    ControlSamples = [d for d in os.listdir(AlnQCDir) if 'Control' in d]
+    ControlSamples = [d for d in os.listdir(AlnQCDir) if 'Control' in d and 'Control_avg' not in d]
     os.chdir(ControlSamples[0])
     colnames = ['sgID','gene','counts']                      
-    CountFile = pd.read_table(glob.glob('*GuideCounts_0.tsv')[0], sep='\t',names=colnames)
+    CountFile = pd.read_table(glob.glob('*GuideCounts_0.txt')[0], sep='\t',names=colnames)
     sgIDs = list(CountFile['sgID'].values)
     genes = list(CountFile['gene'].values)
     L = len(sgIDs)
@@ -64,7 +66,7 @@ def EstimateControlCounts():
         os.chdir(AlnQCDir)
         for controlsample in ControlSamples:
             os.chdir(controlsample)
-            filename = glob.glob('*GuideCounts_0.tsv')[0]                          
+            filename = glob.glob('*GuideCounts_0.txt')[0]                          
             CountFile = pd.read_table(filename, sep='\t',names=colnames)
             counts = list(CountFile['counts'].values)
             CtrlCounts_df[controlsample] = counts
@@ -85,22 +87,26 @@ def EstimateControlCounts():
     
     # --------------------------------------------------------------    
     # Determine if the variance equals the mean (Poisson distribution)
-    # --------------------------------------------------------------      
-    Svar0 = numpy.mean(SampleVar)
-    if Svar0 == 0:
+    # --------------------------------------------------------------       
+    if len(ControlSamples) == 1:
         Model = 'none'
-        print('WARNING: Zero variance or no control replicates! Cannot choose statistical model.')
+        print('WARNING: No control replicates! Cannot choose statistical model.')
     else:
-        L0_list = [1 if Mean[k]>0 else 0 for k in range(L)]
-        overdisp_list = [1 if Mean[k]>0 and SampleVar[k]>Mean[k] else 0 for k in range(L)]
-        overdisp = sum(overdisp_list)/sum(L0_list)
-        print('Overdispersion fraction: '+str(overdisp))
-        if overdisp >= thr_overdisp:
-            Model = 'Neg. Binomial'
-            print('Choosing negative binomial model ...')
-        else:
+        I = [i for i in range(L) if Mean[i]>0]        
+        Mean0 = [Mean[i] for i in I]
+        Var0 = [SampleVar[i] for i in I]
+        TestStat = scipy.stats.mannwhitneyu(Var0,Mean0,alternative='two-sided')
+        if TestStat[1] >= p_overdisp:
             Model = 'Poisson'
-            print('Choosing Poisson model ...')
+            print('No overdispersion detected at p='+str(p_overdisp)+'. Choosing Poisson model ...')
+        TestStat = scipy.stats.mannwhitneyu(Var0,Mean0,alternative='greater')
+        if TestStat[1] < p_overdisp:
+            Model = 'Neg. Binomial'
+            print('Overdispersion detected at p='+str(TestStat[1])+'. Choosing negative binomial model ...')
+        else:
+            Model = 'none'
+            print('WARNING: Low variance in control samples! Cannot choose statistical model ...')            
+
 
     # -----------------------------------------------    
     # Model variance
@@ -120,7 +126,7 @@ def EstimateControlCounts():
         # Compute parameters for neg. binom. distribution 
         # n: number of failures, p: probability of failure
         # -----------------------------------------------
-        print('Computing parameters of negative binomial distribution ...')
+        print('Computing distribution parameters ...')
         n = list(); p = list()
         for k in range(L):
             if Mean[k]==0 or Var[k]==0 :

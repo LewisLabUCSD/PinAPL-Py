@@ -29,7 +29,10 @@ def RunSeqQC():
     os.chdir(DataDir)
     FileNames = [d for d in os.listdir(DataDir)]
     for filename in FileNames:
-        os.system('fastqc -o '+SeqQCDir+' --extract '+filename)
+        if filename[-8:] == 'fastq.gz':
+            os.system('fastqc -o '+SeqQCDir+' --extract '+filename)
+        elif filename[-5:] == 'fastq':
+            os.system('fastqc -o '+SeqQCDir+' '+filename)
     os.chdir(SeqQCDir)    
     os.system('rm *.zip')
     os.chdir(ScriptsDir)

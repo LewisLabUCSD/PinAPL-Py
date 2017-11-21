@@ -70,7 +70,7 @@ def GOI_Scatterplot(sample,GOI='none',Annot='none',NonT='none',Transp='none'):
     # ------------------------------------------------
     print('Reading counts ...')    
     os.chdir(ListDir)
-    filename = glob.glob(sample+'_*sgRNAList.tsv')[0]
+    filename = glob.glob(sample+'_*sgRNAList.txt')[0]
     HitList = pd.read_table(filename, sep='\t')       
     sgIDs = list(HitList['sgRNA'].values)
     genes = list(HitList['gene'].values)  
