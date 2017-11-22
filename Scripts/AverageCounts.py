@@ -59,16 +59,6 @@ def AverageReadCounts(treatment):
             AllGuideCounts['sgRNA'] = sgIDs 
             AllGuideCounts['gene'] = genes         
             AllGuideCounts[replicate] = counts
-            # normalized sgRNA counts
-            filename = glob.glob('*GuideCounts_0.txt')[0]
-            CountsFile = pandas.read_table(filename, sep='\t',names=colnames_s)
-            CountsFile = CountsFile.sort_values(['gene','sgRNA'])        
-            sgIDs = list(CountsFile['sgRNA'])        
-            genes = list(CountsFile['gene'])                
-            counts = list(CountsFile['counts'])    
-            AllGuideCounts0['sgRNA'] = sgIDs 
-            AllGuideCounts0['gene'] = genes         
-            AllGuideCounts0[replicate] = counts        
             # gene counts
             filename = glob.glob('*GeneCounts.txt')[0]
             CountsFile = pandas.read_table(filename, sep='\t',names=colnames_g)
@@ -77,14 +67,6 @@ def AverageReadCounts(treatment):
             counts = list(CountsFile['counts'])    
             AllGeneCounts['gene'] = genes         
             AllGeneCounts[replicate] = counts        
-            # normalized gene counts
-            filename = glob.glob('*GeneCounts_0.txt')[0]
-            CountsFile = pandas.read_table(filename, sep='\t',names=colnames_g)
-            CountsFile = CountsFile.sort_values(['gene'])
-            genes = list(CountsFile['gene'])                
-            counts = list(CountsFile['counts'])    
-            AllGeneCounts0['gene'] = genes     
-            AllGeneCounts0[replicate] = counts
             os.chdir(AlnQCDir)            
         # ------------------------------------------------
         # Compute averages
@@ -98,15 +80,6 @@ def AverageReadCounts(treatment):
         AllGuideCounts[treatment+'_avg'] = avg_counts
         del_columns = range(2,2+R)
         AllGuideCounts.drop(AllGuideCounts.columns[del_columns],axis=1,inplace=True) 
-        # normalized sgRNA counts    
-        repl_counts = AllGuideCounts0.iloc[:,2:]
-        if repl_avg == 'median':
-            avg_counts = repl_counts.median(axis=1)
-        elif repl_avg == 'mean':
-            avg_counts = repl_counts.mean(axis=1)
-        AllGuideCounts0[treatment+'_avg'] = avg_counts
-        del_columns = range(2,2+R)
-        AllGuideCounts0.drop(AllGuideCounts0.columns[del_columns],axis=1,inplace=True)
         # gene counts    
         repl_counts = AllGeneCounts.iloc[:,1:]
         if repl_avg == 'median':
@@ -116,15 +89,7 @@ def AverageReadCounts(treatment):
         AllGeneCounts[treatment+'_avg'] = avg_counts
         del_columns = range(1,1+R)
         AllGeneCounts.drop(AllGeneCounts.columns[del_columns],axis=1,inplace=True)
-        # normalized gene counts    
-        repl_counts = AllGeneCounts0.iloc[:,1:]
-        if repl_avg == 'median':
-            avg_counts = repl_counts.median(axis=1)
-        elif repl_avg == 'mean':
-            avg_counts = repl_counts.mean(axis=1)
-        AllGeneCounts0[treatment+'_avg'] = avg_counts
-        del_columns = range(1,1+R)
-        AllGeneCounts0.drop(AllGeneCounts0.columns[del_columns],axis=1,inplace=True)    
+
         # ------------------------------------------------
         # Write result dataframes
         # ------------------------------------------------     
@@ -133,9 +98,7 @@ def AverageReadCounts(treatment):
             os.makedirs(AvgDir)
         os.chdir(AvgDir)
         AllGuideCounts.to_csv(treatment+'_avg_GuideCounts.txt', sep = '\t', index = False, header = False)
-        AllGuideCounts0.to_csv(treatment+'_avg_GuideCounts_0.txt', sep = '\t', index = False, header = False)
         AllGeneCounts.to_csv(treatment+'_avg_GeneCounts.txt', sep = '\t', index = False, header = False)
-        AllGeneCounts0.to_csv(treatment+'_avg_GeneCounts_0.txt', sep = '\t', index = False, header = False)
     else:
         print('(No replicates found)')
 

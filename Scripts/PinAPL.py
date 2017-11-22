@@ -116,19 +116,19 @@ os.system('python -u '+ReadDepthScript+'.py 2>&1 | tee -a PinAPL-Py.log')
 DoneMsg = 'Read alignments completed.'
 os.system('python -u PrintStatus.py Done "'+DoneMsg+'" 2>&1 | tee -a PinAPL-Py.log')
 
-# Normalize Counts
-StatMsg = 'Normalizing read counts ...'
-os.system('python -u PrintStatus.py SubHeader "'+StatMsg+'" 2>&1 | tee -a PinAPL-Py.log')
-os.system('python -u '+NormalizeScript+'.py'+' 2>&1 | tee -a PinAPL-Py.log' )
-DoneMsg = 'Normalization completed.'
-os.system('python -u PrintStatus.py Done "'+DoneMsg+'" 2>&1 | tee -a PinAPL-Py.log')
-
 # Average counts over replicates
 StatMsg = 'Averaging read counts ...'
 os.system('python -u PrintStatus.py SubHeader "'+StatMsg+'" 2>&1 | tee -a PinAPL-Py.log')
 for treatment in Treatments:
     os.system('python -u '+AverageCountsScript+'.py '+treatment+' 2>&1 | tee -a PinAPL-Py.log' )
 DoneMsg = 'Read count averaging completed.'
+os.system('python -u PrintStatus.py Done "'+DoneMsg+'" 2>&1 | tee -a PinAPL-Py.log')
+
+# Normalize Counts
+StatMsg = 'Normalizing read counts ...'
+os.system('python -u PrintStatus.py SubHeader "'+StatMsg+'" 2>&1 | tee -a PinAPL-Py.log')
+os.system('python -u '+NormalizeScript+'.py'+' 2>&1 | tee -a PinAPL-Py.log' )
+DoneMsg = 'Normalization completed.'
 os.system('python -u PrintStatus.py Done "'+DoneMsg+'" 2>&1 | tee -a PinAPL-Py.log')
 
 # Update sample names 
