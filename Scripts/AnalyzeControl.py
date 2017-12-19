@@ -95,17 +95,28 @@ def EstimateControlCounts():
         I = [i for i in range(L) if Mean[i]>0]        
         Mean0 = [Mean[i] for i in I]
         Var0 = [SampleVar[i] for i in I]
-        TestStat = scipy.stats.mannwhitneyu(Var0,Mean0,alternative='two-sided')
+        TestStat = scipy.stats.wilcoxon(Var0,Mean0)
         if TestStat[1] >= p_overdisp:
             Model = 'Poisson'
-            print('No overdispersion detected at p='+str(p_overdisp)+'. Choosing Poisson model ...')
-        TestStat = scipy.stats.mannwhitneyu(Var0,Mean0,alternative='greater')
-        if TestStat[1] < p_overdisp:
-            Model = 'Neg. Binomial'
-            print('Overdispersion detected at p='+str(TestStat[1])+'. Choosing negative binomial model ...')
+            print('Cannot reject equality of read count mean and variance (p='+str(p_overdisp)+'). Choosing Poisson model ...')
         else:
-            Model = 'none'
-            print('WARNING: Low variance in control samples! Cannot choose statistical model ...')            
+            # compute rank sums manually (** scipy does not allow one-sided Wilcoxon tests **)
+            I = [i for i in range(len(Mean0)) if Var0[i]!=Mean0[i]]
+            Mean00 = [Mean0[i] for i in I]
+            Var00 = [Var0[i] for i in I]
+            Delta = [numpy.abs(Var00[i]-Mean00[i]) for i in range(len(Mean00))]
+            sig = [1 if Var00[i]>Mean00[i] else -1 for i in range(len(Mean00))]
+            Ranks = scipy.stats.mstats.rankdata(Delta)
+            Ranks_pos = [Ranks[i] for i in range(len(Mean00)) if sig[i]>0]
+            Ranks_neg = [Ranks[i] for i in range(len(Mean00)) if sig[i]<0]
+            W_pos = sum(Ranks_pos)
+            W_neg = sum(Ranks_neg)
+            if W_pos > W_neg:
+                Model = 'Neg. Binomial'
+                print('Overdispersion detected at p='+str(TestStat[1])+'. Choosing negative binomial model ...')
+            else:
+                Model = 'Neg. Binomial'             # for lack of better choice...
+                print('WARNING: Low variance in control samples (underdispersion)!')            
 
 
     # -----------------------------------------------    

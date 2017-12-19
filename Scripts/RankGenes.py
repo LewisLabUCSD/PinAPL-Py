@@ -239,7 +239,7 @@ def GeneRankingAnalysis(sample):
     global lfc; lfc = list(lfc_DF['lfc'])
     parjob = Parallel(n_jobs=num_cores)(delayed(AverageLogFC)(g) for g in range(G))      
     nGuides = [parjob[g][0] for g in range(G)]
-    AvgLogFCs = [parjob[g][1] for g in range(G)]   
+    AvgLogFC = [parjob[g][1] for g in range(G)]   
 
        
     # -------------------------------------------        
@@ -289,7 +289,7 @@ def GeneRankingAnalysis(sample):
             metric_sig = multTest[0]
             metric_pval0 = multTest[1]
         else: # no control replicates
-            print('### ERROR: Cannot compute aRRA scores without control replicates! ###')
+            print('### ERROR: Cannot compute aRRA scores without significant sgRNAs! ###')
             SortFlag = True
             metric = [-1 for k in range(G)]
             metric_pval = [-1 for k in range(G)]
@@ -334,11 +334,16 @@ def GeneRankingAnalysis(sample):
         STARS_output = glob.glob('counts_STARSOutput*.txt')[0]
         STARS = pandas.read_table(STARS_output, sep='\t')
         geneList_s = list(STARS['Gene Symbol'].values)
+        # Reduce gene list to genes reported by STARS
         G = len(geneList_s)
         s_index = [geneList.index(geneList_s[k]) for k in range(G)]
         geneList = geneList_s
         sigGuides_s = [sigGuides[s_index[k]] for k in range(G)]
         sigGuides = sigGuides_s
+        AvgLogFC_s = [AvgLogFC[s_index[k]] for k in range(G)]
+        AvgLogFC = AvgLogFC_s     
+        nGuides_s = [nGuides[s_index[k]] for k in range(G)]
+        nGuides = nGuides_s         
         metric = list(STARS['STARS Score'].values)
         metric_pval = list(STARS['p-value'].values)
         multTest = multipletests(metric_pval,alpha,padj)
@@ -353,7 +358,7 @@ def GeneRankingAnalysis(sample):
         # Run non-parametric permutation analysis 
         # -------------------------------------------------   
         SortFlag = False
-        metric = AvgLogFCs
+        metric = AvgLogFC
         # Compute permutations
         I_perm = numpy.random.choice(L,size=(Np,r),replace=False)
         metric_null = Parallel(n_jobs=num_cores)(delayed(AvgLogFC_null)(I) for I in I_perm)
@@ -393,7 +398,7 @@ def GeneRankingAnalysis(sample):
                                      'significant': [str(metric_sig[g]) for g in range(G)],
                                      '# sgRNAs': [nGuides[g] for g in range(G)],                
                                      '# signif. sgRNAs': [sigGuides[g] for g in range(G)],
-                                    'avg. logFC': [AvgLogFCs[g] for g in range(G)]},
+                                    'avg. logFC': [AvgLogFC[g] for g in range(G)]},
                             columns = ['gene',GeneMetric,'p_value','p_value (adj.)',\
                             'significant','# sgRNAs','# signif. sgRNAs','avg. logFC'])
     if GeneMetric == 'AVGLFC':

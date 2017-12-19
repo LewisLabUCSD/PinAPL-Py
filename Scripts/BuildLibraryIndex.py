@@ -47,12 +47,12 @@ def BuildBowtieIndex():
     os.chdir(LibDir)
     LibCols = ['gene','ID','seq']
     LibFile = pd.read_table(LibFilename, sep = libsep, skiprows = 1, names = LibCols)
-    seq = LibFile['seq'].values
-    IDs = LibFile['ID'].values    
+    seq = list(LibFile['seq'])
+    IDs = list(LibFile['ID'])    
     with open('library.fasta','w') as library_fasta:
         for k in range(len(IDs)):
-            library_fasta.write('>'+IDs[k]+'\n')
-            library_fasta.write(seq[k]+'\n')
+            library_fasta.write('>'+str(IDs[k])+'\n')
+            library_fasta.write(str(seq[k])+'\n')
     library_fasta.close()
     
     # ----------------------------------
