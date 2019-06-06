@@ -21,100 +21,29 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from joblib import Parallel, delayed
 import multiprocessing
-from scipy.stats import beta
-from scipy.stats import norm
-from statsmodels.distributions.empirical_distribution import ECDF
-from statsmodels.sandbox.stats.multicomp import multipletests
 from collections import Counter
-from decimal import *
 import sys
 from pvalPlots import *
+from RankGenes_SigmaFC import *
+from RankGenes_AvgLogFC import *
+from RankGenes_aRRA import *
+from RankGenes_STARS import *
 
 
-def compute_aRRAx(g):
-    GOI = geneList[g]    
-    GOI_ranks_sig = list() 
-    I = genes_x.index(GOI)
-    i = I
-    terminate = False
-    while genes_x[i] == GOI and terminate == False:
-        if NB_pval_x[i] < P_0:
-            GOI_ranks_sig.append(ranks_x[i])
-        if i <= L-2:
-            i+=1
-        else:
-            terminate = True
-    GOI_ranks_sig.sort()
-    J = len(GOI_ranks_sig)
-    if J>0:
-        U = [GOI_ranks_sig[i]/L for i in range(J)]
-        rho_k = list()
-        for k in range(J):
-            kth_smallest = U[k]
-            pval = beta.cdf(kth_smallest,k+1,J-k)
-            rho_k.append(pval)
-        rho = min(rho_k)
-    else:
-        rho = 1
-    return rho
-
-def compute_aRRA_nullx(I):
-    I_ranks_sig = list()
-    for i in I:
-        if NB_pval[i] < P_0:
-            I_ranks_sig.append(ranks[i])
-    I_ranks_sig.sort()
-    J = len(I_ranks_sig)
-    if J>0:
-        U = [I_ranks_sig[i]/L for i in range(J)]
-        rho_k = list()
-        for k in range(J):
-            kth_smallest = U[k]
-            pval = beta.cdf(kth_smallest,k+1,J-k)
-            rho_k.append(pval)
-        rho_null = min(rho_k)
-    else:
-        rho_null = 1
-    return rho_null 
-    
-def AverageLogFC(g):
+def CountGuidesPerGene(g):
     gene = geneList[g]       
-    lfc_list = list()
-    i0 = genes_X.index(gene)
+    i0 = genes_bundled.index(gene)
     i = i0
+    nG = 0
     terminate = False
-    while genes_X[i] == gene and terminate == False:
-        lfc_list.append(lfc[i])
+    while genes_bundled[i] == gene and terminate == False:
+        nG += 1
         if i <= L-2:
             i+=1
         else:
             terminate = True    
-    nG = len(lfc_list)
-    if repl_avg == 'mean':
-        avglfc = numpy.mean(lfc_list)
-    elif repl_avg == 'median':
-        avglfc = numpy.median(lfc_list)        
-    return nG,avglfc
-
-def AvgLogFC_null(I):
-    logFC_I = [lfc[i] for i in I]
-    if repl_avg == 'mean':
-        avglfc_I = numpy.mean(logFC_I)
-    elif repl_avg == 'median':
-        avglfc_I = numpy.median(logFC_I)     
-    return avglfc_I
-
-
-def TimeStamp(sec_elapsed,ProcessName):
-    if sec_elapsed < 60: 
-        time_elapsed = sec_elapsed
-        print('Time elapsed ('+ProcessName+') [secs]: ' + '%.3f' %time_elapsed)
-    elif sec_elapsed < 3600:
-        time_elapsed = sec_elapsed/60
-        print('Time elapsed ('+ProcessName+') [mins]: ' + '%.3f' % time_elapsed)
-    else:
-        time_elapsed = sec_elapsed/3600
-        print('Time elapsed ('+ProcessName+') [hours]: ' + '%.3f' % time_elapsed)             
+    return nG
+     
 
 
 def GeneRankingAnalysis(sample):
@@ -131,44 +60,49 @@ def GeneRankingAnalysis(sample):
     config = yaml.load(configFile)
     configFile.close()    
     ScriptsDir = config['ScriptsDir']
-    AnalysisDir = config['AnalysisDir']
-    ListDir = config['HitDir']
+    sgRNARanksDir = config['sgRNARanksDir']
     EffDir = config['EffDir']
     GeneDir = config['GeneDir']
-    alpha = config['alpha_g']            
+    alpha_g = config['alpha_g'] 
     padj = config['padj']
     screentype = config['ScreenType']    
     num_cores = multiprocessing.cpu_count()
     GeneMetric = config['GeneMetric']
-    Np = config['Np']
     SheetFormat = config['HitListFormat']
-    pvalDir = config['pvalDir']
+    pvalDir = config['pvalDir_genes'] 
     res = config['dpi']
     svg = config['svg']
     r = config['NumGuidesPerGene']
-    global P_0; P_0 = config['P_0']
-    global repl_avg; repl_avg = config['repl_avg']
-    
+ 
+   
     # ------------------------------------------------
     # Read sgRNA enrichment/depletion table
     # ------------------------------------------------
-    os.chdir(ListDir)
+    os.chdir(sgRNARanksDir)
     print('Loading sgRNA '+screentype+' table ...')
     filename = glob.glob(sample+'_*sgRNAList.txt')[0]
-    HitList = pandas.read_table(filename, sep='\t')
+    sgRNARanking = pandas.read_table(filename, sep='\t')
     if screentype == 'enrichment':
-        HitList = HitList.sort_values(['significant','p-value','fold change','sgRNA'],ascending=[0,1,0,1])
+        sgRNARanking = sgRNARanking.sort_values(['significant','p-value','fold change','sgRNA'],ascending=[0,1,0,1])
     elif screentype == 'depletion':
-        HitList = HitList.sort_values(['significant','p-value','fold change','sgRNA'],ascending=[0,1,1,1])        
-    sgIDs = list(HitList['sgRNA'])
-    global genes; genes = list(HitList['gene'])
+        sgRNARanking = sgRNARanking.sort_values(['significant','p-value','fold change','sgRNA'],ascending=[0,1,1,1])        
+    global L; L = len(sgRNARanking)
+    genes = list(sgRNARanking['gene'])
     global geneList; geneList = list(set(genes))
-    fc = list(HitList['fold change'])
-    global NB_pval; NB_pval = list(HitList['p-value (adj.)'])
-    global L; L = len(sgIDs)
-    global G; G = len(geneList)
-    NB_sig = list(HitList['significant'].values)
-    
+    fc = list(sgRNARanking['fold change'])
+    NB_pval = list(sgRNARanking['p-value'])
+    G = len(geneList)
+    NB_sig = list(sgRNARanking['significant'])
+
+
+    # ------------------------------------------------
+    # Find number of sgRNAs per gene (some genes have less than r sgRNAs)
+    # ------------------------------------------------
+    Aux_sgRNARanking = sgRNARanking.sort_values(['gene'])
+    global genes_bundled; genes_bundled = list(Aux_sgRNARanking['gene'])
+    nGuides = Parallel(n_jobs=num_cores)(delayed(CountGuidesPerGene)(g) for g in range(G))
+
+ 
     # ------------------------------------------
     # Find number of significant sgRNAs per gene
     # ------------------------------------------  
@@ -181,7 +115,7 @@ def GeneRankingAnalysis(sample):
     NB_sig = list(Temp_DF['NB_significant'])
     genes0 = list(Temp_DF['gene'])
     n0 = NB_sig.index(False)
-    sigGenes = [genes0[k] for k in range(n0)]
+    sigGenes = [genes0[k] for k in range(n0)]       # genes with at least 1 signif. sgRNA
     sigGenesList = list(set(sigGenes))
     # count significant sgRNAs for all genes with at least 1 sign. sgRNA        
     guidesPerGene = list()
@@ -201,187 +135,52 @@ def GeneRankingAnalysis(sample):
     if not os.path.exists(EffDir):
         os.makedirs(EffDir)
     os.chdir(EffDir)
-    plt.figure(figsize=(4,3.5))
+    fig, ax = plt.subplots(figsize=(3.5,2.9))
     if len(guidesPerGene) > 0:
         plt.hist(guidesPerGene, bins = range(1,r+2), align = 'left',color='#42f4a1',edgecolor='black')
     else:
         plt.figtext(0.5,0.5,'N/A')
-    plt.title('on-Target Efficacy', fontsize=14)
-    plt.xlabel('# Significant sgRNAs', fontsize=12)
-    plt.ylabel('Number of Genes', fontsize=12)
+    plt.title('sgRNA on-Target Efficacy', fontsize=12)
+    plt.xlabel('# Significant sgRNAs', fontsize=11)
+    plt.ylabel('Number of Genes', fontsize=11)
     plt.xticks(range(1,r+1))
-    plt.tick_params(labelsize=12)
+    plt.tick_params(labelsize=11)
     plt.tight_layout()
     plt.savefig(sample+'_sgRNA_Efficacy.png',dpi=res)   
     if svg:
         plt.savefig(sample+'_sgRNA_Efficacy.svg')                   
     
-    # -------------------------------------------        
-    # Rank data sheet after fold change
-    # -------------------------------------------
-    fc_DF = pandas.DataFrame(data = {'fc': list(HitList['fold change'])},
-                                 columns = ['fc'])
-    if screentype == 'enrichment':
-        fc_DF = fc_DF.rank(ascending = False)
-    elif screentype == 'depletion':
-        fc_DF = fc_DF.rank(ascending = True)
-    global ranks; ranks = list(fc_DF['fc'])    
-
-    # -------------------------------------------------  
-    # Compute average fold change across sgRNAs
-    # ------------------------------------------------- 
-    print('Computing average fold change across sgRNAs ...')
-    lfc_DF = pandas.DataFrame(data = {'gene': [genes[i] for i in range(L)],
-                                    'lfc': [numpy.log2(fc[i]) for i in range(L)]},
-                              columns = ['gene','lfc'])
-    lfc_DF = lfc_DF.sort_values(['gene'])
-    global genes_X; genes_X = list(lfc_DF['gene'])
-    global lfc; lfc = list(lfc_DF['lfc'])
-    parjob = Parallel(n_jobs=num_cores)(delayed(AverageLogFC)(g) for g in range(G))      
-    nGuides = [parjob[g][0] for g in range(G)]
-    AvgLogFC = [parjob[g][1] for g in range(G)]   
-
-       
-    # -------------------------------------------        
-    # Carry out gene ranking analysis
-    # -------------------------------------------    
-    if GeneMetric == 'aRRA':            
-        # -------------------------------------------------        
-        # compute aRRA 
-        # -------------------------------------------------
-        if min(NB_pval) < 1:
-            start = time.time()
-            SortFlag = True
-            print('Computing aRRA scores ...')
-            aRRA_DF = pandas.DataFrame(data = {'gene': [genes[i] for i in range(L)],
-                                            'ranks': [ranks[i] for i in range(L)],
-                                            'NB_pval': [NB_pval[i] for i in range(L)]},
-                                      columns = ['gene','ranks','NB_pval'])
-            aRRA_DF = aRRA_DF.sort_values(['gene'])
-            global genes_x; genes_x = list(aRRA_DF['gene'])
-            global ranks_x; ranks_x = list(aRRA_DF['ranks'])
-            global NB_pval_x; NB_pval_x = list(aRRA_DF['NB_pval'])
-            metric = Parallel(n_jobs=num_cores)(delayed(compute_aRRAx)(g) for g in range(G))        
-            end = time.time()
-            sec_elapsed = end - start
-            TimeStamp(sec_elapsed,'aRRA Computation')        
-            # Permutation
-            start = time.time()
-            print('Estimating aRRA null distribution ('+str(Np)+' permutations)...')
-            if L < Np*r:                
-                print('WARNING: Library too small for '+str(Np)+' permutations!')
-                Np = int(numpy.floor(L/r))                
-                print('Auto-correcting permutation number to '+str(Np)+' ...')
-            I_perm = numpy.random.choice(L,size=(Np,r),replace=False)
-            metric_null = Parallel(n_jobs=num_cores)(delayed(compute_aRRA_nullx)(I) for I in I_perm)
-            end = time.time()
-            sec_elapsed = end - start
-            TimeStamp(sec_elapsed,'aRRA Permutation')
-            # p-value
-            print('Computing aRRA p-values ...')
-            ecdf = ECDF(metric_null)
-            metric_pval = list()
-            for g in range(G):    
-                pval = ecdf(metric[g])
-                metric_pval.append(pval)
-            # Determine critical p value (p-value correction)
-            multTest = multipletests(metric_pval,alpha,padj)
-            metric_sig = multTest[0]
-            metric_pval0 = multTest[1]
-        else: # no control replicates
-            print('### ERROR: Cannot compute aRRA scores without significant sgRNAs! ###')
-            SortFlag = True
-            metric = [-1 for k in range(G)]
-            metric_pval = [-1 for k in range(G)]
-            metric_pval0 = [-1 for k in range(G)]            
-            metric_sig = ['N/A' for k in range(G)]
+    
+    # ------------------------------------------
+    # Rank genes according to specified method
+    # ------------------------------------------     
+    os.chdir(ScriptsDir)    
+    if GeneMetric == 'SigmaFC':
+        metric, metric_pval, metric_sig = compute_SigmaFC(sgRNARanking)
+        SortFlag = False if screentype=='enrichment' else True   # metric based on fold-change
+    elif GeneMetric == 'aRRA':
+        metric, metric_pval, metric_sig = compute_aRRA(sgRNARanking)
+        SortFlag = True    # metric based on p-val     
     elif GeneMetric == 'STARS':
-        # -------------------------------------------------        
-        # compute STARS score 
-        # -------------------------------------------------            
-        start = time.time()
-        STARSDir = config['STARSDir']
-        thr = config['thr_STARS']
-        os.chdir(ListDir)
-        SortFlag = False
-        # Running null distribution
-        print('Estimating STARS null distribution ('+str(Np)+' permutations)...')
-        STARS_input = open('STARS_input.txt','w')
-        STARS_input.write('sgID\tcounts\n')
-        STARS_chip = open('STARS_chip.txt','w')
-        STARS_chip.write('sgID\tgene\n')
-        for k in range(L):
-            STARS_input.write(sgIDs[k]+'\t'+str(fc[k])+'\n')
-            STARS_chip.write(sgIDs[k]+'\t'+genes[k]+'\n')                
-        STARS_input.close()    
-        STARS_chip.close()
-        os.system('mv STARS_input.txt STARS_chip.txt '+STARSDir)
-        os.chdir(STARSDir)
-        STARS_null_cmd = 'python -u stars_null_v1.2.py --input-file \
-            STARS_input.txt --chip-file STARS_chip.txt --thr '+str(thr)+' --num-ite '+str(Np)
-        os.system(STARS_null_cmd)
-        # Computing STARS score
-        print('Computing STARS scores ...')
-        if screentype == 'enrichment':
-            d = 'P'
-        elif screentype == 'depletion':
-            d = 'N'
-        STARS_cmd = 'python -u stars_v1.2.py --input-file STARS_input.txt \
-            --chip-file STARS_chip.txt --thr '+str(thr)+' --dir '+d+' \
-            --null Null_STARSOutput8_'+str(thr)+'.txt'
-        os.system(STARS_cmd)
-        # Extracting statistics
-        STARS_output = glob.glob('counts_STARSOutput*.txt')[0]
-        STARS = pandas.read_table(STARS_output, sep='\t')
-        geneList_s = list(STARS['Gene Symbol'].values)
-        # Reduce gene list to genes reported by STARS
-        G = len(geneList_s)
-        s_index = [geneList.index(geneList_s[k]) for k in range(G)]
-        geneList = geneList_s
-        sigGuides_s = [sigGuides[s_index[k]] for k in range(G)]
-        sigGuides = sigGuides_s
-        AvgLogFC_s = [AvgLogFC[s_index[k]] for k in range(G)]
-        AvgLogFC = AvgLogFC_s     
-        nGuides_s = [nGuides[s_index[k]] for k in range(G)]
-        nGuides = nGuides_s         
-        metric = list(STARS['STARS Score'].values)
-        metric_pval = list(STARS['p-value'].values)
-        multTest = multipletests(metric_pval,alpha,padj)
-        metric_sig = multTest[0]  
-        metric_pval0 = multTest[1]                   
-        # Deleting STARS files            
-        os.system('rm STARS_input.txt STARS_chip.txt')
-        os.system('rm Null_STARSOutput8_'+str(thr)+'.txt')
-        os.system('rm '+STARS_output)
-    elif GeneMetric == 'AVGLFC':
-        # -------------------------------------------------        
-        # Run non-parametric permutation analysis 
-        # -------------------------------------------------   
-        SortFlag = False
-        metric = AvgLogFC
-        # Compute permutations
-        I_perm = numpy.random.choice(L,size=(Np,r),replace=False)
-        metric_null = Parallel(n_jobs=num_cores)(delayed(AvgLogFC_null)(I) for I in I_perm)
-        ecdf = ECDF(metric_null)
-        metric_pval = list()
-        for g in range(G):
-            if nGuides[g] == r:
-                pval = 1 - ecdf(metric[g])
-                metric_pval.append(pval)        
-            else:
-                pval = 1
-                metric_pval.append(pval)                        
-        # Determine critical p value (p-value correction)
-        multTest = multipletests(metric_pval,alpha,padj)
-        metric_sig = multTest[0]
-        metric_pval0 = multTest[1]
+        metric,metric_pval,metric_sig = compute_STARS(sgRNARanking)        
+        SortFlag = False      # metric always from high to low  
+    elif GeneMetric == 'AvgLogFC':
+        metric, metric_pval, metric_sig = compute_AvgLogFC(sgRNARanking,nGuides)
+        SortFlag = False if screentype=='enrichment' else True  # metric based on fold-change
+    else:
+        print('### ERROR: Cannot find gene ranking method! ###')
+    # Correcting cdf artifact in case of no significant sgRNAs
+    if False not in metric_sig:
+        metric_sig = [False for g in range(G)]
+        
 
     # -------------------------------------------------  
-    # p-value plots
+    # Plotting p-value distribution
     # -------------------------------------------------  
-    if min(NB_pval) < 1:    
-        print('Plotting p-values ...')
-        pvalHist_metric(metric_pval,metric_pval0,GeneMetric,pvalDir,sample,res,svg)           
+    if set(['N/A']) != set(NB_pval):    
+        print('Plotting gene metric p-value distribution...')
+        PlotTitle = 'Gene '+screentype.capitalize()+' ('+GeneMetric+')'
+        pvalHist(metric_pval,pvalDir,sample,res,svg,'#c8d1ca',PlotTitle)           
 
            
     # -------------------------------------------------  
@@ -394,30 +193,39 @@ def GeneRankingAnalysis(sample):
     Results_df = pandas.DataFrame(data = {'gene': [geneList[g] for g in range(G)],
                                     GeneMetric: [metric[g] for g in range(G)],
                                      'p_value': [metric_pval[g] for g in range(G)],
-                                    'p_value (adj.)': [metric_pval0[g] for g in range(G)],
                                      'significant': [str(metric_sig[g]) for g in range(G)],
                                      '# sgRNAs': [nGuides[g] for g in range(G)],                
-                                     '# signif. sgRNAs': [sigGuides[g] for g in range(G)],
-                                    'avg. logFC': [AvgLogFC[g] for g in range(G)]},
-                            columns = ['gene',GeneMetric,'p_value','p_value (adj.)',\
-                            'significant','# sgRNAs','# signif. sgRNAs','avg. logFC'])
-    if GeneMetric == 'AVGLFC':
-        del Results_df['avg. logFC']
+                                     '# signif. sgRNAs': [sigGuides[g] for g in range(G)]},
+                            columns = ['gene',GeneMetric,'p_value',\
+                            'significant','# sgRNAs','# signif. sgRNAs'])
     Results_df_0 = Results_df.sort_values(['significant',GeneMetric],ascending=[False,SortFlag])
-    GeneListFilename = filename[0:-14]+'_'+GeneMetric+'_'+'P'+str(Np)+'_GeneList.txt'
+    GeneListFilename = filename[0:-14]+'_'+GeneMetric+'_GeneList.txt'
     Results_df_0.to_csv(GeneListFilename, sep = '\t', index = False)      
     if SheetFormat == 'xlsx':
         print('Converting to xlsx ...')
-        GeneListFilename = filename[0:-14]+'_'+GeneMetric+'_'+'P'+str(Np)+'_GeneList.xlsx'
+        GeneListFilename = filename[0:-14]+'_'+GeneMetric+'_GeneList.xlsx'
         Results_df_0.to_excel(GeneListFilename)              
-    
+
+
+    # -------------------------------------------------  
+    # Time Stamp
+    # -------------------------------------------------      
+    os.chdir(ScriptsDir)
     end_total = time.time()
     print('------------------------------------------------')
     print('Script completed.')
     sec_elapsed = end_total - start_total    
-    TimeStamp(sec_elapsed,'Total')
-    print('\n')
-    os.chdir(ScriptsDir)
+    if sec_elapsed < 60: 
+        time_elapsed = sec_elapsed
+        print('Time elapsed [secs]: ' + '%.3f' %time_elapsed +'\n')
+    elif sec_elapsed < 3600:
+        time_elapsed = sec_elapsed/60
+        print('Time elapsed [mins]: ' + '%.3f' % time_elapsed +'\n')
+    else:
+        time_elapsed = sec_elapsed/3600
+        print('Time elapsed [hours]: ' + '%.3f' % time_elapsed +'\n')      
+    
+
 
 if __name__ == "__main__":
     input1 = sys.argv[1]

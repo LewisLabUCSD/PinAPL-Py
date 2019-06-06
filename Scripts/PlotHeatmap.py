@@ -32,7 +32,7 @@ def TopN_Clustering():
     configFile.close()
     WorkingDir = config['WorkingDir']
     AnalysisDir = config['AnalysisDir']
-    AlnQCDir = config['AlnQCDir']
+    sgRNAReadCountDir = config['sgRNAReadCountDir']
     ClusterDir = config['HeatDir']
     ScriptsDir = config['ScriptsDir']
     ClusterBy = config['ClusterBy']
@@ -49,22 +49,20 @@ def TopN_Clustering():
     # Dataframe containing all counts 
     # ------------------------------------------------
     print('Loading read counts ...')
-    os.chdir(AlnQCDir)
-    SampleNames = [d for d in os.listdir(AlnQCDir) if os.path.isdir(d) and '_avg' not in d]
+    os.chdir(sgRNAReadCountDir)
+    Filenames = [d for d in os.listdir(sgRNAReadCountDir) if 'normalized' in d \
+        and '_avg' not in d]
     AllCounts = pd.DataFrame()    
     colnames = ['sgRNA','gene','counts']
-    os.chdir(AlnQCDir)
-    for sample in SampleNames:
-        os.chdir(sample)
-        filename = glob.glob('*GuideCounts_0.txt')[0]        
+    for filename in Filenames:
+        sample = filename[0:-27]    
         CountsFile = pd.read_table(filename, sep='\t',names=colnames)
-        sgIDs = list(CountsFile['sgRNA'].values)        
-        genes = list(CountsFile['gene'].values)                
-        counts = list(CountsFile['counts'].values)    
+        sgIDs = list(CountsFile['sgRNA'])
+        genes = list(CountsFile['gene'])                
+        counts = list(CountsFile['counts'])    
         AllCounts['sgRNA'] = sgIDs 
         AllCounts['gene'] = genes         
         AllCounts[sample] = counts
-        os.chdir(AlnQCDir)
 
     # ------------------------------------------------
     # Sort read counts
@@ -90,19 +88,19 @@ def TopN_Clustering():
         Q.to_csv(OutputSheetname,sep='\t',index=False)     
         HeatmapFilename = 'Heatmap_Top'+str(N)+'_most_variable_sgRNAs'
     elif ClusterBy == 'counts':
-        TopGuides = set()  
-        # Assembling top N guides        
-        for sample in SampleNames:
+        TopGuides = set()
+        # Assembling top N guides  
+        Samples = [filename[0:-27] for filename in Filenames]
+        for sample in Samples:
             print('Reading top '+str(N)+' sgRNAs in sample '+sample+' ...')     
             SampleCounts = AllCounts[['sgRNA',sample]]
             if ScreenType == 'enrichment':
-                SampleCounts = SampleCounts.sort_values([sample],ascending=[0])
+                SampleCounts = SampleCounts.sort_values(sample,ascending=0)
             elif ScreenType == 'depletion':
-                SampleCounts = SampleCounts.sort_values(sample,ascending=[1])
-            SampleIDs = list(SampleCounts['sgRNA'].values)
+                SampleCounts = SampleCounts.sort_values(sample,ascending=1)
+            SampleIDs = list(SampleCounts['sgRNA'])
             TopGuides_sample = SampleIDs[0:int(N-1)]
             TopGuides = set.union(TopGuides,TopGuides_sample)
-            os.chdir(AlnQCDir)
         TopGuides = list(TopGuides)    
         T = len(TopGuides)      
         # Establish data frame
@@ -113,15 +111,15 @@ def TopN_Clustering():
                                             'gene': [TopGenes[k] for k in range(T)]},
                                     columns = ['sgRNA','gene'])  
         # Extract counts for top guides and write into data frame
-        for sample in SampleNames:   
+        for sample in Samples:   
             SampleCounts = AllCounts[['sgRNA',sample]]            
             if ScreenType == 'enrichment':
                 SampleCounts = SampleCounts.sort_values([sample],ascending=[0])
             elif ScreenType == 'depletion':
                 SampleCounts = SampleCounts.sort_values(sample,ascending=[1])           
-            SampleIDs = list(SampleCounts['sgRNA'].values)
+            SampleIDs = list(SampleCounts['sgRNA'])
             TopIndex_sample = [SampleIDs.index(TopGuides[k]) for k in range(T)]
-            counts = list(SampleCounts[sample].values)
+            counts = list(SampleCounts[sample])
             TopCounts = [counts[TopIndex_sample[k]] for k in range(T)]
             TopGuides_df[sample] = TopCounts
         # Write dataframe  

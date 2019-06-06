@@ -27,9 +27,9 @@ def AverageReadCounts(treatment):
     config = yaml.load(configFile)
     configFile.close()
     ScriptsDir = config['ScriptsDir']
-    AlnQCDir = config['AlnQCDir']
+    sgRNAReadCountDir = config['sgRNAReadCountDir']
+    GeneReadCountDir = config['GeneReadCountDir']    
     repl_avg = config['repl_avg']
-    AvgDir = treatment+'_avg'
     
     # ------------------------------------------------
     # Get counts from each replicate 
@@ -38,19 +38,15 @@ def AverageReadCounts(treatment):
     print('Processing '+treatment+' ...')
     colnames_s = ['sgRNA','gene','counts']
     colnames_g = ['gene','counts']    
-    os.chdir(AlnQCDir)
-    ReplDirs = [d for d in os.listdir(AlnQCDir) if treatment in d and '_avg' not in d]
-    R = len(ReplDirs)
+    
+    # sgRNA counts
+    os.chdir(sgRNAReadCountDir)
+    ReplFiles = [d for d in os.listdir(sgRNAReadCountDir) if treatment in d and '_avg' not in d]
+    R = len(ReplFiles)
     if R >= 2:
         print('Averaging read counts over '+str(R)+' replicates ...')
         AllGuideCounts = pandas.DataFrame()  
-        AllGuideCounts0 = pandas.DataFrame()
-        AllGeneCounts = pandas.DataFrame()
-        AllGeneCounts0 = pandas.DataFrame()    
-        for replicate in ReplDirs:
-            os.chdir(replicate)
-            # sgRNA counts
-            filename = glob.glob('*GuideCounts.txt')[0]
+        for filename in ReplFiles:            
             CountsFile = pandas.read_table(filename, sep='\t',names=colnames_s)
             CountsFile = CountsFile.sort_values(['gene','sgRNA'])
             sgIDs = list(CountsFile['sgRNA'])        
@@ -58,20 +54,8 @@ def AverageReadCounts(treatment):
             counts = list(CountsFile['counts'])    
             AllGuideCounts['sgRNA'] = sgIDs 
             AllGuideCounts['gene'] = genes         
-            AllGuideCounts[replicate] = counts
-            # gene counts
-            filename = glob.glob('*GeneCounts.txt')[0]
-            CountsFile = pandas.read_table(filename, sep='\t',names=colnames_g)
-            CountsFile = CountsFile.sort_values(['gene'])
-            genes = list(CountsFile['gene'])                
-            counts = list(CountsFile['counts'])    
-            AllGeneCounts['gene'] = genes         
-            AllGeneCounts[replicate] = counts        
-            os.chdir(AlnQCDir)            
-        # ------------------------------------------------
-        # Compute averages
-        # ------------------------------------------------ 
-        # sgRNA counts    
+            AllGuideCounts[filename] = counts
+        # Compute averages  
         repl_counts = AllGuideCounts.iloc[:,2:]
         if repl_avg == 'median':
             avg_counts = repl_counts.median(axis=1)
@@ -79,8 +63,26 @@ def AverageReadCounts(treatment):
             avg_counts = repl_counts.mean(axis=1)
         AllGuideCounts[treatment+'_avg'] = avg_counts
         del_columns = range(2,2+R)
-        AllGuideCounts.drop(AllGuideCounts.columns[del_columns],axis=1,inplace=True) 
-        # gene counts    
+        AllGuideCounts.drop(AllGuideCounts.columns[del_columns],axis=1,inplace=True)
+        # Write result dataframe
+        AllGuideCounts.to_csv(treatment+'_avg_GuideCounts.txt', sep = '\t', index = False, header = False)
+    else:
+        print('(No filenames found)')               
+       
+    # gene counts
+    os.chdir(GeneReadCountDir)
+    ReplFiles = [d for d in os.listdir(GeneReadCountDir) if treatment in d and '_avg' not in d]
+    R = len(ReplFiles)
+    if R >= 2:
+        AllGeneCounts = pandas.DataFrame()
+        for filename in ReplFiles:
+            CountsFile = pandas.read_table(filename, sep='\t',names=colnames_g)
+            CountsFile = CountsFile.sort_values(['gene'])
+            genes = list(CountsFile['gene'])                
+            counts = list(CountsFile['counts'])    
+            AllGeneCounts['gene'] = genes         
+            AllGeneCounts[filename] = counts                
+        # Compute averages 
         repl_counts = AllGeneCounts.iloc[:,1:]
         if repl_avg == 'median':
             avg_counts = repl_counts.median(axis=1)
@@ -89,18 +91,9 @@ def AverageReadCounts(treatment):
         AllGeneCounts[treatment+'_avg'] = avg_counts
         del_columns = range(1,1+R)
         AllGeneCounts.drop(AllGeneCounts.columns[del_columns],axis=1,inplace=True)
-
-        # ------------------------------------------------
         # Write result dataframes
-        # ------------------------------------------------     
-        os.chdir(AlnQCDir)
-        if not os.path.exists(AvgDir):
-            os.makedirs(AvgDir)
-        os.chdir(AvgDir)
-        AllGuideCounts.to_csv(treatment+'_avg_GuideCounts.txt', sep = '\t', index = False, header = False)
+        os.chdir(GeneReadCountDir)
         AllGeneCounts.to_csv(treatment+'_avg_GeneCounts.txt', sep = '\t', index = False, header = False)
-    else:
-        print('(No replicates found)')
 
 
     # --------------------------------------
@@ -109,16 +102,18 @@ def AverageReadCounts(treatment):
     os.chdir(ScriptsDir)
     end = time.time()
     # Final time stamp
+    print('------------------------------------------------')
+    print('Script completed.')      
     sec_elapsed = end - start
     if sec_elapsed < 60:
         time_elapsed = sec_elapsed
-        print('Time elapsed [secs]: ' + '%.3f' % time_elapsed)
+        print('Time elapsed [secs]: ' + '%.3f' % time_elapsed +'\n')
     elif sec_elapsed < 3600:
         time_elapsed = sec_elapsed/60
-        print('Time elapsed [mins]: ' + '%.3f' % time_elapsed)
+        print('Time elapsed [mins]: ' + '%.3f' % time_elapsed +'\n')
     else:
         time_elapsed = sec_elapsed/3600
-        print('Time elapsed [hours]: ' + '%.3f' % time_elapsed)    
+        print('Time elapsed [hours]: ' + '%.3f' % time_elapsed +'\n')    
     
 if __name__ == "__main__":
     input1 = sys.argv[1]    

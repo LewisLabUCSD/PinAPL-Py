@@ -1,61 +1,65 @@
 # PinAPLPy: Platform-independent Analysis of Pooled Screens using Python
-# P. Spahn et al., UC San Diego (10/2016) 
+# P. Spahn et al., UC San Diego 
 
 # ***********************************************************************
 # CONFIGURATION FILE
 # ***********************************************************************
 
 # PROJECT PARAMETERS
-ScreenType: 'enrichment'               # type of screen ['enrichment'/'depletion']
+ScreenType: 'enrichment'              # type of screen ['enrichment'/'depletion']
 
 # LIBRARY PARAMETERS
-LibFilename: 'GeCKOv21_Human.tsv'      # filename of library spreadsheet  
-seq_5_end: 'TCTTGTGGAAAGGACGAAACACCN'  # sequence 5' of sgRNA in read
-NonTargetPrefix: 'NonTargeting'        # prefix for non-targeting sgRNAs in library
-NumGuidesPerGene: 6                    # number of sgRNAs per gene
-
+LibFilename: 'GeCKOv21_Human.tsv'        # filename of library spreadsheet
+seq_5_end: 'TCTTGTGGAAAGGACGAAACACCN'       # 5'-sequence adapter
+NonTargetPrefix: 'NonTargeting'             # prefix for non-targeting sgRNAs in library
+NumGuidesPerGene: 6                     # number of sgRNAs per gene 
+                                       
 # ANALYSIS OPTIONS
-sgRNALength: 20              # sgRNA length [bp]
-Normalization: 'cpm'         # normalization of read counts ['cpm'/'size'/'total']
-RoundCount: True            # round counts after normalization [True/False]
-GeneMetric: 'STARS'           # metric for gene ranking ['aRRA'/'STARS'/'AVGLFC']
-AlnOutput: 'Delete'          # keep raw alignment output? ['Keep'/'Compress'/'Delete']
-keepCutReads: False          # keep files containing trimmed reads? [True/False]
-ClusterBy: 'variance'        # clustering criterion ['variance'/'counts']
-padj: 'fdr_bh'               # method for p-value adjustment ['fdr_bh'/'fdr_tsbh'/'sidak'/'bonferroni']
+GeneMetric: 'SigmaFC'                   # metric for gene ranking ['SigmaFC'/'AvgLogFC'/'aRRA'/'STARS']
+padj: 'sidak'                          # method for p-value adjustment ['fdr_bh'/'sidak'/'bonferroni']
+alpha_s: 0.01                            # significance threshold (sgRNAs enrichment/depletion)
+alpha_g: 0.01                            # significance threshold (gene ranking)
+Normalization: 'total'                    # normalization of read counts ['cpm'/'size'/'total']
+ClusterBy: 'variance'                   # clustering criterion ['variance'/'counts']
+RoundCount: False                       # round counts after normalization [True/False]
+repl_avg: 'median'                      # average counts between replicates ['mean'/'median']
+sgRNALength: 20                         # sgRNA length [bp]
+AS_min: 40                              # alignment matching threshold 
+Theta: 2                                # alignment ambiguity threshold
+Np: 10000                               # number of permutations for gene ranking p-values
+w_SigmaFC: [0,1,2,3,4,5,6]              # weighing function for SigmaFC score
+thr_STARS: 10                           # threshold percentage for STARS analysis
+TopN: 25                                # number of top sgRNAs to take into account for clustering
+ShowNonTargets: True                    # show non-targeting controls in scatterplots [True/False]
+scatter_annotate: False                 # annotate highlighted sgRNAs in scatterplots [True/False]
+IncludeDensityPlots: True              # include sgRNA density plots [True/False]
+AutoHighlight: True                     # automatically highlight the top 10 ranked genes [True/False]
 
-# TECHNICAL PARAMETERS
-AS_min: 40             # matching threshold 
-Theta: 2               # ambiguity threshold 
-Cutoff: 0              # read count threshold 
-alpha_s: 0.01         # critical false-discovery rate for sign. sgRNAs
-alpha_g: 0.01          # critical false-discovery rate for sign. genes
-P_0: 0.01           # maximum p-value for sgRNA to be taken into account for aRRA
-p_overdisp: 0.05       # Significance threshold for overdispersion test
-Np: 5             # number of permutations for gene ranking analysis
-repl_avg: median        # average counts between replicates ['mean'/'median']
-TopN: 25               # number of top sgRNAs to take into account for clustering
-thr_STARS: 20          # threshold percentage for STARS analysis
-CutErrorTol: 0.1       # cutadapt error tolerance
-L_bw: 11               # Bowtie2 -L parameter (seed length)
-N_bw: 1                # Bowtie2 -N parameter (seed mismatch)
-i_bw: 'S,1,0.75'       # Bowtie2 -i parameter (interval function)
+# TECHNICAL PARAMETERS (changes not required/recommended)
+Cutoff: 0                       # read count threshold
+CutErrorTol: 0.1                # cutadapt error tolerance
+L_bw: 11                        # Bowtie2 -L parameter (seed length)
+N_bw: 1                         # Bowtie2 -N parameter (seed mismatch)
+i_bw: 'S,1,0.75'                # Bowtie2 -i parameter (interval function)
+delta: 1                        # count shift to avoid zero counts in logFC
+p_overdisp: 0.05                # significance threshold for overdispersion test
+dotsize: 10                     # size of dots in scatterplot
+TransparencyLevel: 0.05         # transparency (alpha) in scatterplots
+logbase: 10                     # base for log transformation in scatterplots
+AlnOutput: 'Delete'             # keep raw alignment output? ['Keep'/'Compress'/'Delete']
+keepCutReads: False             # keep files containing trimmed reads? [True/False]
+dpi: 300                        # resolution of PNG plots
+svg: True                       # save figures as vector graphics?  [True/False]
+HitListFormat: 'xlsx'                # format of results spreadsheets ['txt'/'xlsx']
+PrintHighlights: True              # print highlighted sgRNA info in console [True/False]
 
-
-# VISUALIZATION PARAMETERS
-TransparencyLevel: 0.1    # transparency (alpha) in scatterplots
-dotsize: 8                # size of dots in scatterplot
-scatter_annotate: False   # annotate scatterplot when highlighting a gene? [True/False]
-ShowNonTargets: True     # show non-targeting controls in scatterplots [True/False]
-dpi: 300                  # resolution of PNG plots
-delta: 1                  # count shift to avoid zero counts in logFC
-logbase: 10               # base for log transformation of counts in scatterplots
-svg: True                # save figures as vector graphics?  [True/False]            
-HitListFormat: 'tsv'      # Format of results spreadsheets ['tsv'/'xlsx']
-width_p: 800              # width of heatmap image (pixels)
-height_p: 800             # height of heatmap image (pixels)
-fontsize_p: 14            # fontsize in heatmap image
-marginsize: 10            # size of margin in heatmap image
+# HARD-CODED PARAMETERS (not available on website)
+FCmin_SigmaFC: 0                        # minimal FC required for SigmaFC score (not compatible with depletion screen)
+IncludeGeneRankCombination: False       # Fishers statistic for p-value combination
+width_p: 800                            # width of heatmap image (pixels)
+height_p: 800                           # height of heatmap image (pixels)
+fontsize_p: 14                          # fontsize in heatmap image
+marginsize: 10                          # size of margin in heatmap image
 
 # DIRECTORIES
 WorkingDir: '/workingdir/'
@@ -63,25 +67,31 @@ DataDir: '/workingdir/Data/'
 TempDataDir: '/workingdir/TempData/'
 LibDir: '/workingdir/Library/'
 IndexDir: '/workingdir/Library/Bowtie2_Index/'
-ScriptsDir: '/opt/PinAPL-Py/Scripts/'
+ScriptsDir: '/workingdir/Scripts/'
 AlignDir: '/workingdir/Alignments/'
 AnalysisDir: '/workingdir/Analysis/'
-TrimLogDir: '/workingdir/Analysis/Read_Trimming'
-HitDir: '/workingdir/Analysis/sgRNA_Rankings'
-GeneDir: '/workingdir/Analysis/Gene_Rankings'
-ControlDir: '/workingdir/Analysis/Control/'
-HeatDir: '/workingdir/Analysis/Heatmap/'
-AlnQCDir: '/workingdir/Analysis/Alignment_Statistics/'
-CountQCDir: '/workingdir/Analysis/ReadCount_Statistics/'
-ScatterDir: '/workingdir/Analysis/ReadCount_Scatterplots/'
-HiLiteDir: '/workingdir/Analysis/ReadCount_Scatterplots/Highlighted_Genes/'
-CorrelDir: '/workingdir/Analysis/Replicate_Correlation/'
-HiLiteDir2: '/workingdir/Analysis/Replicate_Correlation/Highlighted_Genes/'
-EffDir: '/workingdir/Analysis/sgRNA_Efficacy/'
-DepthDir: '/workingdir/Analysis/Read_Depth/'
-SeqQCDir: '/workingdir/Analysis/Sequence_Quality/'
-pvalDir: '/workingdir/Analysis/p-values/' 
-LogFileDir: '/workingdir/Analysis/Log_File/' 
+TrimLogDir: '/workingdir/Analysis/01_Alignment_Results/Read_Trimming/'
+sgRNARanksDir: '/workingdir/Analysis/02_sgRNA-Ranking_Results/sgRNA_Ranking/'
+GeneDir: '/workingdir/Analysis/03_GeneRanking_Results/Gene_Ranking/'
+ControlDir: '/workingdir/Analysis/02_sgRNA-Ranking_Results/ControlSample_Analysis/'
+HeatDir: '/workingdir/Analysis/02_sgRNA-Ranking_Results/Heatmap/'
+AlnQCDir: '/workingdir/Analysis/01_Alignment_Results/Alignment_Statistics/'
+sgRNAReadCountDir: '/workingdir/Analysis/01_Alignment_Results/ReadCounts_per_sgRNA/'
+GeneReadCountDir: '/workingdir/Analysis/01_Alignment_Results/ReadCounts_per_Gene/'
+CountQCDir: '/workingdir/Analysis/02_sgRNA-Ranking_Results/ReadCount_Distribution/'
+ScatterDir: '/workingdir/Analysis/02_sgRNA-Ranking_Results/sgRNA_Scatterplots/'
+DensityDir: '/workingdir/Analysis/02_sgRNA-Ranking_Results/sgRNA_Densities/'
+GenePlotDir: '/workingdir/Analysis/03_GeneRanking_Results/GeneScore_Scatterplots/'
+CorrelDir: '/workingdir/Analysis/02_sgRNA-Ranking_Results/Replicate_Correlation/'
+HiLiteDir2: '/workingdir/Analysis/02_sgRNA-Ranking_Results/Replicate_Correlation/Highlighted_Genes/'
+EffDir: '/workingdir/Analysis/03_GeneRanking_Results/sgRNA_Efficacy/'
+DepthDir: '/workingdir/Analysis/01_Alignment_Results/Read_Depth/'
+SeqQCDir: '/workingdir/Analysis/01_Alignment_Results/Sequence_Quality/'
+pvalDir_sgRNA: '/workingdir/Analysis/02_sgRNA-Ranking_Results/p-value_Distribution/' 
+pvalDir_genes: '/workingdir/Analysis/03_GeneRanking_Results/p-value_Distribution/' 
+zScoreDir_sgRNA: '/workingdir/Analysis/02_sgRNA-Ranking_Results/sgRNA_z-Scores/'
+VolcanoDir_sgRNA: '/workingdir/Analysis/02_sgRNA-Ranking_Results/sgRNA_VolcanoPlots/'
+LogFileDir: '/workingdir/Analysis/00_LogFile/' 
 bw2Dir: '/usr/bin/'
 CutAdaptDir: '/root/.local/bin/'    
 STARSDir: '/opt/PinAPL-Py/Scripts/STARS_mod/'
@@ -94,13 +104,21 @@ ReadDepthScript: 'PlotNumReads'
 SeqQCScript: 'CheckSequenceQuality'
 TrimScript: 'TrimReads'
 AlignScript: 'AlignReads'
+ClassifyScript: 'GetReadCounts'
+CutoffScript: 'ApplyCutoff'
+CleanUpScript: 'RemoveTempOutput'
 NormalizeScript: 'NormalizeReadCounts'
 AverageCountsScript: 'AverageCounts'
 StatsScript: 'AnalyzeReadCounts'
 ControlScript: 'AnalyzeControl'
-sgRNARankScript: 'FindHits'
+sgRNARankScript: 'RanksgRNAs'
+zFCScript: 'PlotFCz'
+vFCScript: 'PlotFCvolcano'
 GeneRankScript: 'RankGenes'
+GenePlotScript: 'PlotGeneScores'
 CombineScript: 'CombineGeneRanks'
 ScatterScript: 'PlotCounts'
+DensityScript: 'PlotDensity'
 ReplicateScript: 'PlotReplicates'
 ClusterScript: 'PlotHeatmap'
+ExtractTop10Script: 'ExtractTop10Genes'

@@ -22,6 +22,10 @@ def GetSamples():
     FileNames = list(DataSheet['FILENAME'].values)
     TreatmentList = list(DataSheet['TREATMENT'].values)
     SampleNames = list(DataSheet['SAMPLE NAME'].values)
+    TreatmentSamples = list()
+    for sample in SampleNames:
+        if 'Control' not in sample:
+            TreatmentSamples.append(sample)
     Treatments = list(set(TreatmentList))
     Replicates = dict()
     n = len(SampleNames)
@@ -29,4 +33,4 @@ def GetSamples():
         replist = [SampleNames[j] for j in range(n) if TreatmentList[j] == treatment]
         Replicates[treatment] = replist
     os.chdir(ScriptsDir)
-    return SampleNames, Treatments, Replicates
+    return SampleNames, Treatments, TreatmentSamples, Replicates

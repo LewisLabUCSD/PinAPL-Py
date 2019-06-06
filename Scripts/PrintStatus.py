@@ -12,8 +12,8 @@ import sys
 
 def PrintStatus_Header():
     print('**************************************************')
-    print('Launching PinAPL-Py v2.8.1')
-    print('P. Spahn et al., UC San Diego (11/2017)')
+    print('Launching PinAPL-Py v2.9')
+    print('P. Spahn et al., UC San Diego (05/2019)')
     print('**************************************************')
     
 def PrintStatus_SubHeader(msg):
@@ -33,10 +33,13 @@ def PrintStatus_CombineReplicates():
     print('Combining gene ranks across replicates ... ')
 
 def PrintStatus_SkipTrim():
-    print('Alignment data found. Skipping read trimming ... ')
+    print('Alignment folder found. Skipping read trimming ... ')
 
-def PrintStatus_SkipSample(sample):
-    print('Alignment data found for sample '+sample+'. Skipping alignment ... ')
+def PrintStatus_SkipAlignment(sample):
+    print('Alignment folder found for sample '+sample+'. Skipping alignment ... ')
+    
+def PrintStatus_SkipAlnQC(sample):
+    print('Read count folder found for sample '+sample+'. Skipping read counting ... ')    
 
 def PrintStatus_SkipSeqQC():
     print('Sequence quality folder found. Skipping quality check ... ')
@@ -66,8 +69,10 @@ if __name__ == "__main__":
         PrintStatus_CombineReplicates()                   
     elif input1 == 'SkipTrim':
         PrintStatus_SkipTrim()           
-    elif input1 == 'SkipSample':
-        PrintStatus_SkipSample(input2)   
+    elif input1 == 'SkipAlignment':
+        PrintStatus_SkipAlignment(input2)   
+    elif input1 == 'SkipAlnQC':
+        PrintStatus_SkipAlnQC(input2)       
     elif input1 == 'SkipSeqQC':
         PrintStatus_SkipSeqQC()           
     elif input1 == 'AllDone':

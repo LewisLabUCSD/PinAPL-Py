@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import os
 import re
-import glob
+import pandas
 import sys
 import time
 import yaml
@@ -40,37 +40,35 @@ def EstimateControlCounts():
     ScriptsDir = config['ScriptsDir']
     WorkingDir = config['WorkingDir']
     AlnQCDir = config['AlnQCDir']
+    sgRNAReadCountDir = config['sgRNAReadCountDir']
     ControlDir = config['ControlDir']
     res = config['dpi']
+    svg = config['svg']
     p_overdisp = config['p_overdisp']
-    CtrlCounts_Filename = 'Control_GuideCounts_0.txt'
+    CtrlCounts_Filename = 'Control_GuideCounts_normalized.txt'
    
     # --------------------------------    
     # Generate table of control counts
     # --------------------------------    
-    print('Reading control counts ...')    
-    os.chdir(AlnQCDir)
-    ControlSamples = [d for d in os.listdir(AlnQCDir) if 'Control' in d and 'Control_avg' not in d]
-    os.chdir(ControlSamples[0])
-    colnames = ['sgID','gene','counts']                      
-    CountFile = pd.read_table(glob.glob('*GuideCounts_0.txt')[0], sep='\t',names=colnames)
-    sgIDs = list(CountFile['sgID'].values)
-    genes = list(CountFile['gene'].values)
-    L = len(sgIDs)
-    CtrlCounts_df = pd.DataFrame(data = {'sgID': sgIDs,
-                                    'gene': genes},
-                            columns = ['sgID','gene'])        
+    print('Reading sgRNA counts ...')    
+    os.chdir(sgRNAReadCountDir)
+    ControlSamples = [d for d in os.listdir(sgRNAReadCountDir) if 'Control' in d and \
+        'normalized' in d and '_avg' not in d]
+    CountFile = pd.read_table(ControlSamples[0], sep = '\t', names=['sgID','gene','counts'])
+    sgIDs = list(CountFile['sgID'])
+    genes = list(CountFile['gene'])
+    L = len(CountFile)
+    CtrlCounts_df = pd.DataFrame()
+    CtrlCounts_df['sgID'] = sgIDs
+    CtrlCounts_df['gene'] = genes
     if len(ControlSamples) == 0:
         print('### ERROR: No control samples found! ###')
     else:
-        os.chdir(AlnQCDir)
-        for controlsample in ControlSamples:
-            os.chdir(controlsample)
-            filename = glob.glob('*GuideCounts_0.txt')[0]                          
-            CountFile = pd.read_table(filename, sep='\t',names=colnames)
-            counts = list(CountFile['counts'].values)
+        for filename in ControlSamples:
+            controlsample = filename[0:-27]
+            CountFile = pd.read_table(filename, sep='\t',names=['sgID','gene','counts'])
+            counts = list(CountFile['counts'])
             CtrlCounts_df[controlsample] = counts
-            os.chdir(AlnQCDir)
     
     # --------------------------------------------    
     # Compute sample means and sample variance
@@ -169,7 +167,7 @@ def EstimateControlCounts():
     # --------------------------------    
     # Plots
     # -------------------------------- 
-    plt.figure(figsize=(8,3.33))
+    plt.figure(figsize=(6.5,2.9))
     # Mean/Variance plot
     print('Generating dispersion plot ...')
     plt.subplot(121)        
@@ -177,35 +175,37 @@ def EstimateControlCounts():
         Mmax = numpy.percentile(Mean_array,99)
         x = [Mean[k] for k in range(L) if Mean[k] < Mmax]
         y = [SampleVar[k] for k in range(L) if Mean[k] < Mmax]
-        plt.scatter(x,y,s=4,lw=0,alpha=0.25)
+        plt.scatter(x,y,s=4,lw=0,alpha=0.25,rasterized=True)
         plt.plot(x,x,'--',color='orange',label='Mean = Variance')
         leg = plt.legend(loc='upper left', prop={'size':8})
         for lh in leg.legendHandles: lh.set_alpha(1)
     else: # no control replicates
         plt.figtext(0.25,0.5,'N/A')
-    plt.xlabel('Mean', fontsize=12)    
-    plt.ylabel('Variance', fontsize=12)    
-    plt.tick_params(labelsize=12)
-    plt.title('Read Count Overdispersion', fontsize=14)
+    plt.xlabel('Mean', fontsize=11)    
+    plt.ylabel('Variance', fontsize=11)    
+    plt.tick_params(labelsize=11)
+    plt.title('Read Count Overdispersion', fontsize=12)
     # Log Plot with Regression
     print('Generating log regression plot ...')
     plt.subplot(122)
     if Model == 'Neg. Binomial' and max(SampleVar)>0:
         logx = [numpy.log(Mean[k]) for k in range(L) if Mean[k]>0 and SampleVar[k]>Mean[k]]
         logy = [numpy.log(SampleVar[k]-Mean[k]) for k in range(L) if Mean[k]>0 and SampleVar[k]>Mean[k]]
-        plt.scatter(logx,logy,s=4,lw=0,alpha=0.25)  
+        plt.scatter(logx,logy,s=4,lw=0,alpha=0.25,rasterized=True)  
         logy_0 = [2*logx[k] + c_0 for k in range(len(logx))]
         plt.plot(logx,logy_0,'r--')
         Disp = '%.2f' % D
         plt.figtext(0.62,0.8,'Var = Mean+'+Disp+'Mean2',color='red',fontsize=8)
     else: # no control replicates
         plt.figtext(0.75,0.5,'N/A')
-    plt.xlabel('log (Mean)', fontsize=12)    
-    plt.ylabel('log (Variance - Mean)', fontsize=12)     
-    plt.title('Mean/Variance Model', fontsize=14)
-    plt.tick_params(labelsize=12)
+    plt.xlabel('log (Mean)', fontsize=11)    
+    plt.ylabel('log (Variance - Mean)', fontsize=11)     
+    plt.title('Mean/Variance Model', fontsize=12)
+    plt.tick_params(labelsize=11)
     plt.tight_layout()
     plt.savefig('Control_MeanVariance.png',dpi=res)
+    if svg:
+        plt.savefig('Control_MeanVariance.svg')      
     
 
     # --------------------------------------

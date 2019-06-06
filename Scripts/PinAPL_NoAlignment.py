@@ -87,13 +87,13 @@ os.system('python -u '+SanityScript+'.py 2>&1 | tee -a PinAPL-Py.log')
 DoneMsg = 'Character sanity check completed.'
 os.system('python -u PrintStatus.py Done "'+DoneMsg+'" 2>&1 | tee -a PinAPL-Py.log')
 
-# Generate index if not present
-if not os.path.exists(IndexDir):
-    StatMsg = 'Building library index ...'
-    os.system('python -u PrintStatus.py SubHeader "'+StatMsg+'" 2>&1 | tee -a PinAPL-Py.log')
-    os.system('python -u '+IndexScript+'.py 2>&1 | tee -a PinAPL-Py.log')
-    DoneMsg = 'Library index completed.'
-    os.system('python -u PrintStatus.py Done "'+DoneMsg+'" 2>&1 | tee -a PinAPL-Py.log')    
+## Generate index if not present
+#if not os.path.exists(IndexDir):
+#    StatMsg = 'Building library index ...'
+#    os.system('python -u PrintStatus.py SubHeader "'+StatMsg+'" 2>&1 | tee -a PinAPL-Py.log')
+#    os.system('python -u '+IndexScript+'.py 2>&1 | tee -a PinAPL-Py.log')
+#    DoneMsg = 'Library index completed.'
+#    os.system('python -u PrintStatus.py Done "'+DoneMsg+'" 2>&1 | tee -a PinAPL-Py.log')    
 
 # Read Samples
 StatMsg = 'Reading sample definition input ...'
@@ -103,39 +103,39 @@ SampleNames, Treatments, TreatmentSamples, Replicates = GetSamples()
 DoneMsg = 'Sample definition completed.'    
 os.system('python -u PrintStatus.py Done "'+DoneMsg+'" 2>&1 | tee -a PinAPL-Py.log')
 
-# Run Sequence Quality Control
-StatMsg = 'Running sequence quality control ...'
-os.system('python -u PrintStatus.py SubHeader "'+StatMsg+'" 2>&1 | tee -a PinAPL-Py.log')
-if os.path.exists(SeqQCDir):
-    os.system('python -u PrintStatus.py SkipSeqQC blank 2>&1 | tee -a PinAPL-Py.log')
-else: 
-    os.system('python -u '+SeqQCScript+'.py 2>&1 | tee -a PinAPL-Py.log')
-DoneMsg = 'Sequence quality control completed.'
-os.system('python -u PrintStatus.py Done "'+DoneMsg+'" 2>&1 | tee -a PinAPL-Py.log')    
-  
-# Trim Adapters
-StatMsg = 'Trimming reads ...'
-os.system('python -u PrintStatus.py SubHeader "'+StatMsg+'" 2>&1 | tee -a PinAPL-Py.log')
-if os.path.exists(AlignDir):
-    os.system('python -u PrintStatus.py SkipTrim blank 2>&1 | tee -a PinAPL-Py.log')
-else:
-    os.system('python -u '+TrimScript+'.py 2>&1 | tee -a PinAPL-Py.log')
-DoneMsg = 'Read trimming completed.'
-os.system('python -u PrintStatus.py Done "'+DoneMsg+'" 2>&1 | tee -a PinAPL-Py.log')
-  
-# Align Reads
-StatMsg = 'Mapping reads to library ...'
-os.system('python -u PrintStatus.py SubHeader "'+StatMsg+'" 2>&1 | tee -a PinAPL-Py.log')
-NewAlignmentDone = False
-for sample in SampleNames:
-    if os.path.exists(AlignDir+sample):
-        os.system('python -u PrintStatus.py SkipAlignment '+sample+' 2>&1 | tee -a PinAPL-Py.log')
-    else:        
-        os.system('python -u PrintStatus.py ProcessSample '+sample+' 2>&1 | tee -a PinAPL-Py.log')
-        os.system('python -u '+AlignScript+'.py '+sample+' 2>&1 | tee -a PinAPL-Py.log')     
-        NewAlignmentDone = True
-DoneMsg = 'Read alignments completed.'
-os.system('python -u PrintStatus.py Done "'+DoneMsg+'" 2>&1 | tee -a PinAPL-Py.log')        
+## Run Sequence Quality Control
+#StatMsg = 'Running sequence quality control ...'
+#os.system('python -u PrintStatus.py SubHeader "'+StatMsg+'" 2>&1 | tee -a PinAPL-Py.log')
+#if os.path.exists(SeqQCDir):
+#    os.system('python -u PrintStatus.py SkipSeqQC blank 2>&1 | tee -a PinAPL-Py.log')
+#else: 
+#    os.system('python -u '+SeqQCScript+'.py 2>&1 | tee -a PinAPL-Py.log')
+#DoneMsg = 'Sequence quality control completed.'
+#os.system('python -u PrintStatus.py Done "'+DoneMsg+'" 2>&1 | tee -a PinAPL-Py.log')    
+#  
+## Trim Adapters
+#StatMsg = 'Trimming reads ...'
+#os.system('python -u PrintStatus.py SubHeader "'+StatMsg+'" 2>&1 | tee -a PinAPL-Py.log')
+#if os.path.exists(AlignDir):
+#    os.system('python -u PrintStatus.py SkipTrim blank 2>&1 | tee -a PinAPL-Py.log')
+#else:
+#    os.system('python -u '+TrimScript+'.py 2>&1 | tee -a PinAPL-Py.log')
+#DoneMsg = 'Read trimming completed.'
+#os.system('python -u PrintStatus.py Done "'+DoneMsg+'" 2>&1 | tee -a PinAPL-Py.log')
+#  
+## Align Reads
+#StatMsg = 'Mapping reads to library ...'
+#os.system('python -u PrintStatus.py SubHeader "'+StatMsg+'" 2>&1 | tee -a PinAPL-Py.log')
+#NewAlignmentDone = False
+#for sample in SampleNames:
+#    if os.path.exists(AlignDir+sample):
+#        os.system('python -u PrintStatus.py SkipAlignment '+sample+' 2>&1 | tee -a PinAPL-Py.log')
+#    else:        
+#        os.system('python -u PrintStatus.py ProcessSample '+sample+' 2>&1 | tee -a PinAPL-Py.log')
+#        os.system('python -u '+AlignScript+'.py '+sample+' 2>&1 | tee -a PinAPL-Py.log')     
+#        NewAlignmentDone = True
+#DoneMsg = 'Read alignments completed.'
+#os.system('python -u PrintStatus.py Done "'+DoneMsg+'" 2>&1 | tee -a PinAPL-Py.log')        
 
 # Get sgRNA and Gene Read Counts
 StatMsg = 'Collecting read counts ...'
@@ -143,22 +143,22 @@ os.system('python -u PrintStatus.py SubHeader "'+StatMsg+'" 2>&1 | tee -a PinAPL
 for sample in SampleNames:
     # Analyze alignment output and get sgRNA counts
     os.system('python -u PrintStatus.py ProcessSample '+sample+' 2>&1 | tee -a PinAPL-Py.log')
-    os.system('python -u '+ClassifyScript+'.py '+sample+' 2>&1 | tee -a PinAPL-Py.log')
+    #os.system('python -u '+ClassifyScript+'.py '+sample+' 2>&1 | tee -a PinAPL-Py.log')
     # Apply sgRNA count cutoff and get gene counts
     os.system('python -u '+CutoffScript+'.py '+sample+' 2>&1 | tee -a PinAPL-Py.log')
 DoneMsg = 'Read count acquisition completed.'
 os.system('python -u PrintStatus.py Done "'+DoneMsg+'" 2>&1 | tee -a PinAPL-Py.log')     
 
-# Delete temporary alignment output
-if NewAlignmentDone:
-    StatMsg = 'Clearing temporary alignment files ...'
-    os.system('python -u PrintStatus.py SubHeader "'+StatMsg+'" 2>&1 | tee -a PinAPL-Py.log')
-    os.system('python -u '+CleanUpScript+'.py 2>&1 | tee -a PinAPL-Py.log')
-    DoneMsg = 'Alignment output processing completed.'
-    os.system('python -u PrintStatus.py Done "'+DoneMsg+'" 2>&1 | tee -a PinAPL-Py.log')
+## Delete temporary alignment output
+#if NewAlignmentDone:
+#    StatMsg = 'Clearing temporary alignment files ...'
+#    os.system('python -u PrintStatus.py SubHeader "'+StatMsg+'" 2>&1 | tee -a PinAPL-Py.log')
+#    os.system('python -u '+CleanUpScript+'.py 2>&1 | tee -a PinAPL-Py.log')
+#    DoneMsg = 'Alignment output processing completed.'
+#    os.system('python -u PrintStatus.py Done "'+DoneMsg+'" 2>&1 | tee -a PinAPL-Py.log')
 
-# Show read depth
-os.system('python -u '+ReadDepthScript+'.py 2>&1 | tee -a PinAPL-Py.log')
+## Show read depth
+#os.system('python -u '+ReadDepthScript+'.py 2>&1 | tee -a PinAPL-Py.log')
 
 # Average counts over replicates
 StatMsg = 'Averaging read counts over replicates ...'

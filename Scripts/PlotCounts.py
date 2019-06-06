@@ -22,6 +22,7 @@ import sys
 import time
 from matplotlib.ticker import FormatStrFormatter
 
+
 def GOI_Scatterplot(sample,GOI='none',Annot='none',NonT='none',Transp='none'):
     # ------------------------------------------------
     # Print header
@@ -38,16 +39,17 @@ def GOI_Scatterplot(sample,GOI='none',Annot='none',NonT='none',Transp='none'):
     ScriptsDir = config['ScriptsDir']
     WorkingDir = config['WorkingDir'] 
     AnalysisDir = config['AnalysisDir']
-    ListDir = config['HitDir']
+    sgRNARanksDir = config['sgRNARanksDir']
     PlotDir = config['ScatterDir']
-    HiLiteDir = config['HiLiteDir']
-    ScreenType = config['ScreenType']    
     alpha = config['alpha_s']
     delta = config['delta']
     NonTPrefix = config['NonTargetPrefix']
     res = config['dpi']
+    svg = config['svg']
     dotsize = config['dotsize']
     logbase = config['logbase']
+    ScreenType = config['ScreenType']
+    PrintHighlights = config['PrintHighlights']
     if Annot == 'none':
         annotate = config['scatter_annotate']    
     elif Annot == 'False':
@@ -68,16 +70,16 @@ def GOI_Scatterplot(sample,GOI='none',Annot='none',NonT='none',Transp='none'):
     # ------------------------------------------------
     # Reading counts from sample and control
     # ------------------------------------------------
-    print('Reading counts ...')    
-    os.chdir(ListDir)
+    print('Reading sgRNA read counts ...')    
+    os.chdir(sgRNARanksDir)
     filename = glob.glob(sample+'_*sgRNAList.txt')[0]
-    HitList = pd.read_table(filename, sep='\t')       
-    sgIDs = list(HitList['sgRNA'].values)
-    genes = list(HitList['gene'].values)  
+    sgRNARanking = pd.read_table(filename, sep='\t')       
+    sgIDs = list(sgRNARanking['sgRNA'].values)
+    genes = list(sgRNARanking['gene'].values)  
     L = len(sgIDs)
-    sample_counts = list(HitList['counts'].values)
-    control_counts = list(HitList['control mean'].values)
-    sig = list(HitList['significant'].values)  
+    sample_counts = list(sgRNARanking['counts'].values)
+    control_counts = list(sgRNARanking['control mean'].values)
+    sig = list(sgRNARanking['significant'].values)  
     # Log transformation
     print('Log'+str(logbase)+' transformation ...')
     if logbase == 2:
@@ -105,7 +107,7 @@ def GOI_Scatterplot(sample,GOI='none',Annot='none',NonT='none',Transp='none'):
     goi_sgIDs = [sgIDs[k] for k in K_goi]
 
     # ------------------------------------------------
-    # Plotting
+    # Plots
     # ------------------------------------------------   
     if len(sample_sig) > 100:
         tpcy = TransparencyLevel
@@ -115,14 +117,17 @@ def GOI_Scatterplot(sample,GOI='none',Annot='none',NonT='none',Transp='none'):
     if not os.path.exists(PlotDir):
         os.makedirs(PlotDir)      
     os.chdir(PlotDir)   
-    fig,ax = plt.subplots(figsize=(4,4.25))
-    plt.scatter(control_rest,sample_rest,s=dotsize,facecolor='black',lw=0,alpha=TransparencyLevel)
-    plt.scatter(control_sig,sample_sig,s=dotsize,facecolor='green',lw=0,alpha=tpcy,label='p < '+str(alpha))
+    fig,ax = plt.subplots(figsize=(3.5,3.5))
+    plt.scatter(control_rest,sample_rest,s=dotsize,facecolor='black',lw=0,alpha=TransparencyLevel,\
+        rasterized=True)
+    plt.scatter(control_sig,sample_sig,s=dotsize,facecolor='green',lw=0,alpha=tpcy,\
+        label='significant',rasterized=True)
     if len(K_nonT)>0 and ShowNonTargets:
         plt.scatter(control_nonT,sample_nonT,s=dotsize,facecolor='orange',lw=0,alpha=0.35,\
-            label='Non Targeting')
+            label='non-targeting', rasterized=True)
     if GOI != 'none':
-        plt.scatter(control_goi,sample_goi,s=2*dotsize,facecolor='red',lw=0,alpha=1.00,label=GOI)
+        plt.scatter(control_goi,sample_goi,s=dotsize,facecolor='red',lw=0,alpha=1.00,label=GOI,\
+            rasterized=True)
     if len(K_sig)>0:
         xmax = 1.05*max([max(control_rest),max(control_sig)])
         ymax = 1.25*max([max(sample_rest),max(sample_sig)])  
@@ -134,23 +139,23 @@ def GOI_Scatterplot(sample,GOI='none',Annot='none',NonT='none',Transp='none'):
         xmin = -0.1*max(control_rest)
         ymin = -0.1*max(sample_rest)
     plt.xlim([xmin,xmax]); plt.ylim([ymin,ymax])
-    plt.tick_params(labelsize=13)
+    plt.tick_params(labelsize=11)
     axes = plt.gca()
     x0 = axes.get_xlim()  
     plt.plot((x0[0],x0[1]), (x0[0],x0[1]), ls="--", color=(51/255,153/255,1), alpha=0.75)    
     ax.yaxis.set_major_formatter(FormatStrFormatter('%.1f'))
     ax.xaxis.set_major_formatter(FormatStrFormatter('%.1f'))    
-    plt.xlabel('log'+str(logbase)+' counts (Control)', fontsize=14)    
-    plt.ylabel('log'+str(logbase)+' counts ('+sample+')', fontsize=14)
-    plt.title('sgRNA '+ScreenType, fontsize=14)
-    leg = plt.legend(loc='upper left', prop={'size':8})
+    plt.xlabel('log'+str(logbase)+' counts (Control)', fontsize=11)    
+    plt.ylabel('log'+str(logbase)+' counts ('+sample+')', fontsize=11)
+    plt.title('sgRNA '+ScreenType.capitalize(), fontsize=12)
+    leg = plt.legend(loc='upper left', prop={'size':6})
     for lh in leg.legendHandles: lh.set_alpha(1)
     if annotate:
         for label, x, y in zip(goi_sgIDs,control_goi,sample_goi):
-            plt.annotate(label,xy=(x,y),color='red',fontsize=5,fontweight='bold')  
+            plt.annotate(label,xy=(x,y),color='red',fontsize=4,fontweight='bold')  
     plt.tight_layout()
     # Define file name
-    figurename = 'counts_'+sample+'.png'
+    figurename = 'counts_'+sample+'_scatterplot.png'
     if GOI != 'none':    
         figurename = figurename[:-4]+'_'+GOI+'.png'
     if Annot not in ['none','False']:
@@ -159,19 +164,23 @@ def GOI_Scatterplot(sample,GOI='none',Annot='none',NonT='none',Transp='none'):
         figurename = figurename[:-4]+'_nonT.png'        
     # Save figure
     if GOI != 'none':        
-        if not os.path.exists(HiLiteDir):
-        	os.makedirs(HiLiteDir)         
-        os.chdir(HiLiteDir)        
+        if not os.path.exists(PlotDir+'/'+sample+'_Highlighted_Genes/'):
+        	os.makedirs(PlotDir+'/'+sample+'_Highlighted_Genes/')         
+        os.chdir(PlotDir+'/'+sample+'_Highlighted_Genes/')        
         plt.savefig(figurename, dpi=res)
+        if svg:
+            plt.savefig(figurename[:-4]+'.svg')
         os.chdir(PlotDir)        
     else:
         plt.savefig(figurename, dpi=res)
+        if svg:
+            plt.savefig(figurename[:-4]+'.svg')
     plt.close()
 
     # ------------------------------------------------
     # Printing 
     # ------------------------------------------------
-    if GOI != 'none':
+    if GOI != 'none' and PrintHighlights:
         print('-----------------------------------------------')     
         print('sgID\t\tCounts\tControl\tSignificant')    
         print('-----------------------------------------------')       

@@ -33,186 +33,198 @@ def Normalization():
     config = yaml.load(configFile)
     configFile.close()
     ScriptsDir = config['ScriptsDir']
-    AlnQCDir = config['AlnQCDir']     
-    DepthDir = config['DepthDir']
+    sgRNAReadCountDir = config['sgRNAReadCountDir']
+    GeneReadCountDir = config['GeneReadCountDir']      
     delta = config['delta']
     norm = config['Normalization']
     RoundCount = config['RoundCount']
-    NormSuffix = '_0.txt'
+    NormSuffix = '_normalized.txt'
     N0 = 1000000
     eps = 0.001 
     
     # ------------------------------------------------
-    # Normalization
-    # ------------------------------------------------        
-    os.chdir(AlnQCDir)
-    SampleNames = [d for d in os.listdir(AlnQCDir) if os.path.isdir(d)]
+    # Get files
+    # ------------------------------------------------  
+    os.chdir(sgRNAReadCountDir)
+    FileNames_u = glob.glob('*_GuideCounts.txt')
     colnames_u = ['sgRNA','gene','counts']
-    colnames_g = ['gene','counts']    
-    if norm == 'cpm':
+    os.chdir(GeneReadCountDir)
+    FileNames_g = glob.glob('*_GeneCounts.txt')     
+    colnames_g = ['gene','counts'] 
+
+    # ------------------------------------------------
+    # Normalization to counts per million
+    # ------------------------------------------------               
+    if norm == 'cpm':    
         print('Normalizing to counts per million reads ...')   
-        for sample in SampleNames:
-            print('Processing '+sample+' ...') 
-            os.chdir(sample)
-            # sgRNA counts            
-            GuideCountsFilename = glob.glob('*GuideCounts.txt')[0]
-            GuideCounts = pandas.read_table(GuideCountsFilename,sep='\t',names=colnames_u)
-            sgIDs = list(GuideCounts['sgRNA'].values)        
-            geneIDs = list(GuideCounts['gene'].values)                            
-            ReadsPerGuide = list(GuideCounts['counts'].values)
+        # sgRNA counts   
+        os.chdir(sgRNAReadCountDir) 
+        for filename in FileNames_u:
+            print('Processing file '+filename+' ...') 
+            GuideCounts = pandas.read_table(filename,sep='\t',names=colnames_u)
+            L = len(GuideCounts)
+            sgIDs = list(GuideCounts['sgRNA'])        
+            geneIDs = list(GuideCounts['gene'])                            
+            ReadsPerGuide = list(GuideCounts['counts'])
             N = sum(ReadsPerGuide)
-            GuideCounts0_Filename = GuideCountsFilename[0:-4] + NormSuffix
-            GuideCounts0 = open(GuideCounts0_Filename,'w')
-            ReadsPerGuide_0 = list()
-            for k in range(len(sgIDs)):
-                if RoundCount:
-                    ReadsPerGuide_0 = int(numpy.round(ReadsPerGuide[k]/N * N0))
-                else:
-                    ReadsPerGuide_0 = ReadsPerGuide[k]/N * N0                    
-                GuideCounts0.write(str(sgIDs[k]) + '\t' + str(geneIDs[k]) + '\t' + \
-                    str(ReadsPerGuide_0) + '\n')
-            GuideCounts0.close()
-            # gene counts
-            GeneCountsFilename = glob.glob('*GeneCounts.txt')[0]
-            GeneCounts = pandas.read_table(GeneCountsFilename,sep='\t',names=colnames_g)            
-            geneIDs = list(GeneCounts['gene'].values)                            
-            ReadsPerGene = list(GeneCounts['counts'].values)    
-            N = sum(ReadsPerGene)                    
-            GeneCounts0_Filename = GeneCountsFilename[0:-4] + NormSuffix
-            GeneCounts0 = open(GeneCounts0_Filename,'w')
-            ReadsPerGene_0 = list()
-            for j in range(len(geneIDs)):
-                if RoundCount:
-                    ReadsPerGene_0 = int(numpy.round(ReadsPerGene[j]/N * N0))
-                else:
-                    ReadsPerGene_0 = ReadsPerGene[j]/N * N0
-                GeneCounts0.write(str(geneIDs[j]) + '\t' + str(ReadsPerGene_0) + '\n')
-            GeneCounts0.close()            
-            os.chdir(AlnQCDir)   
-    
+            if RoundCount:
+                ReadsPerGuide_0 = [int(numpy.round(ReadsPerGuide[k]/N * N0)) for k in range(L)]
+            else:
+                ReadsPerGuide_0 = [ReadsPerGuide[k]/N * N0 for k in range(L)]
+            GuideCounts0_Filename = filename[0:-4] + NormSuffix            
+            GuideCounts0 = pandas.DataFrame()
+            GuideCounts0['sgID'] = sgIDs
+            GuideCounts0['geneID'] = geneIDs
+            GuideCounts0['Norm. Read Counts'] = ReadsPerGuide_0
+            GuideCounts0.to_csv(GuideCounts0_Filename, sep = '\t', index = False, header = False)
+        # gene counts
+        os.chdir(GeneReadCountDir) 
+        for filename in FileNames_g:
+            print('Processing file '+filename+' ...')
+            GeneCounts = pandas.read_table(filename,sep='\t',names=colnames_g)
+            G = len(GeneCounts)            
+            geneIDs = list(GeneCounts['gene'])
+            ReadsPerGene = list(GeneCounts['counts'])
+            N = sum(ReadsPerGene)
+            if RoundCount:
+                ReadsPerGene_0 = [int(numpy.round(ReadsPerGene[j]/N * N0)) for j in range(G)]
+            else:
+                ReadsPerGene_0 = [ReadsPerGene[j]/N * N0 for j in range(G)]
+            GeneCounts0_Filename = filename[0:-4] + NormSuffix
+            GeneCounts0 = pandas.DataFrame()
+            GeneCounts0['geneID'] = geneIDs
+            GeneCounts0['Norm. Read Counts'] = ReadsPerGene_0
+            GeneCounts0.to_csv(GeneCounts0_Filename, sep = '\t', index = False, header = False)
+    # ------------------------------------------------------------
+    # Normalization to mean total read count across replicates
+    # ------------------------------------------------------------    
     elif norm == 'total':
         print('Normalizing to mean total read count ...')
+        os.chdir(sgRNAReadCountDir)       
         TotalCounts = list()
-        for sample in SampleNames:
-            os.chdir(sample)
-            filename = glob.glob('*GuideCounts.txt')[0]
+        for filename in FileNames_u:
             SampleFile = pandas.read_table(filename, sep='\t',names=colnames_u)
-            x = list(SampleFile['counts'].values)
+            x = list(SampleFile['counts'])
             TotalCounts.append(numpy.sum(x))
-            os.chdir(AlnQCDir)
         MeanCount = numpy.mean(TotalCounts)
-        # Compute normalized counts
-        for sample in SampleNames:
-            print('Processing '+sample+' ...') 
-            os.chdir(sample)
-            # sgRNA counts            
-            GuideCountsFilename = glob.glob('*GuideCounts.txt')[0]
-            GuideCounts = pandas.read_table(GuideCountsFilename,sep='\t',names=colnames_u)
-            sgIDs = list(GuideCounts['sgRNA'].values)        
-            geneIDs = list(GuideCounts['gene'].values)                            
-            ReadsPerGuide = list(GuideCounts['counts'].values)
+        # sgRNA counts 
+        os.chdir(sgRNAReadCountDir)
+        for filename in FileNames_u:
+            print('Processing file '+filename+' ...')             
+            GuideCounts = pandas.read_table(filename,sep='\t',names=colnames_u)
+            L = len(GuideCounts)
+            sgIDs = list(GuideCounts['sgRNA'])        
+            geneIDs = list(GuideCounts['gene'])                            
+            ReadsPerGuide = list(GuideCounts['counts'])
             N = sum(ReadsPerGuide)
-            GuideCounts0_Filename = GuideCountsFilename[0:-4] + NormSuffix
-            GuideCounts0 = open(GuideCounts0_Filename,'w')
-            ReadsPerGuide_0 = list()
-            for k in range(len(sgIDs)): 
-                if RoundCount:
-                    ReadsPerGuide_0 = int(numpy.round(ReadsPerGuide[k]/N * MeanCount))
-                else:
-                    ReadsPerGuide_0 = ReadsPerGuide[k]/N * MeanCount
-                GuideCounts0.write(str(sgIDs[k]) + '\t' + str(geneIDs[k]) + '\t' + \
-                    str(ReadsPerGuide_0) + '\n')
-            GuideCounts0.close()
-            # gene counts
-            GeneCountsFilename = glob.glob('*GeneCounts.txt')[0]
-            GeneCounts = pandas.read_table(GeneCountsFilename,sep='\t',names=colnames_g)            
-            geneIDs = list(GeneCounts['gene'].values)                            
-            ReadsPerGene = list(GeneCounts['counts'].values)    
-            N = sum(ReadsPerGene)                    
-            GeneCounts0_Filename = GeneCountsFilename[0:-4] + NormSuffix
-            GeneCounts0 = open(GeneCounts0_Filename,'w')
-            ReadsPerGene_0 = list()
-            for j in range(len(geneIDs)):
-                if RoundCount:
-                    ReadsPerGene_0 = int(numpy.round(ReadsPerGene[j]/N * MeanCount))
-                else:
-                    ReadsPerGene_0 = ReadsPerGene[j]/N * MeanCount
-                GeneCounts0.write(str(geneIDs[j]) + '\t' + str(ReadsPerGene_0) + '\n')
-            GeneCounts0.close()            
-            os.chdir(AlnQCDir)            
-    
+            if RoundCount:            
+                ReadsPerGuide_0 = [int(numpy.round(ReadsPerGuide[k]/N * MeanCount)) for k in range(L)]             
+            else:
+                ReadsPerGuide_0 = [ReadsPerGuide[k]/N * MeanCount for k in range(L)]                       
+            GuideCounts0_Filename = filename[0:-4] + NormSuffix
+            GuideCounts0 = pandas.DataFrame()
+            GuideCounts0['sgID'] = sgIDs
+            GuideCounts0['geneID'] = geneIDs
+            GuideCounts0['Norm. Read Counts'] = ReadsPerGuide_0
+            GuideCounts0.to_csv(GuideCounts0_Filename, sep = '\t', index = False, header = False)
+        # gene counts
+        os.chdir(GeneReadCountDir)
+        for filename in FileNames_g:
+            print('Processing file '+filename+' ...')
+            GeneCounts = pandas.read_table(filename,sep='\t',names=colnames_g)
+            G = len(GeneCounts)
+            geneIDs = list(GeneCounts['gene'])                            
+            ReadsPerGene = list(GeneCounts['counts'])
+            N = sum(ReadsPerGene)
+            if RoundCount:
+                ReadsPerGene_0 = [int(numpy.round(ReadsPerGene[j]/N * MeanCount)) for j in range(G)]
+            else:
+                ReadsPerGene_0 = [ReadsPerGene[j]/N * MeanCount for j in range(G)]
+            GeneCounts0_Filename = filename[0:-4] + NormSuffix
+            GeneCounts0 = pandas.DataFrame()
+            GeneCounts0['geneID'] = geneIDs
+            GeneCounts0['Norm. Read Counts'] = ReadsPerGene_0
+            GeneCounts0.to_csv(GeneCounts0_Filename, sep = '\t', index = False, header = False)
+    # ------------------------------------------------------------
+    # Normalization by size-factor (Love et al., Genome Biol 2014)
+    # ------------------------------------------------------------     
     elif norm == 'size':
         print('Normalizing by size-factors ...')       
         # Establish data frame
-        os.chdir(SampleNames[0])
-        filename = glob.glob('*GuideCounts.txt')[0]
+        os.chdir(sgRNAReadCountDir)
+        filename = FileNames_u[0]
         SampleFile = pandas.read_table(filename, sep='\t',names=colnames_u)
-        sgIDs = list(SampleFile['sgRNA'].values)
-        genes = list(SampleFile['gene'].values)
-        L = len(sgIDs)
+        sgIDs = list(SampleFile['sgRNA'])
+        geneIDs = list(SampleFile['gene'])
+        L = len(sgIDs)        
         RawCounts = pandas.DataFrame(data = {'sgRNA': [sgIDs[k] for k in range(L)],
-                                         'gene': [genes[k] for k in range(L)]},
+                                         'gene': [geneIDs[k] for k in range(L)]},
                                 columns = ['sgRNA','gene'])
         SizeFactors = pandas.DataFrame(data = {'sgRNA': [sgIDs[k] for k in range(L)],
-                                         'gene': [genes[k] for k in range(L)]},
+                                         'gene': [geneIDs[k] for k in range(L)]},
                                 columns = ['sgRNA','gene'])
         # Compute geometric means for all sgRNAs
         print('Computing geometric means ...')
-        os.chdir(AlnQCDir)
-        for sample in SampleNames:
-            os.chdir(sample)
-            filename = glob.glob('*GuideCounts.txt')[0]
+        for filename in FileNames_u:
+            sample = filename[0:-16]
             SampleFile = pandas.read_table(filename, sep='\t',names=colnames_u)
-            x = list(SampleFile['counts'].values)
+            x = list(SampleFile['counts'])
             RawCounts[sample] = x
             SizeFactors[sample] = [x[k] if x[k]>0 else x[k]+eps for k in range(L)]
-            os.chdir(AlnQCDir)        
         geomean = [sc.gmean(list(SizeFactors.iloc[k,2:])) for k in range(L)]
         SizeFactors['Geom mean'] = geomean
         # Compute size-factors for each sgRNA and each sample   
         print('Computing sgRNA size-factors ...')
-        for sample in SampleNames:
+        for filename in FileNames_u:
+            sample = filename[0:-16]
             x = SizeFactors[sample]
             g0 = SizeFactors['Geom mean']
             x0_k = [x[k]/g0[k] for k in range(L)]
             SizeFactors[sample+' sgRNA size-factors'] = [x0_k[k] for k in range(L)]
         # Compute size-factor for each sample
         print('Computing sample size-factors ...')
-        for sample in SampleNames:
+        for filename in FileNames_u:
+            sample = filename[0:-16]
             SizeFactors[sample+' size-factor'] = numpy.median(SizeFactors[sample+' sgRNA size-factors'])
         # Write size-factor dataframe
-        os.chdir(DepthDir)
         SizeFactors.to_csv('Size-factors.txt',sep='\t',index=False)
         # Write normalized counts dataframe
         print('Writing normalized read counts ...')
-        os.chdir(AlnQCDir)        
-        Counts0 = pandas.DataFrame(data = {'sgRNA': [sgIDs[k] for k in range(L)],
-                                         'gene': [genes[k] for k in range(L)]},
-                                columns = ['sgRNA','gene'])
-        G = len(list(set(genes)))                                
-        GeneCounts0 = pandas.DataFrame(data = {'gene': [genes[j] for j in range(G)]},
-                                columns = ['gene'])
-        for sample in SampleNames:
-            os.chdir(sample)
+        # sgRNA counts         
+        for filename in FileNames_u:
+            sample = filename[0:-16]
             if RoundCount:
-                Counts0[sample] = [int(numpy.round(RawCounts[sample][k]/SizeFactors[sample+' size-factor'][k])) \
-                    for k in range(L)]
+                ReadsPerGuide_0 = [int(numpy.round(RawCounts[sample][k]/SizeFactors[sample+' size-factor'][k])) \
+                        for k in range(L)]
             else:
-                Counts0[sample] = [RawCounts[sample][k]/SizeFactors[sample+' size-factor'][k] \
-                    for k in range(L)]                
-            Counts0.to_csv(sample+'_GuideCounts'+NormSuffix,sep='\t',columns=['sgRNA','gene',sample],\
-                header=False,index=False)            
-            GeneCounts = pandas.read_table(glob.glob('*GeneCounts.txt')[0],sep='\t',names=colnames_g) 
-            ReadsPerGene = list(GeneCounts['counts'].values)
+                ReadsPerGuide_0 = [RawCounts[sample][k]/SizeFactors[sample+' size-factor'][k] for k in range(L)]
+            GuideCounts0_Filename = filename[0:-4] + NormSuffix
+            GuideCounts0 = pandas.DataFrame()
+            GuideCounts0['sgID'] = sgIDs
+            GuideCounts0['geneID'] = geneIDs
+            GuideCounts0['Norm. Read Counts'] = ReadsPerGuide_0
+            GuideCounts0.to_csv(GuideCounts0_Filename, sep = '\t', index = False, header = False)
+        # gene counts        
+        os.chdir(GeneReadCountDir)  
+        for filename in FileNames_g:
+            sample = filename[0:-15]
+            GeneCounts = pandas.read_table(filename,sep='\t',names=colnames_g)
+            G = len(GeneCounts)
+            geneIDs = list(GeneCounts['gene'])
+            ReadsPerGene = list(GeneCounts['counts'])                    
             if RoundCount:
-                GeneCounts0[sample] = [int(numpy.round(ReadsPerGene[j]/SizeFactors[sample+' size-factor'][0])) \
+                ReadsPerGene_0 = [int(numpy.round(ReadsPerGene[j]/SizeFactors[sample+' size-factor'][j])) \
                     for j in range(G)]
             else:
-                GeneCounts0[sample] = [ReadsPerGene[j]/SizeFactors[sample+' size-factor'][0] \
-                    for j in range(G)]                
-            GeneCounts0.to_csv(sample+'_GeneCounts'+NormSuffix,sep='\t',columns=['gene',sample],\
-                header=False,index=False)                        
-            os.chdir(AlnQCDir)
+                ReadsPerGene_0 = [ReadsPerGene[j]/SizeFactors[sample+' size-factor'][j] for j in range(G)] 
+            GeneCounts0_Filename = filename[0:-4] + NormSuffix
+            GeneCounts0 = pandas.DataFrame()
+            GeneCounts0['geneID'] = geneIDs
+            GeneCounts0['Norm. Read Counts'] = ReadsPerGene_0
+            GeneCounts0.to_csv(GeneCounts0_Filename, sep = '\t', index = False, header = False)                            
+    # ------------------------------------------------------------
+    # Spelling error catch
+    # ------------------------------------------------------------  
     else:
         print('### ERROR: Check spelling of Normalization parameter in configuration file! ###')
     

@@ -39,12 +39,13 @@ def Repl_Scatterplot(Repl1,Repl2,GOI='none',Annot='none',NonT='none',Transp='non
     ScriptsDir = config['ScriptsDir']
     WorkingDir = config['WorkingDir'] 
     AnalysisDir = config['AnalysisDir']
-    AlnQCDir = config['AlnQCDir']
+    sgRNAReadCountDir = config['sgRNAReadCountDir']
     PlotDir = config['CorrelDir']
     HiLiteDir2 = config['HiLiteDir2']
     delta = config['delta']
     NonTPrefix = config['NonTargetPrefix']
     res = config['dpi']
+    svg = config['svg']
     dotsize = config['dotsize']
     logbase = config['logbase'] 
     ShowNonTargets = config['ShowNonTargets']
@@ -69,21 +70,20 @@ def Repl_Scatterplot(Repl1,Repl2,GOI='none',Annot='none',NonT='none',Transp='non
     # ------------------------------------------------
     # Reading counts from sample and control
     # ------------------------------------------------
-    print('Reading counts ...')    
-    colnames = ['sgRNA','gene','counts']
-    os.chdir(AlnQCDir+Repl1)
-    filename1 = glob.glob('*_GuideCounts_0.txt')[0]
+    print('Reading sgRNA counts ...')    
+    os.chdir(sgRNAReadCountDir)
+    colnames = ['sgRNA','gene','counts']    
+    filename1 = Repl1+'_GuideCounts_normalized.txt'
     ListFile1 = pd.read_table(filename1, sep='\t',low_memory=False,names=colnames)    
     ListFile1 = ListFile1.sort_values('sgRNA')    
-    os.chdir(AlnQCDir+Repl2)    
-    filename2 = glob.glob('*_GuideCounts_0.txt')[0]
+    filename2 = Repl2+'_GuideCounts_normalized.txt'
     ListFile2 = pd.read_table(filename2, sep='\t',low_memory=False,names=colnames)
     ListFile2 = ListFile2.sort_values('sgRNA')    
     sgIDs = list(ListFile1['sgRNA'].values)
     genes = list(ListFile1['gene'].values)  
     L = len(sgIDs)
-    repl1_counts = list(ListFile1['counts'].values)
-    repl2_counts = list(ListFile2['counts'].values)
+    repl1_counts = list(ListFile1['counts'])
+    repl2_counts = list(ListFile2['counts'])
     # Log transformation
     print('Log'+str(logbase)+' transformation ...')    
     if logbase == 2:
@@ -122,28 +122,30 @@ def Repl_Scatterplot(Repl1,Repl2,GOI='none',Annot='none',NonT='none',Transp='non
         os.makedirs(PlotDir)      
     goi_highlight = False; nonT_highlight = False
     os.chdir(PlotDir)   
-    fig,ax = plt.subplots(figsize=(4,4))
-    plt.scatter(repl1_rest,repl2_rest,s=dotsize,facecolor='black',lw=0,alpha=TransparencyLevel)
+    fig,ax = plt.subplots(figsize=(3.5,3.5))
+    plt.scatter(repl1_rest,repl2_rest,s=dotsize,facecolor='black',lw=0,alpha=TransparencyLevel,\
+        rasterized=True)
     if len(K_nonT)>0 and ShowNonTargets:
         plt.scatter(repl1_nonT,repl2_nonT,s=dotsize,facecolor='orange',lw=0,alpha=0.35,\
-            label='Non Targeting')
+            label='non-targeting',rasterized=True)
         nonT_highlight = True
     if GOI != 'none':
-        plt.scatter(repl1_goi,repl2_goi,s=2*dotsize,facecolor='red',lw=0,alpha=1.00,label=GOI)
+        plt.scatter(repl1_goi,repl2_goi,s=2*dotsize,facecolor='red',lw=0,alpha=1.00,label=GOI,\
+            rasterized=True)
         goi_highlight = True
     if goi_highlight or nonT_highlight:
-        leg = plt.legend(loc='upper left', prop={'size':9})
+        leg = plt.legend(loc='upper left', prop={'size':8})
         for lh in leg.legendHandles: lh.set_alpha(1)
     axes = plt.gca()
     x0 = axes.get_xlim()  
     plt.plot((x0[0],x0[1]), (x0[0],x0[1]), ls="--", color=(51/255,153/255,1), alpha=0.75)
-    plt.title('Correlation '+Repl1+' '+Repl2, fontsize=12)
-    plt.xlabel(Repl1+' log'+str(logbase)+' counts', fontsize=12)    
-    plt.ylabel(Repl2+' log'+str(logbase)+' counts', fontsize=12)    
+    plt.title('Correlation '+Repl1+' '+Repl2, fontsize=11)
+    plt.xlabel(Repl1+' log'+str(logbase)+' counts', fontsize=11)    
+    plt.ylabel(Repl2+' log'+str(logbase)+' counts', fontsize=11)    
     plt.text(.45,.15,'Corr (Pearson) = '+str(round(CorrCoeffP*1000)/1000),transform=axes.transAxes,\
-        fontsize=9, color='blue') 
+        fontsize=7, color='blue') 
     plt.text(.45,.1,'Corr (Spearman) = '+str(round(CorrCoeffS*1000)/1000),transform=axes.transAxes,\
-        fontsize=9, color='blue') 
+        fontsize=7, color='blue') 
     if len(repl1_nonT) != 0:
         xmin = -0.1*(max([max(repl1_rest),max(repl1_nonT)]))
         xmax = 1.05*(max([max(repl1_rest),max(repl1_nonT)]))
@@ -157,7 +159,7 @@ def Repl_Scatterplot(Repl1,Repl2,GOI='none',Annot='none',NonT='none',Transp='non
         ymin = -0.1*max(repl2_rest)
         ymax = 1.05*max(repl2_rest)    
     plt.xlim([xmin,xmax]); plt.ylim([ymin,ymax])
-    plt.tick_params(labelsize=13)
+    plt.tick_params(labelsize=11)
     if annotate:
         for label, x, y in zip(goi_sgIDs,repl1_goi,repl2_goi):
             plt.annotate(label,xy=(x,y),color='red',fontsize=5,fontweight='bold')     
@@ -176,9 +178,13 @@ def Repl_Scatterplot(Repl1,Repl2,GOI='none',Annot='none',NonT='none',Transp='non
         	os.makedirs(HiLiteDir2)         
         os.chdir(HiLiteDir2)
         plt.savefig(figurename, dpi=res)
+        if svg:
+            plt.savefig(figurename[:-4]+'.svg')
         os.chdir(PlotDir) 
     else:
-        plt.savefig(figurename, dpi=res)    
+        plt.savefig(figurename, dpi=res)
+        if svg:
+            plt.savefig(figurename[:-4]+'.svg')
     plt.close()
 
     # --------------------------------------

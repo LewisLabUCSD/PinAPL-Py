@@ -10,7 +10,6 @@ Created on Thu Apr 28 13:13:27 2016
 # =======================================================================
 # Imports
 from __future__ import division # floating point division by default
-import glob
 import pandas as pd
 from Lorenz import gini
 import yaml
@@ -48,8 +47,8 @@ def AnalyzeCounts(sample):
     ScriptsDir = config['ScriptsDir']    
     DataDir = config['DataDir']
     AnalysisDir = config['AnalysisDir']
-    ScreenType = config['ScreenType']
-    InputDir = config['AlnQCDir']+sample
+    sgRNAReadCountDir = config['sgRNAReadCountDir']
+    GeneReadCountDir = config['GeneReadCountDir']
     OutputDir = config['CountQCDir']+sample
     res = config['dpi']    
     svg = config['svg']
@@ -58,16 +57,17 @@ def AnalyzeCounts(sample):
     # --------------------------------------
     # Load counts
     # --------------------------------------
-    os.chdir(InputDir)
+    os.chdir(sgRNAReadCountDir)
     colnames = ['ID','gene','counts']
-    GuideFileName = glob.glob('*_GuideCounts_0.txt')[0]
+    GuideFileName = sample+'_GuideCounts_normalized.txt'
     GuideFile = pd.read_table(GuideFileName, sep='\t', names=colnames)
-    ReadsPerGuide = list(GuideFile['counts'].values)
+    ReadsPerGuide = list(GuideFile['counts'])
     L = len(ReadsPerGuide)   
+    os.chdir(GeneReadCountDir)
     colnames = ['gene','counts']    
-    GeneFileName = glob.glob('*_GeneCounts_0.txt')[0]
+    GeneFileName = sample+'_GeneCounts_normalized.txt'
     GeneFile = pd.read_table(GeneFileName, sep='\t', names=colnames)
-    ReadsPerGene = list(GeneFile['counts'].values)
+    ReadsPerGene = list(GeneFile['counts'])
     sgID = list(GuideFile['ID'].values)    
     gene = list(GuideFile['gene'].values)    
     if not os.path.exists(OutputDir):
@@ -93,18 +93,18 @@ def AnalyzeCounts(sample):
     ax0.plot(xu,yu, linewidth=2, color='green')   
     ax0.plot(xu,xu, '--', color='#dbdcdd')
     ax0.set_ylim([0,1])    
-    ax0.set_xlabel('Cumulative Fraction of sgRNAs', fontsize=11)    
-    ax0.set_ylabel('Cumulative Fraction of Reads', fontsize=11)
+    ax0.set_xlabel('Cumulative Fraction of sgRNAs', fontsize=10)
+    ax0.set_ylabel('Cumulative Fraction of Reads', fontsize=10)
     ax0.tick_params(labelsize=11)
-    ax0.set_title('Read Disparity (sgRNAs)', fontsize=12)
+    ax0.set_title('Read Count Inequality (sgRNAs)', fontsize=10)
     ax0.text(.05,.8,'Gini coefficient: '+str((round(GiniIndex_u*1000)/1000)),fontsize=9)
     ax1.plot(xg,yg, linewidth=2, color='blue')   
     ax1.plot(xg,xg, '--', color='#dbdcdd')
     ax1.set_ylim([0,1])
-    ax1.set_xlabel('Cumulative Fraction of Genes', fontsize=11)    
-    ax1.set_ylabel('Cumulative Fraction of Reads', fontsize=11)
+    ax1.set_xlabel('Cumulative Fraction of Genes', fontsize=10)    
+    ax1.set_ylabel('Cumulative Fraction of Reads', fontsize=10)
     ax1.tick_params(labelsize=11)
-    ax1.set_title('Read Disparity (Genes)', fontsize=12)     
+    ax1.set_title('Read Count Inequality (Genes)', fontsize=10)
     ax1.text(.05,.8,'Gini coefficient: '+str((round(GiniIndex_g*1000)/1000)),fontsize=9)    
     plt.tight_layout()
     plt.savefig(sample+'_LorenzCurves.png',dpi=res)
@@ -114,7 +114,7 @@ def AnalyzeCounts(sample):
     # --------------------------------------
     # Boxplots & Histograms
     # --------------------------------------
-    fig = plt.figure(figsize=(6,5))
+    fig = plt.figure(figsize=(6,5))   
     gs = gridspec.GridSpec(2, 2, width_ratios=[1, 2])
     ax0 = plt.subplot(gs[0])
     ax1 = plt.subplot(gs[1])
@@ -129,8 +129,8 @@ def AnalyzeCounts(sample):
     for patch in bp['boxes']:
         patch.set(facecolor='#92fcae') 
     ax0.set_xticks([''])
-    ax0.set_ylabel('Counts per sgRNA', fontsize=12)
-    ax0.tick_params(labelsize=12)
+    ax0.set_ylabel('Counts per sgRNA', fontsize=11)
+    ax0.tick_params(labelsize=11)
     # Reads per gene: Boxplot
     bp = ax2.boxplot(ReadsPerGene, showfliers = False, patch_artist=True) # No outliers
     plt.setp(bp['boxes'], color='black')
@@ -139,12 +139,12 @@ def AnalyzeCounts(sample):
     for patch in bp['boxes']:
         patch.set(facecolor='#9de4f9') 
     ax2.set_xticks([''])
-    ax2.set_ylabel('Counts per Gene', fontsize=12)
-    ax2.tick_params(labelsize=12)   
+    ax2.set_ylabel('Counts per Gene', fontsize=11)
+    ax2.tick_params(labelsize=11)
     print('Generating histograms...')
     # Reads per guide: Histogram
-    ax1.set_title('EMPTY', color='white', fontsize=16)
-    fig.text(.3,.95,'Read Distribution (sgRNAs)', fontsize=14)
+    ax1.set_title('EMPTY', color='white', fontsize=14)
+    fig.text(.3,.95,'Read Distribution (sgRNAs)', fontsize=12)
     Counts_noFliers = list()
     max_count = max(40,int(numpy.percentile(ReadsPerGuide,99)))
     max_count = min(max_count,60)    
@@ -152,15 +152,15 @@ def AnalyzeCounts(sample):
         if count <= max_count:
             Counts_noFliers.append(count)
     ax1.hist(Counts_noFliers, color='green', bins=range(max_count+2), align = 'left')   
-    ax1.set_xlabel('Counts per sgRNA', fontsize=12)
-    ax1.set_ylabel('Number of sgRNAs', fontsize=12)    
-    ax1.tick_params(labelsize=12)
+    ax1.set_xlabel('Counts per sgRNA', fontsize=11)
+    ax1.set_ylabel('Number of sgRNAs', fontsize=11)    
+    ax1.tick_params(labelsize=11)
     formatter = FuncFormatter(kilos)
     ax1.yaxis.set_major_formatter(formatter)
     ax1.set_xlim([-10,max_count])
     # Reads per gene: Histogram
-    ax3.set_title('EMPTY', color='white', fontsize=16)
-    fig.text(.3,.47,'Read Distribution (Genes)', fontsize=14)
+    ax3.set_title('EMPTY', color='white', fontsize=14)
+    fig.text(.3,.47,'Read Distribution (Genes)', fontsize=12)
     Counts_noFliers = list()
     max_count = max(40,int(numpy.percentile(ReadsPerGene,99)))
     max_count = min(max_count,120)
@@ -168,9 +168,9 @@ def AnalyzeCounts(sample):
         if count <= max_count:
             Counts_noFliers.append(count)
     ax3.hist(Counts_noFliers, color='blue', bins=range(max_count+2), align = 'left')
-    ax3.set_xlabel('Counts per Gene', fontsize=12)
-    ax3.set_ylabel('Number of Genes', fontsize=12)
-    ax3.tick_params(labelsize=12)
+    ax3.set_xlabel('Counts per Gene', fontsize=11)
+    ax3.set_ylabel('Number of Genes', fontsize=11)
+    ax3.tick_params(labelsize=11)
     formatter = FuncFormatter(kilos1)
     ax3.yaxis.set_major_formatter(formatter)        
     ax3.set_xlim([-5,max_count])

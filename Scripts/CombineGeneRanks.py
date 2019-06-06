@@ -40,20 +40,9 @@ def GeneRankCombination(treatment):
     if len(treatment_files) > 1:
         treatment_files.sort()
         K = len(treatment_files)
-        ResultTable = pandas.DataFrame() 
+        ResultTable = pandas.DataFrame()
         X1 = pandas.read_table(treatment_files[0], sep='\t')
-        # Pre-process gene rank tables in case of STARS    
-        if metric == 'STARS':
-            # Compute consensus gene list (present in all replicates) 
-            print('Computing consensus gene list from STARS output ...')
-            Genes_0 = set(X1['gene'])
-            for treatment_file in treatment_files:
-                X = pandas.read_table(treatment_file, sep='\t')
-                Genes = set(X['gene'])
-                Genes_0 = Genes_0.intersection(Genes)
-            G = len(Genes_0)
-        else:
-            G = len(X1)        
+        G = len(X1)        
         # Read replicates
         chi = list(numpy.zeros(G))    
         k = 0    
@@ -61,21 +50,15 @@ def GeneRankCombination(treatment):
             k+=1   
             print('Reading '+treatment+' replicate '+str(k)+' ...')            
             X = pandas.read_table(treatment_file, sep='\t')
-            if metric == 'STARS':
-                # use only genes from consensus list
-                I = [X[X['gene']==gene].index[0] for gene in Genes_0]
-                X0 = X.iloc[I]
-                X0.sort_values('gene',ascending=1)
-            else:
-                X0 = X.sort_values('gene',ascending=1)    
+            X0 = X.sort_values('gene',ascending=1)    
             genes = list(X0['gene'])
             ResultTable['gene'] = genes
-            pval = list(X0['p_value (adj.)'])
+            pval = list(X0['p_value'])
             ResultTable['p-value Repl. '+str(k)] = pval
             ln_pval = [numpy.log(pval[i]+eps) for i in range(G)]
             chi = numpy.add(chi,ln_pval)         
         
-        # Combine p-values
+        # Combine p-values [REF 1]
         print('Computing Fisher statistic ...')
         chi = [-2*chi[i] for i in range(G)]
         ResultTable['Fisher Statistic'] = chi
@@ -107,3 +90,7 @@ def GeneRankCombination(treatment):
 if __name__ == "__main__":
     input1 = sys.argv[1]
     GeneRankCombination(input1)
+    
+# REFERENCES:
+# [REF 1]: 'Fisher's Method' (wikipedia)    
+    
