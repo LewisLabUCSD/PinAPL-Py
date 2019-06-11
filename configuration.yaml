@@ -94,7 +94,7 @@ VolcanoDir_sgRNA: '/workingdir/Analysis/02_sgRNA-Ranking_Results/sgRNA_VolcanoPl
 LogFileDir: '/workingdir/Analysis/00_LogFile/' 
 bw2Dir: '/usr/bin/'
 CutAdaptDir: '/root/.local/bin/'    
-STARSDir: '/opt/PinAPL-Py/Scripts/STARS_mod/'
+STARSDir: '/workingdir/Scripts/STARS_mod/'
 
 # SCRIPT FILENAMES
 SanityScript: 'CheckCharacters'
