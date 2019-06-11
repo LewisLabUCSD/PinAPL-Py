@@ -67,7 +67,7 @@ DataDir: '/workingdir/Data/'
 TempDataDir: '/workingdir/TempData/'
 LibDir: '/workingdir/Library/'
 IndexDir: '/workingdir/Library/Bowtie2_Index/'
-ScriptsDir: '/workingdir/Scripts/'
+ScriptsDir: '/opt/PinAPL-Py/Scripts/'
 AlignDir: '/workingdir/Alignments/'
 AnalysisDir: '/workingdir/Analysis/'
 TrimLogDir: '/workingdir/Analysis/01_Alignment_Results/Read_Trimming/'
@@ -94,7 +94,7 @@ VolcanoDir_sgRNA: '/workingdir/Analysis/02_sgRNA-Ranking_Results/sgRNA_VolcanoPl
 LogFileDir: '/workingdir/Analysis/00_LogFile/' 
 bw2Dir: '/usr/bin/'
 CutAdaptDir: '/root/.local/bin/'    
-STARSDir: '/workingdir/Scripts/STARS_mod/'
+STARSDir: '/opt/PinAPL-Py/Scripts/STARS_mod/'
 
 # SCRIPT FILENAMES
 SanityScript: 'CheckCharacters'
