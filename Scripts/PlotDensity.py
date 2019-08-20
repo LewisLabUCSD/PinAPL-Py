@@ -89,7 +89,7 @@ def DensityPlot(sample):
     plt.tick_params(reset = True,labelsize=11)
     axes = plt.gca()
     x0 = axes.get_xlim()  
-    plt.plot((x0[0],x0[1]), (x0[0],x0[1]), ls="--", color=(51/255,153/255,1), alpha=0.75)    
+    plt.plot((x0[0],x0[1]), (x0[0],x0[1]), ls="--", color='#808080', alpha=0.75)    
     ax.yaxis.set_major_formatter(FormatStrFormatter('%.1f'))
     ax.xaxis.set_major_formatter(FormatStrFormatter('%.1f'))    
     plt.xlabel('log'+str(logbase)+' counts (Control)', fontsize=11)    

@@ -126,7 +126,7 @@ def Repl_Scatterplot(Repl1,Repl2,GOI='none',Annot='none',NonT='none',Transp='non
     plt.scatter(repl1_rest,repl2_rest,s=dotsize,facecolor='black',lw=0,alpha=TransparencyLevel,\
         rasterized=True)
     if len(K_nonT)>0 and ShowNonTargets:
-        plt.scatter(repl1_nonT,repl2_nonT,s=dotsize,facecolor='orange',lw=0,alpha=0.35,\
+        plt.scatter(repl1_nonT,repl2_nonT,s=dotsize,facecolor='orange',lw=0,alpha=0.15,\
             label='non-targeting',rasterized=True)
         nonT_highlight = True
     if GOI != 'none':
@@ -168,9 +168,9 @@ def Repl_Scatterplot(Repl1,Repl2,GOI='none',Annot='none',NonT='none',Transp='non
     figurename = 'counts_'+Repl1+'_'+Repl2+'.png'    
     if GOI != 'none':    
         figurename = figurename[:-4]+'_'+GOI+'.png'
-    if Annot not in ['none','False']:
+    if annotate:
         figurename = figurename[:-4]+'_IDs.png'        
-    if NonT not in ['none','False']:
+    if ShowNonTargets:
         figurename = figurename[:-4]+'_nonT.png'  
     # Save figure        
     if GOI != 'none':

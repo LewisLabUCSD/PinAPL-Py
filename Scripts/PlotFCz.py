@@ -114,7 +114,7 @@ def zScoreFC(sample,GOI='none',Annot='none',NonT='none'):
     plt.scatter(K_rest,z_rest,s=8,lw=0,color='#d3d3d3',rasterized=True)
     plt.scatter(K_sig,z_sig,s=8,lw=0,color='green',label='significant',rasterized=True)
     if len(K_nonT)>0 and ShowNonTargets:
-        plt.scatter(K_nonT,z_nonT,s=8,lw=0,color='orange',alpha=0.35,label='non-targeting',rasterized=True)
+        plt.scatter(K_nonT,z_nonT,s=8,lw=0,color='orange',alpha=0.15,label='non-targeting',rasterized=True)
     if GOI != 'none':
         plt.scatter(K_goi,z_goi,s=8,lw=0,color='red',label=GOI,rasterized=True)    
     if annotate:
@@ -136,10 +136,16 @@ def zScoreFC(sample,GOI='none',Annot='none',NonT='none'):
         leg = plt.legend(loc='upper right', prop={'size':6})        
         for lh in leg.legendHandles: lh.set_alpha(1)
     plt.tight_layout()
-    # Save figure
+    # Define file name
     figurename = sample+'_'+'sgRNA_zScores.png'
     if GOI != 'none':    
-        figurename = figurename[:-4]+'_'+GOI+'.png'    
+        figurename = figurename[:-4]+'_'+GOI+'.png'
+    if annotate:
+        figurename = figurename[:-4]+'_IDs.png'        
+    if ShowNonTargets:
+        figurename = figurename[:-4]+'_nonT.png'      
+    # Save figure
+    if GOI != 'none':    
         if not os.path.exists(outputDir+'/'+sample+'_Highlighted_Genes'):
         	os.makedirs(outputDir+'/'+sample+'_Highlighted_Genes')         
         os.chdir(outputDir+'/'+sample+'_Highlighted_Genes')  

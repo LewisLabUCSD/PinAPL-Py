@@ -123,7 +123,7 @@ def GOI_Scatterplot(sample,GOI='none',Annot='none',NonT='none',Transp='none'):
     plt.scatter(control_sig,sample_sig,s=dotsize,facecolor='green',lw=0,alpha=tpcy,\
         label='significant',rasterized=True)
     if len(K_nonT)>0 and ShowNonTargets:
-        plt.scatter(control_nonT,sample_nonT,s=dotsize,facecolor='orange',lw=0,alpha=0.35,\
+        plt.scatter(control_nonT,sample_nonT,s=dotsize,facecolor='orange',lw=0,alpha=0.15,\
             label='non-targeting', rasterized=True)
     if GOI != 'none':
         plt.scatter(control_goi,sample_goi,s=dotsize,facecolor='red',lw=0,alpha=1.00,label=GOI,\
@@ -158,9 +158,9 @@ def GOI_Scatterplot(sample,GOI='none',Annot='none',NonT='none',Transp='none'):
     figurename = 'counts_'+sample+'_scatterplot.png'
     if GOI != 'none':    
         figurename = figurename[:-4]+'_'+GOI+'.png'
-    if Annot not in ['none','False']:
+    if annotate:
         figurename = figurename[:-4]+'_IDs.png'        
-    if NonT not in ['none','False']:
+    if ShowNonTargets:
         figurename = figurename[:-4]+'_nonT.png'        
     # Save figure
     if GOI != 'none':        

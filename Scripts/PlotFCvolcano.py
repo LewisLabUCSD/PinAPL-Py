@@ -116,7 +116,7 @@ def VolcanoPlot(sample,GOI='none',Annot='none',NonT='none'):
     plt.scatter(FC_rest,p_rest,s=6,facecolor='grey',lw=0,alpha=0.25,rasterized=True)
     plt.scatter(FC_sig,p_sig,s=6,facecolor='green',lw=0,alpha=tpcy,label='significant',rasterized=True) 
     if len(K_nonT)>0 and ShowNonTargets:
-        plt.scatter(FC_nonT,p_nonT,s=6,lw=0,color='orange',alpha=0.35,label='non-targeting',rasterized=True)
+        plt.scatter(FC_nonT,p_nonT,s=6,lw=0,color='orange',alpha=0.15,label='non-targeting',rasterized=True)
     if GOI != 'none':
         plt.scatter(FC_goi,p_goi,s=6,lw=0,color='red',label=GOI,rasterized=True)   
     if annotate:
@@ -133,10 +133,16 @@ def VolcanoPlot(sample,GOI='none',Annot='none',NonT='none'):
         leg = plt.legend(loc='upper right', prop={'size':6})        
         for lh in leg.legendHandles: lh.set_alpha(1)
     plt.tight_layout()
-    # save figure
+    # Define file name
     figurename = sample+'_'+'sgRNA_volcano.png'
     if GOI != 'none':    
-        figurename = figurename[:-4]+'_'+GOI+'.png'    
+        figurename = figurename[:-4]+'_'+GOI+'.png'
+    if annotate:
+        figurename = figurename[:-4]+'_IDs.png'        
+    if ShowNonTargets:
+        figurename = figurename[:-4]+'_nonT.png'        
+    # save figure    
+    if GOI != 'none':       
         if not os.path.exists(outputDir+'/'+sample+'_Highlighted_Genes'):
         	os.makedirs(outputDir+'/'+sample+'_Highlighted_Genes')         
         os.chdir(outputDir+'/'+sample+'_Highlighted_Genes')  

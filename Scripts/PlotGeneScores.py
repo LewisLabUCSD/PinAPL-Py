@@ -73,7 +73,7 @@ def GeneScoreScatterplot(sample,GOI='none'):
         
 
     # ------------------------------------------------      
-    # Define gene set
+    # Define sets
     # ------------------------------------------------  
     GeneIndex = range(G)
     SigIndex = [g for g in range(G) if sig[g]==True]
@@ -91,9 +91,9 @@ def GeneScoreScatterplot(sample,GOI='none'):
     print('Plotting '+str(GeneMetric)+' scores ...')
     fig, ax = plt.subplots(figsize=(3.5,2.9))
     plt.scatter(RestIndex,V_rest,s=15,color='#99a399',lw=0,alpha=0.2)
-    plt.scatter(SigIndex,V_sig,s=15,color='#54e84c',lw=0,alpha=1,label='significant',\
+    plt.scatter(SigIndex,V_sig,s=15,color='#54e84c',lw=0,alpha=0.2,label='significant',\
         rasterized=True)
-    plt.scatter(NonTIndex,V_nonT,s=15,color='#ffd575',lw=0,alpha=0.35,label='non-targeting',\
+    plt.scatter(NonTIndex,V_nonT,s=15,color='#ffd575',lw=0,alpha=0.2,label='non-targeting',\
         rasterized=True)
     if GOI != 'none':
         GOILabel = GOI
