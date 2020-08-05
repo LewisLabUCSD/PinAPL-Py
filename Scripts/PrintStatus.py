@@ -12,8 +12,8 @@ import sys
 
 def PrintStatus_Header():
     print('**************************************************')
-    print('Launching PinAPL-Py v2.9')
-    print('P. Spahn et al., UC San Diego (05/2019)')
+    print('Launching PinAPL-Py v2.91')
+    print('P. Spahn et al., UC San Diego (08/2020)')
     print('**************************************************')
     
 def PrintStatus_SubHeader(msg):

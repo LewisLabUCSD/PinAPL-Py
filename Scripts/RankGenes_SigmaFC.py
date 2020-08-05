@@ -36,7 +36,8 @@ def SigmaFC_Permutation(P):
                 u = 1
             pi_j = u * np.log10((Nx[j]+delta)/(N0[j]+delta))
             pi = pi + pi_j    
-        Pi = w[k]*pi       
+        #Pi = w[k]*pi       # only w = id supported
+        Pi = k*pi   # Avoid "out of range" error in case of an unexpected number of sgRNAs per gene
     else:
         Pi = 0
     return Pi
