@@ -121,7 +121,8 @@ def compute_SigmaFC(sgRNAList):
                 pi = pi + pi_j
         else:
             pi = 0; k = 0
-        metric.append(w[k]*pi)
+        #metric.append(w[k]*pi)
+        metric.append(k*pi)     # Avoid "out of range" error 
 
     # ------------------------------------------------    
     # Estimate SigmaFC Score distribution (Permutation)
