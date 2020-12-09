@@ -29,11 +29,12 @@ def SigmaFC_Permutation(P):
         N0 = list(sg_table['control mean']);               
         pi = 0        
         for j in range(k):
-            y = np.log10((Nx[j]+delta)/(N0[j]+delta)) # log fold-change
-            if y < FCmin:
-                u = np.exp(Lambda*(y-FCmin))
-            else:
-                u = 1
+            # compute fold-change weight   (discontinued)
+#            y = np.log10((Nx[j]+delta)/(N0[j]+delta)) # log fold-change
+#            if y < FCmin:
+#                u = np.exp(Lambda*(y-FCmin))
+#            else:
+            u = 1
             pi_j = u * np.log10((Nx[j]+delta)/(N0[j]+delta))
             pi = pi + pi_j    
         #Pi = w[k]*pi       # only w = id supported
@@ -59,9 +60,9 @@ def compute_SigmaFC(sgRNAList):
     alpha_g = config['alpha_g']
     ScreenType = config['ScreenType']
     num_cores = multiprocessing.cpu_count()    
-    global Lambda; Lambda = -np.log(0.1)   # deprecation rate
-    global FCmin;           # deprecation cutoff (log10 fold change). Set to 0 for no deprecation
-    FCmin = config['FCmin_SigmaFC']
+#    global Lambda; Lambda = -np.log(0.1)   # deprecation rate
+#    global FCmin;           # deprecation cutoff (log10 fold change). DISCONTINUED
+#    FCmin = config['FCmin_SigmaFC']
     global w;                # reward function for numbers of signif. sgRNAs
     w = config['w_SigmaFC']
 
@@ -110,13 +111,13 @@ def compute_SigmaFC(sgRNAList):
             Nx = list(sg_table['counts']) 
             N0 = list(sg_table['control mean'])
             pi = 0
-            for j in range(k):
-                # compute fold-change weight                
-                y = np.log10((Nx[j]+delta)/(N0[j]+delta)) # log fold-change
-                if y < FCmin:
-                    u = np.exp(Lambda*(y-FCmin))
-                else:
-                    u = 1
+            for j in range(k):                
+                # compute fold-change weight   (discontinued)             
+#                y = np.log10((Nx[j]+delta)/(N0[j]+delta)) # log fold-change
+#                if y < FCmin:
+#                    u = np.exp(Lambda*(y-FCmin))
+#                else:
+                u = 1
                 pi_j = u * np.log10((Nx[j]+delta)/(N0[j]+delta))
                 pi = pi + pi_j
         else:
