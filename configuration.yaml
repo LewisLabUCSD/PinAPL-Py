@@ -9,8 +9,10 @@
 ScreenType: 'enrichment'              # type of screen ['enrichment'/'depletion']
 
 # LIBRARY PARAMETERS
-LibFilename: 'GeCKOv21_Human.tsv'        # filename of library spreadsheet
+LibFilename: 'GeCKOv2_Human.tsv'        # filename of library spreadsheet
 seq_5_end: 'TCTTGTGGAAAGGACGAAACACCN'       # 5'-sequence adapter
+#seq_3_end: 'GTTTTAGAGCTAGAAATAGCAAGTT'       # sequence 3' of sgRNA in read
+CtrlPrefix: 'Control_'
 NonTargetPrefix: 'NonTargeting'             # prefix for non-targeting sgRNAs in library
 NumGuidesPerGene: 6                     # number of sgRNAs per gene 
                                        
@@ -67,7 +69,7 @@ DataDir: '/workingdir/Data/'
 TempDataDir: '/workingdir/TempData/'
 LibDir: '/workingdir/Library/'
 IndexDir: '/workingdir/Library/Bowtie2_Index/'
-ScriptsDir: '/opt/PinAPL-Py/Scripts/'
+ScriptsDir: '/workingdir/Scripts/'
 AlignDir: '/workingdir/Alignments/'
 AnalysisDir: '/workingdir/Analysis/'
 TrimLogDir: '/workingdir/Analysis/01_Alignment_Results/Read_Trimming/'
@@ -94,7 +96,7 @@ VolcanoDir_sgRNA: '/workingdir/Analysis/02_sgRNA-Ranking_Results/sgRNA_VolcanoPl
 LogFileDir: '/workingdir/Analysis/00_LogFile/' 
 bw2Dir: '/usr/bin/'
 CutAdaptDir: '/root/.local/bin/'    
-STARSDir: '/opt/PinAPL-Py/Scripts/STARS_mod/'
+STARSDir: '/workingdir/Scripts/STARS_mod/'
 
 # SCRIPT FILENAMES
 SanityScript: 'CheckCharacters'
